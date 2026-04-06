@@ -8,7 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
+import AIGuidanceEditor from '@/components/settings/AIGuidanceEditor';
 
 const defaultSettings = {
   store_name: 'My Store',
@@ -60,18 +62,25 @@ export default function AISettings() {
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8 max-w-4xl">
       <div className="mb-6 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-purple-100 flex items-center justify-center">
           <Bot className="w-5 h-5 text-purple-600" />
         </div>
         <div>
           <h1 className="text-2xl font-bold">AI Agent Settings</h1>
-          <p className="text-sm text-muted-foreground">Configure your AI chat agent's behavior</p>
+          <p className="text-sm text-muted-foreground">Configure your AI chat agent's behavior and interaction guidance</p>
         </div>
       </div>
 
-      <div className="space-y-5">
+      <Tabs defaultValue="settings" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="settings">Basic Settings</TabsTrigger>
+          <TabsTrigger value="guidance">Interaction Guidance</TabsTrigger>
+        </TabsList>
+
+        {/* Settings Tab */}
+        <TabsContent value="settings" className="space-y-5">
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">General</CardTitle>
@@ -136,7 +145,13 @@ export default function AISettings() {
         <Button onClick={save} className="gap-2 w-full">
           <Save className="w-4 h-4" /> Save Settings
         </Button>
-      </div>
+        </TabsContent>
+
+        {/* Guidance Tab */}
+        <TabsContent value="guidance" className="pt-6">
+          <AIGuidanceEditor />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

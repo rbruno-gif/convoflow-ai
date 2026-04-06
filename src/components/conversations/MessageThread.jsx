@@ -213,14 +213,18 @@ function MessageBubble({ message }) {
 
   if (isWhisper) {
     return (
-      <div className="flex gap-2.5 justify-end mb-2">
-        <div className="max-w-[70%]">
-          <div className="px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100 border border-purple-300 dark:border-purple-700 rounded-tr-sm">
-            <p className="text-[11px] font-semibold mb-1">💬 Coaching (Private)</p>
-            {message.content}
+      <div className="flex gap-2.5 justify-end my-3">
+        <div className="max-w-[75%]">
+          <div className="px-4 py-3 rounded-lg bg-purple-100 dark:bg-purple-900/50 border-l-4 border-l-purple-500 dark:border-l-purple-400">
+            <p className="text-[11px] font-bold text-purple-700 dark:text-purple-300 mb-1.5 uppercase tracking-wide">
+              🎓 Coaching Message (Private)
+            </p>
+            <p className="text-sm text-purple-900 dark:text-purple-100 leading-relaxed">
+              {message.content}
+            </p>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1 text-right">
-            {message.sender_name} · {message.timestamp && format(new Date(message.timestamp), 'h:mm a')}
+          <p className="text-[10px] text-purple-600 dark:text-purple-400 mt-1.5 text-right font-medium">
+            {message.sender_name} • {message.timestamp && format(new Date(message.timestamp), 'h:mm a')}
           </p>
         </div>
       </div>

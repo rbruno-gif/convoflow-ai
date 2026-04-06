@@ -40,15 +40,21 @@ export default function WhisperPanel({ conversation, currentUser }) {
   };
 
   return (
-    <div className="px-4 py-3 border-t bg-purple-50 dark:bg-purple-950/30 space-y-2">
-      <div className="flex items-center gap-2 text-xs font-semibold text-purple-700 dark:text-purple-300">
-        <Eye className="w-3.5 h-3.5" /> Coaching for {agentEmail}
+    <div className="px-4 py-3 border-t-2 border-t-purple-300 bg-purple-50/80 dark:bg-purple-950/40 space-y-3">
+      <div className="flex items-center gap-2">
+        <Eye className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+        <span className="font-semibold text-sm text-purple-900 dark:text-purple-200">
+          💬 Private Coaching
+        </span>
+        <span className="text-xs text-purple-700 dark:text-purple-300 ml-auto">
+          Only visible to {agentEmail}
+        </span>
       </div>
       <Textarea
-        placeholder="Send private coaching to the agent..."
+        placeholder="Send coaching tips to guide the agent..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        className="resize-none text-sm h-16"
+        className="resize-none text-sm h-14 bg-white dark:bg-slate-800 border-purple-200 dark:border-purple-800"
         onKeyDown={(e) => {
           if (e.key === 'Enter' && e.ctrlKey) {
             e.preventDefault();
@@ -56,14 +62,23 @@ export default function WhisperPanel({ conversation, currentUser }) {
           }
         }}
       />
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setMessage('')}
+          disabled={sending || !message.trim()}
+          className="text-xs"
+        >
+          Clear
+        </Button>
         <Button
           size="sm"
           onClick={handleSend}
           disabled={sending || !message.trim()}
-          className="gap-2"
+          className="gap-2 bg-purple-600 hover:bg-purple-700 text-white"
         >
-          <Send className="w-3.5 h-3.5" /> Send to Agent
+          <Send className="w-3.5 h-3.5" /> Send Coaching
         </Button>
       </div>
     </div>

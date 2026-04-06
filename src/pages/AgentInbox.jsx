@@ -182,7 +182,8 @@ function ConvRow({ conv, selected, onSelect, showClaim, onClaim }) {
       onClick={() => onSelect(conv.id)}
       className={cn(
         'px-4 py-3 cursor-pointer hover:bg-muted/50 border-b transition-colors',
-        selected === conv.id && 'bg-accent'
+        selected === conv.id && 'bg-accent',
+        conv.is_urgent && 'border-l-2 border-l-destructive bg-destructive/5'
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -201,10 +202,15 @@ function ConvRow({ conv, selected, onSelect, showClaim, onClaim }) {
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate">{conv.last_message}</p>
-          <div className="flex items-center gap-1.5 mt-1">
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-medium', statusColor[conv.status] || 'bg-muted text-muted-foreground')}>
               {conv.status?.replace('_', ' ')}
             </span>
+            {conv.is_urgent && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold bg-destructive/10 text-destructive">
+                URGENT
+              </span>
+            )}
             {conv.last_message_time && (
               <span className="text-[9px] text-muted-foreground">
                 {formatDistanceToNow(new Date(conv.last_message_time), { addSuffix: true })}

@@ -62,6 +62,26 @@
     },
     "flagged_reason": {
       "type": "string"
+    },
+    "sentiment": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "default": "neutral",
+      "description": "Detected sentiment from latest messages"
+    },
+    "is_urgent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Auto-flagged as urgent (negative sentiment + keywords)"
+    },
+    "sentiment_updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When sentiment was last analyzed"
     }
   },
   "required": [

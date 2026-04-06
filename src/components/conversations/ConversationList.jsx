@@ -40,7 +40,8 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
               onClick={() => onSelect(c.id)}
               className={cn(
                 'flex items-start gap-3 p-4 border-b cursor-pointer hover:bg-muted/40 transition-colors',
-                selectedId === c.id && 'bg-accent'
+                selectedId === c.id && 'bg-accent',
+                c.is_urgent && 'border-l-2 border-l-destructive'
               )}
             >
               <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
@@ -69,13 +70,27 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
                       <AlertTriangle className="w-2.5 h-2.5" /> {c.status === 'flagged' ? 'Flagged' : 'Human req.'}
                     </span>
                   )}
+                  {c.sentiment && (
+                    <span className={cn('text-[10px] px-1.5 py-0.5 rounded-full font-medium', 
+                      c.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                      c.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                      'bg-slate-100 text-slate-600'
+                    )}>
+                      {c.sentiment}
+                    </span>
+                  )}
+                  {c.is_urgent && (
+                    <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full font-semibold">
+                      URGENT
+                    </span>
+                  )}
                   {c.unread_count > 0 && (
                     <span className="ml-auto text-[10px] bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 font-medium">
                       {c.unread_count}
                     </span>
                   )}
-                </div>
-              </div>
+                  </div>
+                  </div>
             </div>
           ))
         )}

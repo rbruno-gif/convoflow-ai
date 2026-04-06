@@ -21,6 +21,7 @@ import WidgetCustomizer from '@/pages/WidgetCustomizer';
 import Integrations from '@/pages/Integrations';
 import AgentInbox from '@/pages/AgentInbox';
 import Agents from '@/pages/Agents';
+import AITest from '@/pages/AITest';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -60,6 +61,7 @@ const AuthenticatedApp = () => {
         <Route path="/agent-inbox" element={<AgentInbox />} />
         <Route path="/agents" element={<Agents />} />
         <Route path="/settings" element={<AISettings />} />
+        <Route path="/ai-test" element={<AITest />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

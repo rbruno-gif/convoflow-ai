@@ -40,6 +40,7 @@ const navGroups = [
       { icon: UserCog, label: 'Agents', path: '/agents' },
       { icon: Palette, label: 'Widget', path: '/widget' },
       { icon: Settings, label: 'AI Settings', path: '/settings' },
+      { icon: Bot, label: 'AI Tester', path: '/ai-test' },
       { icon: Plug, label: 'Integrations', path: '/integrations' },
     ],
   },

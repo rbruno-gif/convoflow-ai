@@ -31,28 +31,28 @@ export default function Conversations() {
   const selected = conversations.find(c => c.id === selectedId);
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar list */}
-      <ConversationList
-        conversations={filtered}
-        selectedId={selectedId}
-        onSelect={setSelectedId}
-        filter={filter}
-        onFilterChange={setFilter}
-      />
+    <div className="flex h-full bg-background">
+      {/* Sidebar list - narrower */}
+      <div className="w-80 border-r bg-card flex flex-col min-h-0">
+        <ConversationList
+          conversations={filtered}
+          selectedId={selectedId}
+          onSelect={setSelectedId}
+          filter={filter}
+          onFilterChange={setFilter}
+        />
+      </div>
 
-      {/* Thread area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* Main thread area - expanded */}
+      <div className="flex-1 flex flex-col min-w-0 bg-background">
         {selected ? (
-          <>
-            <MessageThread conversation={selected} />
-            <ConversationActions conversation={selected} />
-          </>
+          <MessageThread conversation={selected} />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
-              <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="text-sm">Select a conversation to view</p>
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
+              <p className="text-base font-medium">Select a conversation to start</p>
+              <p className="text-xs text-muted-foreground mt-1">Choose from the list to view messages</p>
             </div>
           </div>
         )}

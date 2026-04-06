@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import AISuggestedReplies from '@/components/conversations/AISuggestedReplies';
 
 export default function MessageThread({ conversation }) {
   const [reply, setReply] = useState('');
@@ -102,8 +103,13 @@ export default function MessageThread({ conversation }) {
         <div ref={bottomRef} />
       </div>
 
+      {/* AI Suggested Replies */}
+      <div className="border-t bg-card pt-2">
+        <AISuggestedReplies messages={messages} onSelect={s => setReply(s)} />
+      </div>
+
       {/* Reply box */}
-      <div className="p-4 border-t bg-card">
+      <div className="px-4 pb-4 bg-card">
         <Textarea
           placeholder="Type a reply..."
           value={reply}

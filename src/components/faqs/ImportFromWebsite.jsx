@@ -22,13 +22,13 @@ export default function ImportFromWebsite({ onImported }) {
     setSelected(new Set());
 
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `Visit the following website and extract all useful FAQ-style knowledge base entries from it. 
+      prompt: `Visit the following website and extract ALL information, content, policies, product details, FAQs, shipping info, return policies, contact details, pricing, and any other useful information from it.
 URL: ${url}
 
-Extract questions and answers that would be useful for a customer support AI agent (e-commerce related: shipping, returns, products, payments, orders, policies, etc.).
-If the page has explicit FAQs, extract them. If not, infer logical Q&A pairs from the content.
-For each entry, also pick the most relevant category from: shipping, returns, payment, products, orders, general.
-Extract up to 15 entries.`,
+Be thorough and comprehensive — extract EVERYTHING you can find on the page.
+Convert all the information into Q&A format for a customer support AI agent.
+For each entry, pick the most relevant category from: shipping, returns, payment, products, orders, general.
+Do not limit yourself — extract as many entries as needed to capture ALL the information on the page.`,
       add_context_from_internet: true,
       response_json_schema: {
         type: 'object',

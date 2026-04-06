@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import ImportFromWebsite from '@/components/faqs/ImportFromWebsite';
 
 const sourceConfig = {
   manual: { icon: FileText, color: 'bg-blue-100 text-blue-600', label: 'Manual' },
@@ -63,6 +62,42 @@ export default function KnowledgeBase() {
     qc.invalidateQueries({ queryKey: ['knowledge-docs'] });
   };
 
+  const importFromWebsite = async (websiteUrl) => {
+    if (!websiteUrl.trim()) return;
+    setUploading(true);
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `Visit the following website and extract ALL information from it — every detail, policy, product description, FAQ, shipping info, return policy, pricing, contact info, terms, and any other content on the page.
+URL: ${websiteUrl}
+
+Be thorough and comprehensive. Extract EVERYTHING. Compile it all into a single detailed knowledge base document that an AI support agent can use to answer customer questions accurately on behalf of this company.`,
+      add_context_from_internet: true,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          content: { type: 'string' },
+          category: { type: 'string' },
+        },
+      },
+    });
+    if (result?.content) {
+      setForm({
+        title: result.title || websiteUrl,
+        content: result.content,
+        source_type: 'website',
+        source_url: websiteUrl,
+        category: result.category || '',
+        is_active: true,
+      });
+      setShowForm(true);
+      setShowImport(false);
+      toast({ title: 'Website content extracted — review and save' });
+    } else {
+      toast({ title: 'Could not extract content', variant: 'destructive' });
+    }
+    setUploading(false);
+  };
+
   const handlePDFUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -110,7 +145,26 @@ export default function KnowledgeBase() {
       {showImport && (
         <div className="mb-6 p-5 rounded-xl border bg-card shadow-sm">
           <h3 className="font-semibold text-sm mb-3">Import from Website</h3>
-          <ImportFromWebsite onImported={() => { qc.invalidateQueries({ queryKey: ['knowledge-docs'] }); setShowImport(false); }} />
+          <p className="text-xs text-muted-foreground mb-3">Scrapes ALL content from the page and saves it as a knowledge base document.</p>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="https://yourstore.com/about"
+                onKeyDown={e => { if (e.key === 'Enter') importFromWebsite(e.target.value); }}
+                id="kb-import-url"
+              />
+            </div>
+            <Button
+              disabled={uploading}
+              onClick={() => importFromWebsite(document.getElementById('kb-import-url').value)}
+              className="gap-2 shrink-0"
+            >
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+              {uploading ? 'Scraping...' : 'Scrape Website'}
+            </Button>
+          </div>
         </div>
       )}
 

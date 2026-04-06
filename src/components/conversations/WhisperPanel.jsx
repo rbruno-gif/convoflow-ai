@@ -12,7 +12,7 @@ export default function WhisperPanel({ conversation, currentUser }) {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const isSupervisor = currentUser?.role === 'supervisor';
+  const isSupervisor = currentUser?.role === 'supervisor' || currentUser?.role === 'admin';
   const agentEmail = conversation?.assigned_agent;
 
   if (!isSupervisor || !agentEmail) return null;

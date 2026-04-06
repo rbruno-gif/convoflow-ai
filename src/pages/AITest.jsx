@@ -104,8 +104,8 @@ ${history}`,
     const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are ${persona}, the official AI support agent for ${storeName}. You represent ${storeName} and speak on their behalf at all times.\n\n${instructions ? `Additional instructions: ${instructions}\n\n` : ''}Use the knowledge base and FAQs below to answer customer questions accurately.\n\n=== KNOWLEDGE BASE ===\n${kbContext}\n\n=== FAQs ===\n${faqContext}\n\n=== CONVERSATION ===\n${history}\n\nRespond as ${persona} representing ${storeName}. Be helpful, professional, and accurate. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect the customer with a human agent.`,
-      model: "claude_opus_4_6",
+      prompt: `You are ${persona}, a support agent for ${storeName}.\n\nContext:\n${kbContext}\n${faqContext}\n\nConversation:\n${history}\n\nRules:\n- Write 1-2 sentences ONLY\n- Under 30 words total\n- Plain text, no formatting, no emojis, no bold\n- Natural, conversational tone\n- If you don't know, just say you'll connect them to a human agent`,
+      model: "gpt_5_mini",
     });
 
     const aiReply = typeof result === 'string' ? result : result?.text || "I'm here to help! Could you provide more details?";

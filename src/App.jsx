@@ -101,16 +101,16 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <TenantProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
+    <Router>
+      <AuthProvider>
+        <TenantProvider>
+          <QueryClientProvider client={queryClientInstance}>
             <AuthenticatedApp />
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
-      </TenantProvider>
-    </AuthProvider>
+            <Toaster />
+          </QueryClientProvider>
+        </TenantProvider>
+      </AuthProvider>
+    </Router>
   )
 }
 

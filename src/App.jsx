@@ -4,10 +4,8 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import { TenantProvider, useTenant } from '@/lib/TenantContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
-import CompanyAdminLayout from '@/components/CompanyAdminLayout';
 import Dashboard from '@/pages/Dashboard';
 import Conversations from '@/pages/Conversations';
 import Flagged from '@/pages/Flagged';
@@ -25,56 +23,6 @@ import AgentInbox from '@/pages/AgentInbox';
 import Agents from '@/pages/Agents';
 import AITest from '@/pages/AITest';
 import FAQApprovals from '@/pages/FAQApprovals';
-import SuperAdminDashboard from '@/pages/SuperAdminDashboard';
-import CompanyAdminDashboard from '@/pages/CompanyAdminDashboard';
-
-const AppRoutes = () => {
-  const { loading: tenantLoading, isSuperAdmin } = useTenant();
-  
-  if (tenantLoading) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  return (
-    <Routes>
-      {/* Super Admin Routes */}
-      {isSuperAdmin() && (
-        <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
-      )}
-
-      {/* Company Admin/Agent Routes */}
-      <Route element={<CompanyAdminLayout />}>
-        <Route path="/" element={<CompanyAdminDashboard />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/conversations" element={<Conversations />} />
-        <Route path="/flagged" element={<Flagged />} />
-        <Route path="/tickets" element={<Tickets />} />
-        <Route path="/leads" element={<Leads />} />
-        <Route path="/flows" element={<Flows />} />
-        <Route path="/knowledge" element={<KnowledgeBase />} />
-        <Route path="/faqs" element={<FAQs />} />
-        <Route path="/widget" element={<WidgetCustomizer />} />
-        <Route path="/integrations" element={<Integrations />} />
-        <Route path="/agent-inbox" element={<AgentInbox />} />
-        <Route path="/agents" element={<Agents />} />
-        <Route path="/settings" element={<AISettings />} />
-        <Route path="/ai-test" element={<AITest />} />
-        <Route path="/faq-approvals" element={<FAQApprovals />} />
-      </Route>
-
-      {/* Legacy routes for backward compatibility */}
-      <Route element={<Layout />}>
-        <Route path="/dashboard-legacy" element={<Dashboard />} />
-      </Route>
-
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
-  );
-};
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -96,21 +44,42 @@ const AuthenticatedApp = () => {
     }
   }
 
-  return <AppRoutes />;
+  return (
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/analytics" element={<Analytics />} />
+        <Route path="/conversations" element={<Conversations />} />
+        <Route path="/flagged" element={<Flagged />} />
+        <Route path="/tickets" element={<Tickets />} />
+        <Route path="/leads" element={<Leads />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/flows" element={<Flows />} />
+        <Route path="/knowledge" element={<KnowledgeBase />} />
+        <Route path="/faqs" element={<FAQs />} />
+        <Route path="/widget" element={<WidgetCustomizer />} />
+        <Route path="/integrations" element={<Integrations />} />
+        <Route path="/agent-inbox" element={<AgentInbox />} />
+        <Route path="/agents" element={<Agents />} />
+        <Route path="/settings" element={<AISettings />} />
+        <Route path="/ai-test" element={<AITest />} />
+        <Route path="/faq-approvals" element={<FAQApprovals />} />
+      </Route>
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
+  );
 };
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <TenantProvider>
-          <QueryClientProvider client={queryClientInstance}>
-            <AuthenticatedApp />
-            <Toaster />
-          </QueryClientProvider>
-        </TenantProvider>
-      </AuthProvider>
-    </Router>
+    <AuthProvider>
+      <QueryClientProvider client={queryClientInstance}>
+        <Router>
+          <AuthenticatedApp />
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 

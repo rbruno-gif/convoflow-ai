@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import MessageThread from '@/components/conversations/MessageThread';
-import ConversationActions from '@/components/conversations/ConversationActions';
 import { useToast } from '@/components/ui/use-toast';
 
 const sentimentCache = {};
@@ -151,12 +150,7 @@ export default function AgentInbox() {
       {/* Right: message thread */}
       <div className="flex-1 flex flex-col min-h-0">
         {selectedConv ? (
-          <div className="flex flex-col h-full">
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <MessageThread conversation={selectedConv} />
-            </div>
-            <ConversationActions conversation={selectedConv} />
-          </div>
+          <MessageThread conversation={selectedConv} />
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground flex-col gap-3">
             <MessageSquare className="w-12 h-12 opacity-20" />

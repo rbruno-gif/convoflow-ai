@@ -26,6 +26,8 @@ import Agents from '@/pages/Agents';
 import AITest from '@/pages/AITest';
 import FAQApprovals from '@/pages/FAQApprovals';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import TermsOfService from '@/pages/TermsOfService';
+import DataDeletion from '@/pages/DataDeletion';
 import AppSettings from '@/pages/AppSettings';
 
 const AuthenticatedApp = () => {
@@ -52,6 +54,8 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/data-deletion" element={<DataDeletion />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/analytics" element={<Analytics />} />

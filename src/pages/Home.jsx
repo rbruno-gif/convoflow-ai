@@ -23,6 +23,12 @@ export default function Home() {
             <button onClick={() => navigate('/privacy')} className="text-sm text-muted-foreground hover:text-foreground">
               Privacy Policy
             </button>
+            <button onClick={() => navigate('/terms')} className="text-sm text-muted-foreground hover:text-foreground">
+              Terms of Service
+            </button>
+            <button onClick={() => navigate('/data-deletion')} className="text-sm text-muted-foreground hover:text-foreground">
+              Data Deletion
+            </button>
             <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
               Dashboard
             </Link>
@@ -82,11 +88,19 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-muted-foreground">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-muted-foreground space-y-3">
           <p>&copy; 2026 ChatPulse. All rights reserved.</p>
-          <button onClick={() => navigate('/privacy')} className="text-primary hover:underline mt-2">
-            Privacy Policy
-          </button>
+          <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <button onClick={() => navigate('/privacy')} className="text-primary hover:underline">
+              Privacy Policy
+            </button>
+            <button onClick={() => navigate('/terms')} className="text-primary hover:underline">
+              Terms of Service
+            </button>
+            <button onClick={() => navigate('/data-deletion')} className="text-primary hover:underline">
+              Data Deletion
+            </button>
+          </div>
         </div>
       </footer>
     </div>

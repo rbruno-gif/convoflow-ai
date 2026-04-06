@@ -18,6 +18,7 @@ import Leads from '@/pages/Leads';
 import Flows from '@/pages/Flows';
 import KnowledgeBase from '@/pages/KnowledgeBase';
 import WidgetCustomizer from '@/pages/WidgetCustomizer';
+import Integrations from '@/pages/Integrations';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -53,6 +54,7 @@ const AuthenticatedApp = () => {
         <Route path="/knowledge" element={<KnowledgeBase />} />
         <Route path="/faqs" element={<FAQs />} />
         <Route path="/widget" element={<WidgetCustomizer />} />
+        <Route path="/integrations" element={<Integrations />} />
         <Route path="/settings" element={<AISettings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />

@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { MessageSquare, BarChart3, HelpCircle, ShoppingBag, Settings, Bot, AlertTriangle, Ticket, Users, Zap, BookOpen, Palette, LayoutDashboard } from 'lucide-react';
+import { MessageSquare, BarChart3, HelpCircle, ShoppingBag, Settings, Bot, AlertTriangle, Ticket, Users, Zap, BookOpen, Palette, LayoutDashboard, Plug } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navGroups = [
@@ -38,6 +38,7 @@ const navGroups = [
     items: [
       { icon: Palette, label: 'Widget', path: '/widget' },
       { icon: Settings, label: 'AI Settings', path: '/settings' },
+      { icon: Plug, label: 'Integrations', path: '/integrations' },
     ],
   },
 ];

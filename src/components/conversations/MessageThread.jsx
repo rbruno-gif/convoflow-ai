@@ -253,6 +253,28 @@ function MessageBubble({ message }) {
   const isSupervisor = message.sender_type === 'supervisor';
   const isWhisper = message.is_whisper;
 
+  const renderContent = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, i) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-semibold hover:opacity-80 break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   if (isWhisper) {
     return (
       <div className="flex gap-2.5 justify-end my-3">
@@ -262,7 +284,7 @@ function MessageBubble({ message }) {
               🎓 Coaching Message (Private)
             </p>
             <p className="text-sm text-purple-900 dark:text-purple-100 leading-relaxed">
-              {message.content}
+              {renderContent(message.content)}
             </p>
           </div>
           <p className="text-[10px] text-purple-600 dark:text-purple-400 mt-1.5 text-right font-medium">
@@ -285,7 +307,7 @@ function MessageBubble({ message }) {
           'px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
           isCustomer ? 'bg-white border text-foreground rounded-tl-sm' : isAI ? 'bg-purple-600 text-white rounded-tr-sm' : 'bg-primary text-primary-foreground rounded-tr-sm'
         )}>
-          {message.content}
+          {renderContent(message.content)}
         </div>
         <p className={cn('text-[10px] text-muted-foreground mt-1', isCustomer ? 'text-left' : 'text-right')}>
           {isAI ? '🤖 ShopBot' : isCustomer ? message.sender_name : '👤 Agent'}

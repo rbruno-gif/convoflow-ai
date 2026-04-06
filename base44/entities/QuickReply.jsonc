@@ -1,0 +1,47 @@
+{
+  "name": "QuickReply",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Template name for internal use"
+    },
+    "content": {
+      "type": "string",
+      "description": "The actual message content to send to customers"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "order_updates",
+        "shipping_info",
+        "account_management",
+        "reminders",
+        "product_info",
+        "support",
+        "returns",
+        "billing"
+      ],
+      "default": "support",
+      "description": "Template category for organization"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this template is available for use"
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times this template has been sent"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about this template"
+    }
+  },
+  "required": [
+    "name",
+    "content"
+  ]
+}

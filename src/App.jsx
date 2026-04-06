@@ -23,6 +23,7 @@ import WidgetCustomizer from '@/pages/WidgetCustomizer';
 import Integrations from '@/pages/Integrations';
 import AgentInbox from '@/pages/AgentInbox';
 import Agents from '@/pages/Agents';
+import QuickReplies from '@/pages/QuickReplies';
 import AITest from '@/pages/AITest';
 import FAQApprovals from '@/pages/FAQApprovals';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
         <Route path="/integrations" element={<Integrations />} />
         <Route path="/agent-inbox" element={<AgentInbox />} />
         <Route path="/agents" element={<Agents />} />
+        <Route path="/quick-replies" element={<QuickReplies />} />
         <Route path="/settings" element={<AISettings />} />
         <Route path="/ai-test" element={<AITest />} />
         <Route path="/faq-approvals" element={<FAQApprovals />} />

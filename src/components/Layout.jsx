@@ -27,12 +27,13 @@ const navGroups = [
     ],
   },
   {
-    label: 'AI & Automation',
-    items: [
-      { icon: Zap, label: 'Flows', path: '/flows' },
-      { icon: BookOpen, label: 'Knowledge Base', path: '/knowledge' },
-      { icon: HelpCircle, label: 'FAQ Manager', path: '/faqs' },
-    ],
+  label: 'AI & Automation',
+  items: [
+    { icon: Zap, label: 'Flows', path: '/flows' },
+    { icon: BookOpen, label: 'Knowledge Base', path: '/knowledge' },
+    { icon: HelpCircle, label: 'FAQ Manager', path: '/faqs' },
+    { icon: MessageSquare, label: 'Quick Replies', path: '/quick-replies' },
+  ],
   },
   {
   label: 'Settings',

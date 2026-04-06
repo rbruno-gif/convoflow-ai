@@ -1,0 +1,47 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string"
+    },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "ai",
+        "agent"
+      ],
+      "description": "Who sent the message"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "order",
+        "faq",
+        "handoff"
+      ],
+      "default": "text"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "content",
+    "sender_type"
+  ]
+}

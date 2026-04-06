@@ -1,0 +1,39 @@
+{
+  "name": "AgentSettings",
+  "type": "object",
+  "properties": {
+    "store_name": {
+      "type": "string"
+    },
+    "ai_persona_name": {
+      "type": "string",
+      "default": "ShopBot"
+    },
+    "welcome_message": {
+      "type": "string"
+    },
+    "ai_instructions": {
+      "type": "string",
+      "description": "Custom instructions for the AI agent"
+    },
+    "auto_flag_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "handoff_message": {
+      "type": "string"
+    },
+    "business_hours": {
+      "type": "string"
+    },
+    "is_ai_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "store_name"
+  ]
+}

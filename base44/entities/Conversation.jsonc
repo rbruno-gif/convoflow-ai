@@ -1,0 +1,70 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "customer_name": {
+      "type": "string",
+      "description": "Customer's name from Facebook"
+    },
+    "customer_fb_id": {
+      "type": "string",
+      "description": "Facebook user ID"
+    },
+    "customer_avatar": {
+      "type": "string",
+      "description": "Customer avatar URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "waiting",
+        "flagged",
+        "resolved",
+        "human_requested"
+      ],
+      "default": "active"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "ai",
+        "human"
+      ],
+      "default": "ai",
+      "description": "Whether AI or human is handling"
+    },
+    "assigned_agent": {
+      "type": "string",
+      "description": "Agent email assigned to this convo"
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "last_message_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "unread_count": {
+      "type": "number",
+      "default": 0
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "order_intent": {
+      "type": "boolean",
+      "default": false,
+      "description": "AI detected order intent"
+    },
+    "flagged_reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "customer_name"
+  ]
+}

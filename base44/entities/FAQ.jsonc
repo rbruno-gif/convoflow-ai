@@ -1,0 +1,42 @@
+{
+  "name": "FAQ",
+  "type": "object",
+  "properties": {
+    "question": {
+      "type": "string"
+    },
+    "answer": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "shipping",
+        "returns",
+        "payment",
+        "products",
+        "orders",
+        "general"
+      ],
+      "default": "general"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "question",
+    "answer"
+  ]
+}

@@ -33,7 +33,10 @@ export default function FAQs() {
   const cancel = () => { setShowForm(false); setEditing(null); };
 
   const save = async () => {
-    if (!form.question || !form.answer) return;
+    if (!form.question || !form.answer) {
+      toast({ title: 'Please fill in both question and answer', variant: 'destructive' });
+      return;
+    }
     if (editing) {
       await base44.entities.FAQ.update(editing, form);
       toast({ title: 'FAQ updated' });

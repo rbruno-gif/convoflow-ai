@@ -111,7 +111,7 @@ export default function MessageThread({ conversation }) {
     ).join('\n');
 
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are ${persona}, the official AI support agent for ${storeName}. You represent ${storeName} and speak on their behalf at all times.\n\n${instructions ? `Additional instructions: ${instructions}\n\n` : ''}Use the knowledge base and FAQs below to answer customer questions accurately.\n\n=== KNOWLEDGE BASE ===\n${kbContext}\n\n=== FAQs ===\n${faqContext}\n\n=== CONVERSATION ===\n${recentHistory}\n\nRespond as ${persona} representing ${storeName}. Be helpful, professional, and accurate. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect the customer with a human agent.`,
+      prompt: `You are ${persona}, the official AI support agent for ${storeName}.\n\n${instructions ? `Instructions: ${instructions}\n\n` : ''}Knowledge base:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nConversation:\n${recentHistory}\n\nRespond briefly and naturally (2-3 sentences max). Be helpful and friendly. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect with a human agent.`,
       model: "claude_opus_4_6",
     });
 

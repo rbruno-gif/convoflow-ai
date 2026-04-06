@@ -1,0 +1,39 @@
+{
+  "name": "FacebookPage",
+  "type": "object",
+  "properties": {
+    "page_name": {
+      "type": "string",
+      "description": "Display name for this Facebook page"
+    },
+    "page_id": {
+      "type": "string",
+      "description": "Facebook Page ID"
+    },
+    "page_access_token": {
+      "type": "string",
+      "description": "Facebook Page Access Token"
+    },
+    "company": {
+      "type": "string",
+      "description": "Company or brand this page belongs to"
+    },
+    "verify_token": {
+      "type": "string",
+      "description": "Webhook verify token for this page"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "webhook_url": {
+      "type": "string",
+      "description": "The webhook URL to register in Meta"
+    }
+  },
+  "required": [
+    "page_name",
+    "page_id",
+    "page_access_token"
+  ]
+}

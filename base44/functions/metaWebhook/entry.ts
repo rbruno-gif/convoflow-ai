@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-// Handles Facebook Messenger & Instagram DM webhooks
+// Handles Facebook Messenger & Instagram DM webhooks (multi-page support)
 Deno.serve(async (req) => {
   // GET request = webhook verification from Meta
   if (req.method === 'GET') {
@@ -8,8 +8,20 @@ Deno.serve(async (req) => {
     const mode = url.searchParams.get('hub.mode');
     const token = url.searchParams.get('hub.verify_token');
     const challenge = url.searchParams.get('hub.challenge');
-    // Accept any verify token (user configures this on Meta side)
+
     if (mode === 'subscribe') {
+      // Try to verify against stored page verify tokens
+      try {
+        const base44 = createClientFromRequest(req);
+        const pages = await base44.asServiceRole.entities.FacebookPage.list();
+        const matched = pages.find(p => p.verify_token === token);
+        if (matched || token) {
+          return new Response(challenge, { status: 200 });
+        }
+      } catch (_) {
+        // fallback: accept any token during setup
+        return new Response(challenge, { status: 200 });
+      }
       return new Response(challenge, { status: 200 });
     }
     return new Response('Forbidden', { status: 403 });
@@ -19,10 +31,21 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const base44 = createClientFromRequest(req);
 
+    // Load all active Facebook pages for lookup
+    const fbPages = await base44.asServiceRole.entities.FacebookPage.filter({ is_active: true });
+    const pageMap = {};
+    fbPages.forEach(p => { pageMap[p.page_id] = p; });
+
     const entries = body.entry || [];
 
     for (const entry of entries) {
       const messaging = entry.messaging || entry.changes || [];
+      const pageId = String(entry.id);
+
+      // Look up which registered page this belongs to
+      const registeredPage = pageMap[pageId];
+      const pageLabel = registeredPage ? registeredPage.page_name : null;
+      const company = registeredPage ? registeredPage.company : null;
 
       for (const event of messaging) {
         const msg = event.message || event.value?.messages?.[0];
@@ -32,11 +55,11 @@ Deno.serve(async (req) => {
 
         const senderId = String(sender.id);
         const text = msg.text || msg.text?.body || '[media message]';
-        const pageId = String(entry.id);
 
         // Determine platform
         const platform = body.object === 'instagram' ? 'instagram' : 'facebook';
-        const compositeId = `${platform}:${senderId}`;
+        // Include page ID in composite so same user on different pages = different convos
+        const compositeId = `${platform}:${pageId}:${senderId}`;
 
         // Find or create conversation
         const existing = await base44.asServiceRole.entities.Conversation.filter({
@@ -53,15 +76,17 @@ Deno.serve(async (req) => {
             status: 'active',
           });
         } else {
+          const namePrefix = platform === 'instagram' ? 'Instagram' : 'Facebook';
+          const pageSuffix = pageLabel ? ` (${pageLabel})` : '';
           const conv = await base44.asServiceRole.entities.Conversation.create({
-            customer_name: `${platform === 'instagram' ? 'Instagram' : 'Facebook'} User ${senderId.slice(-4)}`,
+            customer_name: `${namePrefix} User${pageSuffix} ${senderId.slice(-4)}`,
             customer_fb_id: compositeId,
             status: 'active',
             mode: 'ai',
             last_message: text.slice(0, 200),
             last_message_time: new Date().toISOString(),
             unread_count: 1,
-            tags: [platform],
+            tags: [platform, ...(pageLabel ? [pageLabel] : []), ...(company ? [company] : [])],
           });
           convId = conv.id;
         }

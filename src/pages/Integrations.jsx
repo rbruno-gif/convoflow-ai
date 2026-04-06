@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import GmailIntegration from '@/components/integrations/GmailIntegration';
 import MetaIntegration from '@/components/integrations/MetaIntegration';
+import FacebookPagesManager from '@/components/integrations/FacebookPagesManager';
 import WhatsAppIntegration from '@/components/integrations/WhatsAppIntegration';
 
 export default function Integrations() {
@@ -22,7 +23,7 @@ export default function Integrations() {
 
       <div className="space-y-5">
         <GmailIntegration />
-        <MetaIntegration platform="facebook" />
+        <FacebookPagesManager />
         <MetaIntegration platform="instagram" />
         <WhatsAppIntegration />
       </div>

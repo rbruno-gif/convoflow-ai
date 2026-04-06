@@ -26,7 +26,7 @@ import AITest from '@/pages/AITest';
 import FAQApprovals from '@/pages/FAQApprovals';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -48,7 +48,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route element={<Layout />}>
+      {user && <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/conversations" element={<Conversations />} />
@@ -66,7 +66,7 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<AISettings />} />
         <Route path="/ai-test" element={<AITest />} />
         <Route path="/faq-approvals" element={<FAQApprovals />} />
-      </Route>
+      </Route>}
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

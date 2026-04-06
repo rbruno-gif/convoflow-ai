@@ -111,7 +111,7 @@ export default function MessageThread({ conversation }) {
     ).join('\n');
 
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are ${persona}, the official AI support agent for ${storeName}.\n\n${instructions ? `Instructions: ${instructions}\n\n` : ''}Knowledge base:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nConversation:\n${recentHistory}\n\nIMPORTANT: Keep your response under 40 words. Be conversational and natural. Answer in 1-2 sentences only. Be helpful and friendly. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect with a human agent.`,
+      prompt: `You are ${persona}, a support agent for ${storeName}.\n\nContext:\n${kbContext}\n${faqContext}\n\nConversation:\n${recentHistory}\n\nRules:\n- Write 1-2 sentences ONLY\n- Under 30 words total\n- Plain text, no formatting, no emojis, no bold\n- Natural, conversational tone\n- If you don't know, just say you'll connect them to a human agent`,
       model: "gpt_5_mini",
     });
 

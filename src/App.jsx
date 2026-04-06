@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import Home from '@/pages/Home';
 import Dashboard from '@/pages/Dashboard';
 import Conversations from '@/pages/Conversations';
@@ -48,7 +49,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      {user && <Route element={<Layout />}>
+      <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/conversations" element={<Conversations />} />
@@ -66,7 +67,7 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<AISettings />} />
         <Route path="/ai-test" element={<AITest />} />
         <Route path="/faq-approvals" element={<FAQApprovals />} />
-      </Route>}
+      </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

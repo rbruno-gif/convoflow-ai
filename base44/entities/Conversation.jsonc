@@ -82,6 +82,48 @@
       "type": "string",
       "format": "date-time",
       "description": "When sentiment was last analyzed"
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "order_inquiry",
+        "product_support",
+        "billing_issue",
+        "complaint",
+        "feedback",
+        "general_question",
+        "returns_refunds",
+        "shipping",
+        "technical_support",
+        "other"
+      ],
+      "default": "general_question",
+      "description": "Detected conversation intent"
+    },
+    "conversation_summary": {
+      "type": "string",
+      "description": "AI-generated summary of conversation"
+    },
+    "key_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key topics/keywords extracted from conversation"
+    },
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "unresolved",
+        "resolved",
+        "escalated"
+      ],
+      "default": "unresolved"
+    },
+    "ai_resolution_attempted": {
+      "type": "boolean",
+      "default": false,
+      "description": "AI attempted to resolve before handoff"
     }
   },
   "required": [

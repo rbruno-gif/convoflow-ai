@@ -1,67 +1,127 @@
 import { useState, useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Flag, UserCheck, CheckCircle, Bot } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { Flag, CheckCircle, Zap, User, Bot } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function ConversationActions({ conversation }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(setCurrentUser).catch(() => {});
+    base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  const update = async (data) => {
-    await base44.entities.Conversation.update(conversation.id, data);
+  const flag = async () => {
+    setLoading(true);
+    await base44.entities.Conversation.update(conversation.id, { status: 'flagged' });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    qc.invalidateQueries({ queryKey: ['flagged'] });
+    toast({ title: 'Conversation flagged' });
+    setLoading(false);
+  };
+
+  const resolve = async () => {
+    setLoading(true);
+    await base44.entities.Conversation.update(conversation.id, {
+      status: 'resolved',
+      resolution_status: 'resolved',
+      mode: 'ai',
+    });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    toast({ title: 'Marked as resolved' });
+    setLoading(false);
+  };
+
+  const handoffToAgent = async () => {
+    setLoading(true);
+    await base44.entities.Conversation.update(conversation.id, {
+      status: 'human_requested',
+      mode: 'human',
+      assigned_agent: user?.email,
+      ai_resolution_attempted: true,
+    });
     qc.invalidateQueries({ queryKey: ['conversations'] });
     qc.invalidateQueries({ queryKey: ['agent-inbox'] });
+    toast({ title: 'Handed off to human agent' });
+    setLoading(false);
   };
 
-  const flagConvo = () => {
-    update({ status: 'flagged', flagged_reason: 'Manually flagged by agent' });
-    toast({ title: 'Conversation flagged' });
+  const summarizeNow = async () => {
+    setLoading(true);
+    await base44.functions.invoke('generateConversationSummary', {
+      conversation_id: conversation.id,
+    });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    toast({ title: 'Summary generated' });
+    setLoading(false);
   };
 
-  const takeOver = () => {
-    update({ mode: 'human', status: 'active', assigned_agent: currentUser?.email || '' });
-    toast({ title: 'Switched to human mode' });
-  };
-
-  const handBack = () => {
-    update({ mode: 'ai', status: 'active', assigned_agent: '' });
-    toast({ title: 'Handed back to AI' });
-  };
-
-  const resolve = () => {
-    update({ status: 'resolved' });
-    toast({ title: 'Conversation resolved' });
+  const analyzeIntentNow = async () => {
+    setLoading(true);
+    await base44.functions.invoke('analyzeConversationIntent', {
+      conversation_id: conversation.id,
+    });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    toast({ title: 'Intent analyzed' });
+    setLoading(false);
   };
 
   return (
-    <div className="px-4 py-3 border-t bg-card flex items-center gap-2 flex-wrap">
-      <span className="text-xs text-muted-foreground mr-1">Actions:</span>
-      {conversation.status !== 'flagged' && (
-        <Button variant="outline" size="sm" onClick={flagConvo} className="text-xs h-7 text-orange-600 border-orange-200 hover:bg-orange-50">
-          <Flag className="w-3 h-3 mr-1" /> Flag
-        </Button>
-      )}
-      {conversation.mode === 'ai' ? (
-        <Button variant="outline" size="sm" onClick={takeOver} className="text-xs h-7 text-blue-600 border-blue-200 hover:bg-blue-50">
-          <UserCheck className="w-3 h-3 mr-1" /> Take Over
-        </Button>
-      ) : (
-        <Button variant="outline" size="sm" onClick={handBack} className="text-xs h-7 text-purple-600 border-purple-200 hover:bg-purple-50">
-          <Bot className="w-3 h-3 mr-1" /> Hand to AI
-        </Button>
-      )}
-      {conversation.status !== 'resolved' && (
-        <Button variant="outline" size="sm" onClick={resolve} className="text-xs h-7 text-green-600 border-green-200 hover:bg-green-50">
-          <CheckCircle className="w-3 h-3 mr-1" /> Resolve
-        </Button>
-      )}
+    <div className="px-5 py-3 border-t bg-card flex flex-wrap gap-2">
+      <Button
+        size="sm"
+        variant={conversation.status === 'flagged' ? 'default' : 'outline'}
+        onClick={flag}
+        disabled={loading}
+        className="gap-2 text-xs"
+      >
+        <Flag className="w-3.5 h-3.5" /> Flag
+      </Button>
+
+      <Button
+        size="sm"
+        variant={conversation.mode === 'human' ? 'default' : 'outline'}
+        onClick={handoffToAgent}
+        disabled={loading || conversation.mode === 'human'}
+        className="gap-2 text-xs"
+      >
+        <User className="w-3.5 h-3.5" /> Handoff to Agent
+      </Button>
+
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={summarizeNow}
+        disabled={loading}
+        className="gap-2 text-xs"
+      >
+        <Bot className="w-3.5 h-3.5" /> Summarize
+      </Button>
+
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={analyzeIntentNow}
+        disabled={loading}
+        className="gap-2 text-xs"
+      >
+        <Zap className="w-3.5 h-3.5" /> Analyze Intent
+      </Button>
+
+      <Button
+        size="sm"
+        variant={conversation.status === 'resolved' ? 'default' : 'outline'}
+        onClick={resolve}
+        disabled={loading}
+        className="gap-2 text-xs ml-auto"
+      >
+        <CheckCircle className="w-3.5 h-3.5" /> Resolve
+      </Button>
     </div>
   );
 }

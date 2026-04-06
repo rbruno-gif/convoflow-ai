@@ -83,6 +83,23 @@ export default function Analytics() {
     value: tickets.filter(t => t.priority === p).length,
   })).filter(d => d.value > 0);
 
+  // Intent distribution
+  const intentData = [
+    { name: 'Order Inquiry', value: conversations.filter(c => c.intent === 'order_inquiry').length },
+    { name: 'Product Support', value: conversations.filter(c => c.intent === 'product_support').length },
+    { name: 'Billing Issue', value: conversations.filter(c => c.intent === 'billing_issue').length },
+    { name: 'Returns/Refunds', value: conversations.filter(c => c.intent === 'returns_refunds').length },
+    { name: 'Complaint', value: conversations.filter(c => c.intent === 'complaint').length },
+    { name: 'Other', value: conversations.filter(c => c.intent === 'other' || !c.intent).length },
+  ].filter(d => d.value > 0);
+
+  // Resolution status
+  const resolutionData = [
+    { name: 'Resolved', value: conversations.filter(c => c.resolution_status === 'resolved').length },
+    { name: 'Unresolved', value: conversations.filter(c => c.resolution_status === 'unresolved').length },
+    { name: 'Escalated', value: conversations.filter(c => c.resolution_status === 'escalated').length },
+  ].filter(d => d.value > 0);
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -137,6 +154,53 @@ export default function Analytics() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-6 mb-6">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Top Intents</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {intentData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No data yet</p>
+            ) : (
+              <div className="space-y-3">
+                {intentData.map((d, i) => (
+                  <div key={d.name}>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-muted-foreground">{d.name}</span>
+                      <span className="font-semibold">{d.value}</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${totalConvos > 0 ? (d.value / totalConvos) * 100 : 0}%`, background: COLORS[i % COLORS.length] }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">Resolution Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {resolutionData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">No data yet</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                  <Pie data={resolutionData} cx="50%" cy="50%" innerRadius={40} outerRadius={70} dataKey="value" label>
+                    {resolutionData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>

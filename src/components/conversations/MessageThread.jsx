@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import AISuggestedReplies from '@/components/conversations/AISuggestedReplies';
+import ConversationContext from '@/components/conversations/ConversationContext';
+import ConversationActions from '@/components/conversations/ConversationActions';
 
 export default function MessageThread({ conversation }) {
   const [reply, setReply] = useState('');
@@ -97,6 +99,9 @@ export default function MessageThread({ conversation }) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {/* Context Panel */}
+      <ConversationContext conversation={conversation} />
+
       {/* Header */}
       <div className="px-5 py-3 border-b bg-card flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
@@ -123,6 +128,9 @@ export default function MessageThread({ conversation }) {
       <div className="border-t bg-card pt-2">
         <AISuggestedReplies messages={messages} onSelect={s => setReply(s)} />
       </div>
+
+      {/* Actions */}
+      <ConversationActions conversation={conversation} />
 
       {/* Reply box */}
       <div className="px-4 pb-4 bg-card">

@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Flag, UserCheck, CheckCircle, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,10 +8,16 @@ import { useToast } from '@/components/ui/use-toast';
 export default function ConversationActions({ conversation }) {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setCurrentUser).catch(() => {});
+  }, []);
 
   const update = async (data) => {
     await base44.entities.Conversation.update(conversation.id, data);
     qc.invalidateQueries({ queryKey: ['conversations'] });
+    qc.invalidateQueries({ queryKey: ['agent-inbox'] });
   };
 
   const flagConvo = () => {
@@ -19,12 +26,12 @@ export default function ConversationActions({ conversation }) {
   };
 
   const takeOver = () => {
-    update({ mode: 'human', status: 'active' });
+    update({ mode: 'human', status: 'active', assigned_agent: currentUser?.email || '' });
     toast({ title: 'Switched to human mode' });
   };
 
   const handBack = () => {
-    update({ mode: 'ai', status: 'active' });
+    update({ mode: 'ai', status: 'active', assigned_agent: '' });
     toast({ title: 'Handed back to AI' });
   };
 

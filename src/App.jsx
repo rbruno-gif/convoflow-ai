@@ -19,6 +19,8 @@ import Flows from '@/pages/Flows';
 import KnowledgeBase from '@/pages/KnowledgeBase';
 import WidgetCustomizer from '@/pages/WidgetCustomizer';
 import Integrations from '@/pages/Integrations';
+import AgentInbox from '@/pages/AgentInbox';
+import Agents from '@/pages/Agents';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -55,6 +57,8 @@ const AuthenticatedApp = () => {
         <Route path="/faqs" element={<FAQs />} />
         <Route path="/widget" element={<WidgetCustomizer />} />
         <Route path="/integrations" element={<Integrations />} />
+        <Route path="/agent-inbox" element={<AgentInbox />} />
+        <Route path="/agents" element={<Agents />} />
         <Route path="/settings" element={<AISettings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />

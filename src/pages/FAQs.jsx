@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Pencil, Trash2, HelpCircle, Globe } from 'lucide-react';
+import { Plus, Pencil, Trash2, HelpCircle, Globe, Lightbulb } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ImportFromWebsite from '@/components/faqs/ImportFromWebsite';
+import FAQSuggestionForm from '@/components/faqs/FAQSuggestionForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,13 +78,19 @@ export default function FAQs() {
           <p className="text-sm text-muted-foreground">Manage the knowledge base your AI uses to answer questions</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { setShowImport(s => !s); setShowForm(false); }} className="gap-2">
-            <Globe className="w-4 h-4" /> Import from Website
-          </Button>
-          <Button onClick={openNew} className="gap-2">
-            <Plus className="w-4 h-4" /> Add FAQ
-          </Button>
-        </div>
+           <FAQSuggestionForm />
+           <Button variant="outline" onClick={() => { setShowImport(s => !s); setShowForm(false); }} className="gap-2">
+             <Globe className="w-4 h-4" /> Import from Website
+           </Button>
+           <Link to="/faq-approvals">
+             <Button variant="outline" className="gap-2">
+               <Lightbulb className="w-4 h-4" /> Approvals
+             </Button>
+           </Link>
+           <Button onClick={openNew} className="gap-2">
+             <Plus className="w-4 h-4" /> Add FAQ
+           </Button>
+         </div>
       </div>
 
       {showImport && (

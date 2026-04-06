@@ -1,0 +1,67 @@
+{
+  "name": "FAQSuggestion",
+  "type": "object",
+  "properties": {
+    "question": {
+      "type": "string",
+      "description": "Suggested FAQ question"
+    },
+    "answer": {
+      "type": "string",
+      "description": "Suggested FAQ answer"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "shipping",
+        "returns",
+        "payment",
+        "products",
+        "orders",
+        "general"
+      ],
+      "default": "general"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Approval status"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "chat",
+        "manual",
+        "customer_request"
+      ],
+      "default": "manual",
+      "description": "Where the suggestion came from"
+    },
+    "suggested_by": {
+      "type": "string",
+      "description": "Email of user who made suggestion"
+    },
+    "frequency": {
+      "type": "number",
+      "default": 1,
+      "description": "How many times this question was asked"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "Admin feedback or notes on approval/rejection"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "question",
+    "answer"
+  ]
+}

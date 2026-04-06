@@ -3,6 +3,7 @@ import { ArrowRight, MessageSquare, CheckCircle, User, Zap, Settings, Video } fr
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import InteractiveDemo from '@/components/demo/InteractiveDemo';
 
 const steps = [
   {
@@ -93,6 +94,12 @@ export default function DemoWalkthrough() {
             Step-by-step guide showing how ChatPulse processes Facebook Messenger conversations
           </p>
           <Badge className="mt-4 bg-primary/10 text-primary">Use this as a reference for your screen recording</Badge>
+        </div>
+
+        {/* Interactive Demo */}
+        <div className="mb-12 bg-card rounded-xl p-8 border-0 shadow-sm">
+          <h2 className="text-xl font-bold mb-6">Interactive Demo</h2>
+          <InteractiveDemo />
         </div>
 
         {/* Main Walkthrough */}

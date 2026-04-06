@@ -53,11 +53,26 @@ export default function MessageThread({ conversation }) {
     const lastUserMsg = [...messages].reverse().find(m => m.sender_type === 'customer');
     if (!lastUserMsg) { setSending(false); return; }
 
-    const faqs = await base44.entities.FAQ.filter({ is_active: true });
+    const [faqs, knowledgeDocs, settingsList] = await Promise.all([
+      base44.entities.FAQ.filter({ is_active: true }),
+      base44.entities.KnowledgeDoc.filter({ is_active: true }),
+      base44.entities.AgentSettings.list(),
+    ]);
+
+    const s = settingsList[0];
+    const storeName = s?.store_name || 'U2CMobile';
+    const persona = s?.ai_persona_name || 'ShopBot';
+    const instructions = s?.ai_instructions || '';
+
     const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+    const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
+
+    const recentHistory = messages.slice(-10).map(m =>
+      `${m.sender_type === 'customer' ? 'Customer' : persona}: ${m.content}`
+    ).join('\n');
 
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are a helpful e-commerce chat agent. Use the FAQs below to answer customer questions naturally.\n\nFAQs:\n${faqContext}\n\nCustomer message: "${lastUserMsg.content}"\n\nReply concisely and helpfully. If you cannot answer, say you'll connect them to a human agent.`,
+      prompt: `You are ${persona}, the official AI support agent for ${storeName}. You represent ${storeName} and speak on their behalf at all times.\n\n${instructions ? `Additional instructions: ${instructions}\n\n` : ''}Use the knowledge base and FAQs below to answer customer questions accurately.\n\n=== KNOWLEDGE BASE ===\n${kbContext}\n\n=== FAQs ===\n${faqContext}\n\n=== CONVERSATION ===\n${recentHistory}\n\nRespond as ${persona} representing ${storeName}. Be helpful, professional, and accurate. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect the customer with a human agent.`,
     });
 
     const aiReply = typeof response === 'string' ? response : response?.text || 'Let me connect you to a human agent for this.';

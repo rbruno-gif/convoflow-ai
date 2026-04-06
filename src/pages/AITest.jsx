@@ -42,16 +42,22 @@ export default function AITest() {
       .map(m => `${m.role === 'customer' ? 'Customer' : 'ShopBot'}: ${m.content}`)
       .join('\n');
 
-    const faqs = await base44.entities.FAQ.filter({ is_active: true });
-    const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+    const [faqs, knowledgeDocs, settingsList] = await Promise.all([
+      base44.entities.FAQ.filter({ is_active: true }),
+      base44.entities.KnowledgeDoc.filter({ is_active: true }),
+      base44.entities.AgentSettings.list(),
+    ]);
 
-    const settings = await base44.entities.AgentSettings.list();
-    const s = settings[0];
+    const s = settingsList[0];
+    const storeName = s?.store_name || 'U2CMobile';
     const persona = s?.ai_persona_name || 'ShopBot';
-    const instructions = s?.ai_instructions || 'You are a helpful e-commerce assistant.';
+    const instructions = s?.ai_instructions || '';
+
+    const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+    const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
 
     const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are ${persona}, an AI customer support agent. ${instructions}\n\nUse the FAQs below to answer questions:\n${faqContext}\n\nConversation so far:\n${history}\n\nRespond as ${persona} naturally and helpfully. If you cannot help, suggest connecting to a human agent.`,
+      prompt: `You are ${persona}, the official AI support agent for ${storeName}. You represent ${storeName} and speak on their behalf at all times.\n\n${instructions ? `Additional instructions: ${instructions}\n\n` : ''}Use the knowledge base and FAQs below to answer customer questions accurately.\n\n=== KNOWLEDGE BASE ===\n${kbContext}\n\n=== FAQs ===\n${faqContext}\n\n=== CONVERSATION ===\n${history}\n\nRespond as ${persona} representing ${storeName}. Be helpful, professional, and accurate. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect the customer with a human agent.`,
     });
 
     const aiReply = typeof result === 'string' ? result : result?.text || "I'm here to help! Could you provide more details?";

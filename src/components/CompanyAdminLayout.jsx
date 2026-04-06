@@ -92,7 +92,7 @@ export default function CompanyAdminLayout() {
   const location = useLocation();
 
   const handleLogout = async () => {
-    await base44.auth.logout();
+    await base44.auth.logout('/');
   };
 
   if (!currentCompany) {

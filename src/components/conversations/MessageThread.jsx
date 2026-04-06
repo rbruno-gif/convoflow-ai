@@ -11,19 +11,33 @@ import AISuggestedReplies from '@/components/conversations/AISuggestedReplies';
 import ConversationContext from '@/components/conversations/ConversationContext';
 import ConversationActions from '@/components/conversations/ConversationActions';
 import FAQSuggestionForm from '@/components/faqs/FAQSuggestionForm';
+import WhisperPanel from '@/components/conversations/WhisperPanel';
 
 export default function MessageThread({ conversation }) {
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [showFAQSuggestion, setShowFAQSuggestion] = useState(null);
+  const [user, setUser] = useState(null);
   const bottomRef = useRef(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: messages = [] } = useQuery({
+  useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
+
+  const { data: allMessages = [] } = useQuery({
     queryKey: ['messages', conversation.id],
     queryFn: () => base44.entities.Message.filter({ conversation_id: conversation.id }, 'timestamp', 200),
     refetchInterval: 3000,
+  });
+
+  // Filter whispers: only show to agent they're for and supervisors
+  const messages = allMessages.filter(msg => {
+    if (msg.is_whisper) {
+      return user?.role === 'supervisor' || user?.email === msg.whisper_to_agent_email;
+    }
+    return true;
   });
 
   useEffect(() => {
@@ -162,6 +176,9 @@ export default function MessageThread({ conversation }) {
         </div>
       )}
 
+      {/* Whisper Panel for Supervisors */}
+      <WhisperPanel conversation={conversation} currentUser={user} />
+
       {/* Actions */}
       <ConversationActions conversation={conversation} onSuggestFAQ={suggestFAQ} />
 
@@ -191,6 +208,24 @@ export default function MessageThread({ conversation }) {
 function MessageBubble({ message }) {
   const isCustomer = message.sender_type === 'customer';
   const isAI = message.sender_type === 'ai';
+  const isSupervisor = message.sender_type === 'supervisor';
+  const isWhisper = message.is_whisper;
+
+  if (isWhisper) {
+    return (
+      <div className="flex gap-2.5 justify-end mb-2">
+        <div className="max-w-[70%]">
+          <div className="px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100 border border-purple-300 dark:border-purple-700 rounded-tr-sm">
+            <p className="text-[11px] font-semibold mb-1">💬 Coaching (Private)</p>
+            {message.content}
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1 text-right">
+            {message.sender_name} · {message.timestamp && format(new Date(message.timestamp), 'h:mm a')}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn('flex gap-2.5', isCustomer ? 'justify-start' : 'justify-end')}>

@@ -43,6 +43,15 @@ export default function Agents() {
   const roleColors = {
     admin: 'bg-purple-100 text-purple-700',
     user: 'bg-blue-100 text-blue-700',
+    agent: 'bg-blue-100 text-blue-700',
+    supervisor: 'bg-orange-100 text-orange-700',
+  };
+
+  const roleLabels = {
+    admin: 'Admin',
+    user: 'Agent',
+    agent: 'Agent',
+    supervisor: 'Supervisor',
   };
 
   return (
@@ -80,8 +89,9 @@ export default function Agents() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">Agent (handle chats)</SelectItem>
-                    <SelectItem value="admin">Admin (full access)</SelectItem>
+                   <SelectItem value="agent">Agent (handle chats)</SelectItem>
+                   <SelectItem value="supervisor">Supervisor (coach agents)</SelectItem>
+                   <SelectItem value="admin">Admin (full access)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -122,7 +132,7 @@ export default function Agents() {
                 </div>
                 <Badge className={roleColors[u.role] || 'bg-muted text-muted-foreground'}>
                   {u.role === 'admin' ? <Shield className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
-                  {u.role === 'admin' ? 'Admin' : 'Agent'}
+                  {roleLabels[u.role] || u.role}
                 </Badge>
               </div>
             </CardContent>

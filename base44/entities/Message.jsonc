@@ -10,7 +10,8 @@
       "enum": [
         "customer",
         "ai",
-        "agent"
+        "agent",
+        "supervisor"
       ],
       "description": "Who sent the message"
     },
@@ -34,9 +35,19 @@
         "text",
         "order",
         "faq",
-        "handoff"
+        "handoff",
+        "whisper"
       ],
       "default": "text"
+    },
+    "is_whisper": {
+      "type": "boolean",
+      "default": false,
+      "description": "Private message from supervisor to agent only"
+    },
+    "whisper_to_agent_email": {
+      "type": "string",
+      "description": "Email of agent receiving the whisper message"
     }
   },
   "required": [

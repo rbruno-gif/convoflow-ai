@@ -25,6 +25,7 @@ import AgentInbox from '@/pages/AgentInbox';
 import Agents from '@/pages/Agents';
 import AITest from '@/pages/AITest';
 import FAQApprovals from '@/pages/FAQApprovals';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -49,6 +50,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/analytics" element={<Analytics />} />

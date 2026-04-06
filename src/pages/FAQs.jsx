@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Pencil, Trash2, HelpCircle, Check, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, HelpCircle, Globe } from 'lucide-react';
+import ImportFromWebsite from '@/components/faqs/ImportFromWebsite';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,7 @@ export default function FAQs() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyFaq);
   const [showForm, setShowForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
 
@@ -70,10 +72,22 @@ export default function FAQs() {
           <h1 className="text-2xl font-bold">FAQ Manager</h1>
           <p className="text-sm text-muted-foreground">Manage the knowledge base your AI uses to answer questions</p>
         </div>
-        <Button onClick={openNew} className="gap-2">
-          <Plus className="w-4 h-4" /> Add FAQ
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { setShowImport(s => !s); setShowForm(false); }} className="gap-2">
+            <Globe className="w-4 h-4" /> Import from Website
+          </Button>
+          <Button onClick={openNew} className="gap-2">
+            <Plus className="w-4 h-4" /> Add FAQ
+          </Button>
+        </div>
       </div>
+
+      {showImport && (
+        <div className="mb-6 p-5 rounded-xl border bg-card shadow-sm">
+          <h3 className="font-semibold text-sm mb-3">Import Knowledge Base from Website</h3>
+          <ImportFromWebsite onImported={() => { qc.invalidateQueries({ queryKey: ['faqs'] }); setShowImport(false); }} />
+        </div>
+      )}
 
       {showForm && (
         <Card className="mb-6 border-0 shadow-md">

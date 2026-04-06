@@ -26,6 +26,7 @@ import Agents from '@/pages/Agents';
 import AITest from '@/pages/AITest';
 import FAQApprovals from '@/pages/FAQApprovals';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import AppSettings from '@/pages/AppSettings';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, user } = useAuth();
@@ -63,6 +64,7 @@ const AuthenticatedApp = () => {
         <Route path="/knowledge" element={<KnowledgeBase />} />
         <Route path="/faqs" element={<FAQs />} />
         <Route path="/widget" element={<WidgetCustomizer />} />
+        <Route path="/app-settings" element={<AppSettings />} />
         <Route path="/integrations" element={<Integrations />} />
         <Route path="/agent-inbox" element={<AgentInbox />} />
         <Route path="/agents" element={<Agents />} />

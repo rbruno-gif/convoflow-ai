@@ -43,6 +43,22 @@
     },
     "custom_css": {
       "type": "string"
+    },
+    "privacy_policy_url": {
+      "type": "string",
+      "description": "Privacy policy URL for login dialog and app details"
+    },
+    "terms_of_service_url": {
+      "type": "string",
+      "description": "Terms of Service URL for login dialog and app details"
+    },
+    "data_deletion_url": {
+      "type": "string",
+      "description": "URL for user data deletion instructions"
+    },
+    "app_icon_url": {
+      "type": "string",
+      "description": "App icon URL (1024 x 1024)"
     }
   },
   "required": []

@@ -21,7 +21,7 @@ export default function ConversationActions({ conversation }) {
     await base44.entities.Conversation.update(conversation.id, { status: 'flagged' });
     qc.invalidateQueries({ queryKey: ['conversations'] });
     qc.invalidateQueries({ queryKey: ['flagged'] });
-    toast({ title: 'Conversation flagged' });
+    toast({ title: 'Conversation flagged', open: true });
     setLoading(false);
   };
 
@@ -33,7 +33,7 @@ export default function ConversationActions({ conversation }) {
       mode: 'ai',
     });
     qc.invalidateQueries({ queryKey: ['conversations'] });
-    toast({ title: 'Marked as resolved' });
+    toast({ title: 'Marked as resolved', open: true });
     setLoading(false);
   };
 
@@ -47,7 +47,7 @@ export default function ConversationActions({ conversation }) {
     });
     qc.invalidateQueries({ queryKey: ['conversations'] });
     qc.invalidateQueries({ queryKey: ['agent-inbox'] });
-    toast({ title: 'Handed off to human agent' });
+    toast({ title: 'Handed off to human agent', open: true });
     setLoading(false);
   };
 
@@ -57,7 +57,7 @@ export default function ConversationActions({ conversation }) {
       conversation_id: conversation.id,
     });
     qc.invalidateQueries({ queryKey: ['conversations'] });
-    toast({ title: 'Summary generated' });
+    toast({ title: 'Summary generated', open: true });
     setLoading(false);
   };
 
@@ -67,7 +67,7 @@ export default function ConversationActions({ conversation }) {
       conversation_id: conversation.id,
     });
     qc.invalidateQueries({ queryKey: ['conversations'] });
-    toast({ title: 'Intent analyzed' });
+    toast({ title: 'Intent analyzed', open: true });
     setLoading(false);
   };
 

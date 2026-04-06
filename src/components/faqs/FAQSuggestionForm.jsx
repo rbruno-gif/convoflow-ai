@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -11,15 +11,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, X } from 'lucide-react';
 
-export default function FAQSuggestionForm() {
+export default function FAQSuggestionForm({ conversation, onClose }) {
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [category, setCategory] = useState('general');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  // Auto-fill from conversation if provided
+  useEffect(() => {
+    if (conversation) {
+      setOpen(true);
+      setQuestion(conversation.question || '');
+      setAnswer(conversation.answer || '');
+      setCategory(conversation.category || 'general');
+    }
+  }, [conversation]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -49,6 +59,12 @@ export default function FAQSuggestionForm() {
     setCategory('general');
     setOpen(false);
     setLoading(false);
+    onClose?.();
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    onClose?.();
   };
 
   if (!open) {
@@ -65,10 +81,19 @@ export default function FAQSuggestionForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-accent/30">
-      <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-4 h-4 text-primary" />
-        <h3 className="font-semibold text-sm">Suggest a New FAQ</h3>
+    <form onSubmit={handleSubmit} className="space-y-4 p-4 border rounded-lg bg-accent/30 relative">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-primary" />
+          <h3 className="font-semibold text-sm">Suggest a New FAQ</h3>
+        </div>
+        <button
+          type="button"
+          onClick={handleClose}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       <Input
@@ -107,7 +132,7 @@ export default function FAQSuggestionForm() {
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setOpen(false)}
+          onClick={handleClose}
           disabled={loading}
         >
           Cancel

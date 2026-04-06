@@ -10,10 +10,12 @@ import { useToast } from '@/components/ui/use-toast';
 import AISuggestedReplies from '@/components/conversations/AISuggestedReplies';
 import ConversationContext from '@/components/conversations/ConversationContext';
 import ConversationActions from '@/components/conversations/ConversationActions';
+import FAQSuggestionForm from '@/components/faqs/FAQSuggestionForm';
 
 export default function MessageThread({ conversation }) {
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
+  const [showFAQSuggestion, setShowFAQSuggestion] = useState(null);
   const bottomRef = useRef(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -48,6 +50,27 @@ export default function MessageThread({ conversation }) {
     queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] });
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
     setSending(false);
+  };
+
+  const suggestFAQ = async () => {
+    const lastUserMsg = [...messages].reverse().find(m => m.sender_type === 'customer');
+    const lastAIMsg = [...messages].reverse().find(m => m.sender_type === 'ai');
+    
+    if (!lastUserMsg || !lastAIMsg) return;
+
+    // Use AI to extract a proper Q&A from the conversation
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `Extract a clear, concise FAQ from this customer support exchange. Return a JSON object with "question" and "answer" fields.\n\nCustomer: ${lastUserMsg.content}\n\nAgent: ${lastAIMsg.content}`,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          question: { type: 'string' },
+          answer: { type: 'string' },
+        },
+      },
+    });
+
+    setShowFAQSuggestion(result);
   };
 
   const handleAIReply = async () => {
@@ -129,8 +152,18 @@ export default function MessageThread({ conversation }) {
         <AISuggestedReplies messages={messages} onSelect={s => setReply(s)} />
       </div>
 
+      {/* FAQ Suggestion Modal */}
+      {showFAQSuggestion && (
+        <div className="px-4 py-3 border-t bg-accent/20">
+          <FAQSuggestionForm
+            conversation={showFAQSuggestion}
+            onClose={() => setShowFAQSuggestion(null)}
+          />
+        </div>
+      )}
+
       {/* Actions */}
-      <ConversationActions conversation={conversation} />
+      <ConversationActions conversation={conversation} onSuggestFAQ={suggestFAQ} />
 
       {/* Reply box */}
       <div className="px-4 pb-4 bg-card">

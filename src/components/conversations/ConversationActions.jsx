@@ -3,10 +3,10 @@ import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Flag, CheckCircle, Zap, User, Bot } from 'lucide-react';
+import { Flag, CheckCircle, Zap, User, Bot, Lightbulb } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function ConversationActions({ conversation }) {
+export default function ConversationActions({ conversation, onSuggestFAQ }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const qc = useQueryClient();
@@ -112,6 +112,18 @@ export default function ConversationActions({ conversation }) {
       >
         <Zap className="w-3.5 h-3.5" /> Analyze Intent
       </Button>
+
+      {onSuggestFAQ && (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onSuggestFAQ}
+          disabled={loading}
+          className="gap-2 text-xs"
+        >
+          <Lightbulb className="w-3.5 h-3.5" /> Suggest FAQ
+        </Button>
+      )}
 
       <Button
         size="sm"

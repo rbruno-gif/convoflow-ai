@@ -63,6 +63,7 @@ export default function AgentInbox() {
   );
   const myChats = needsHuman.filter(c => c.assigned_agent === user?.email);
   const unassigned = needsHuman.filter(c => !c.assigned_agent || c.assigned_agent === '');
+  const aiChats = conversations.filter(c => c.mode === 'ai' && c.status !== 'resolved');
 
   const selectedConv = conversations.find(c => c.id === selected);
 
@@ -106,6 +107,27 @@ export default function AgentInbox() {
               <p className="text-xs text-muted-foreground text-center py-6">No chats waiting 🎉</p>
             ) : (
               unassigned.map(conv => (
+                <ConvRow
+                  key={conv.id}
+                  conv={conv}
+                  selected={selected}
+                  onSelect={setSelected}
+                  showClaim
+                  onClaim={() => claimConversation(conv)}
+                />
+              ))
+            )}
+          </div>
+
+          {/* AI ongoing conversations */}
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-4 pt-3 pb-1 flex items-center gap-1">
+              <Bot className="w-3 h-3" /> AI Active ({aiChats.length})
+            </p>
+            {aiChats.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">No AI conversations</p>
+            ) : (
+              aiChats.map(conv => (
                 <ConvRow
                   key={conv.id}
                   conv={conv}

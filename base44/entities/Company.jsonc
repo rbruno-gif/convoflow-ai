@@ -1,0 +1,81 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Company/business name"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-safe identifier for the company"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Company logo URL"
+    },
+    "website": {
+      "type": "string",
+      "description": "Company website URL"
+    },
+    "industry": {
+      "type": "string",
+      "description": "Industry/business type"
+    },
+    "support_email": {
+      "type": "string",
+      "description": "Support contact email"
+    },
+    "support_phone": {
+      "type": "string",
+      "description": "Support contact phone"
+    },
+    "business_hours": {
+      "type": "string",
+      "description": "Business hours (e.g., Mon-Fri 9AM-5PM)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "suspended"
+      ],
+      "default": "active"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "free",
+        "starter",
+        "professional",
+        "enterprise"
+      ],
+      "default": "free"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Primary owner email"
+    },
+    "features_enabled": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of enabled features based on plan"
+    },
+    "subscription_started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "subscription_ends_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "name",
+    "slug",
+    "owner_email"
+  ]
+}

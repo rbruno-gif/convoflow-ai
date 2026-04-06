@@ -1,0 +1,63 @@
+{
+  "name": "CompanyKnowledgeBase",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company (tenant isolation)"
+    },
+    "title": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "faq",
+        "guide",
+        "policy",
+        "product_info",
+        "troubleshooting"
+      ],
+      "default": "guide"
+    },
+    "category": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "website",
+        "pdf",
+        "imported"
+      ],
+      "default": "manual"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "usage_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_used_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "company_id",
+    "title",
+    "content"
+  ]
+}

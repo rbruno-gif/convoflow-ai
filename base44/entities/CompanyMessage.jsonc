@@ -1,0 +1,51 @@
+{
+  "name": "CompanyMessage",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company (tenant isolation)"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "customer",
+        "ai",
+        "agent"
+      ]
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "order",
+        "faq",
+        "handoff"
+      ],
+      "default": "text"
+    }
+  },
+  "required": [
+    "company_id",
+    "conversation_id",
+    "content",
+    "sender_type"
+  ]
+}

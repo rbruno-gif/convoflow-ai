@@ -1,0 +1,79 @@
+{
+  "name": "CompanySettings",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "chatbot_name": {
+      "type": "string",
+      "default": "ShopBot",
+      "description": "AI agent name"
+    },
+    "ai_instructions": {
+      "type": "string",
+      "description": "Custom AI behavior instructions"
+    },
+    "tone_of_voice": {
+      "type": "string",
+      "enum": [
+        "formal",
+        "friendly",
+        "professional",
+        "casual"
+      ],
+      "default": "professional"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#3b82f6"
+    },
+    "secondary_color": {
+      "type": "string",
+      "default": "#1e40af"
+    },
+    "widget_position": {
+      "type": "string",
+      "enum": [
+        "bottom-right",
+        "bottom-left"
+      ],
+      "default": "bottom-right"
+    },
+    "greeting_message": {
+      "type": "string",
+      "description": "Widget greeting text"
+    },
+    "welcome_message": {
+      "type": "string",
+      "description": "First AI message to customers"
+    },
+    "offline_message": {
+      "type": "string",
+      "description": "Message when offline"
+    },
+    "escalation_rules": {
+      "type": "object",
+      "description": "JSON rules for escalating conversations"
+    },
+    "auto_flag_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keywords that trigger escalation"
+    },
+    "enable_lead_capture": {
+      "type": "boolean",
+      "default": true
+    },
+    "enable_file_uploads": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "company_id"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "CompanyAgent",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company (tenant isolation)"
+    },
+    "email": {
+      "type": "string"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "agent",
+        "manager"
+      ],
+      "default": "agent"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "suspended"
+      ],
+      "default": "active"
+    },
+    "assigned_conversations": {
+      "type": "number",
+      "default": 0
+    },
+    "resolved_tickets": {
+      "type": "number",
+      "default": 0
+    },
+    "avg_resolution_time_minutes": {
+      "type": "number"
+    },
+    "satisfaction_score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "company_id",
+    "email",
+    "full_name"
+  ]
+}

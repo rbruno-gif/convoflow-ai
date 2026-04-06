@@ -1,0 +1,101 @@
+{
+  "name": "CompanyConversation",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company (tenant isolation)"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "customer_id": {
+      "type": "string",
+      "description": "Unique customer identifier"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "waiting",
+        "flagged",
+        "resolved",
+        "human_requested"
+      ],
+      "default": "active"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "ai",
+        "human"
+      ],
+      "default": "ai"
+    },
+    "assigned_agent": {
+      "type": "string",
+      "description": "Agent email"
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "last_message_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "unread_count": {
+      "type": "number",
+      "default": 0
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "sales_inquiry",
+        "support",
+        "billing",
+        "complaint",
+        "feedback",
+        "other"
+      ],
+      "default": "other"
+    },
+    "sentiment": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "default": "neutral"
+    },
+    "is_urgent": {
+      "type": "boolean",
+      "default": false
+    },
+    "conversation_summary": {
+      "type": "string"
+    },
+    "key_topics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "company_id",
+    "customer_name"
+  ]
+}

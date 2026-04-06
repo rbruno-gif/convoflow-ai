@@ -4,8 +4,10 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { TenantProvider, useTenant } from '@/lib/TenantContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
+import CompanyAdminLayout from '@/components/CompanyAdminLayout';
 import Dashboard from '@/pages/Dashboard';
 import Conversations from '@/pages/Conversations';
 import Flagged from '@/pages/Flagged';
@@ -23,11 +25,14 @@ import AgentInbox from '@/pages/AgentInbox';
 import Agents from '@/pages/Agents';
 import AITest from '@/pages/AITest';
 import FAQApprovals from '@/pages/FAQApprovals';
+import SuperAdminDashboard from '@/pages/SuperAdminDashboard';
+import CompanyAdminDashboard from '@/pages/CompanyAdminDashboard';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isSuperAdmin, loading: tenantLoading } = useTenant();
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  if (isLoadingPublicSettings || isLoadingAuth || tenantLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -46,14 +51,19 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
+      {/* Super Admin Routes */}
+      {isSuperAdmin() && (
+        <Route path="/super-admin/*" element={<SuperAdminDashboard />} />
+      )}
+
+      {/* Company Admin/Agent Routes */}
+      <Route element={<CompanyAdminLayout />}>
+        <Route path="/" element={<CompanyAdminDashboard />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/flagged" element={<Flagged />} />
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/leads" element={<Leads />} />
-        <Route path="/orders" element={<Orders />} />
         <Route path="/flows" element={<Flows />} />
         <Route path="/knowledge" element={<KnowledgeBase />} />
         <Route path="/faqs" element={<FAQs />} />
@@ -65,6 +75,12 @@ const AuthenticatedApp = () => {
         <Route path="/ai-test" element={<AITest />} />
         <Route path="/faq-approvals" element={<FAQApprovals />} />
       </Route>
+
+      {/* Legacy routes for backward compatibility */}
+      <Route element={<Layout />}>
+        <Route path="/dashboard-legacy" element={<Dashboard />} />
+      </Route>
+
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
@@ -73,12 +89,14 @@ const AuthenticatedApp = () => {
 function App() {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
+      <TenantProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </TenantProvider>
     </AuthProvider>
   )
 }

@@ -1,0 +1,67 @@
+{
+  "name": "CompanyAnalytics",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company (tenant isolation)"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_conversations": {
+      "type": "number",
+      "default": 0
+    },
+    "ai_resolved": {
+      "type": "number",
+      "default": 0
+    },
+    "human_required": {
+      "type": "number",
+      "default": 0
+    },
+    "total_messages": {
+      "type": "number",
+      "default": 0
+    },
+    "avg_response_time_seconds": {
+      "type": "number"
+    },
+    "avg_resolution_time_minutes": {
+      "type": "number"
+    },
+    "customer_satisfaction_score": {
+      "type": "number"
+    },
+    "leads_captured": {
+      "type": "number",
+      "default": 0
+    },
+    "leads_qualified": {
+      "type": "number",
+      "default": 0
+    },
+    "escalations": {
+      "type": "number",
+      "default": 0
+    },
+    "top_intents": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "unanswered_questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "company_id",
+    "date"
+  ]
+}

@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { MessageSquare, UserCheck, Bot, Clock, CheckCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import MessageThread from '@/components/conversations/MessageThread';
@@ -58,6 +59,11 @@ export default function AgentInbox() {
     refetchInterval: 5000,
   });
 
+  const { data: agents = [] } = useQuery({
+    queryKey: ['agents-list'],
+    queryFn: () => base44.entities.User.list(),
+  });
+
   const needsHuman = conversations.filter(c =>
     c.status === 'human_requested' || c.status === 'flagged' || c.mode === 'human'
   );
@@ -67,15 +73,15 @@ export default function AgentInbox() {
 
   const selectedConv = conversations.find(c => c.id === selected);
 
-  const claimConversation = async (conv) => {
+  const assignConversation = async (conv, agentEmail) => {
     await base44.entities.Conversation.update(conv.id, {
-      assigned_agent: user?.email,
+      assigned_agent: agentEmail,
       mode: 'human',
       status: 'active',
     });
     qc.invalidateQueries({ queryKey: ['agent-inbox'] });
     setSelected(conv.id);
-    toast({ title: 'Conversation claimed' });
+    toast({ title: `Assigned to ${agentEmail}` });
   };
 
   return (
@@ -93,7 +99,7 @@ export default function AgentInbox() {
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground px-4 pt-3 pb-1">My Chats ({myChats.length})</p>
               {myChats.map(conv => (
-                <ConvRow key={conv.id} conv={conv} selected={selected} onSelect={setSelected} showClaim={false} />
+                <ConvRow key={conv.id} conv={conv} selected={selected} onSelect={setSelected} agents={agents} />
               ))}
             </div>
           )}
@@ -107,15 +113,15 @@ export default function AgentInbox() {
               <p className="text-xs text-muted-foreground text-center py-6">No chats waiting 🎉</p>
             ) : (
               unassigned.map(conv => (
-                <ConvRow
-                  key={conv.id}
-                  conv={conv}
-                  selected={selected}
-                  onSelect={setSelected}
-                  showClaim
-                  onClaim={() => claimConversation(conv)}
-                />
-              ))
+                 <ConvRow
+                   key={conv.id}
+                   conv={conv}
+                   selected={selected}
+                   onSelect={setSelected}
+                   agents={agents}
+                   onAssign={(email) => assignConversation(conv, email)}
+                 />
+               ))
             )}
           </div>
 
@@ -133,8 +139,8 @@ export default function AgentInbox() {
                   conv={conv}
                   selected={selected}
                   onSelect={setSelected}
-                  showClaim
-                  onClaim={() => claimConversation(conv)}
+                  agents={agents}
+                  onAssign={(email) => assignConversation(conv, email)}
                 />
               ))
             )}
@@ -168,7 +174,7 @@ const sentimentStyles = {
   Negative: 'bg-red-100 text-red-700',
 };
 
-function ConvRow({ conv, selected, onSelect, showClaim, onClaim }) {
+function ConvRow({ conv, selected, onSelect, agents, onAssign }) {
   const statusColor = {
     flagged: 'bg-orange-100 text-orange-700',
     human_requested: 'bg-blue-100 text-blue-700',
@@ -218,15 +224,19 @@ function ConvRow({ conv, selected, onSelect, showClaim, onClaim }) {
             )}
           </div>
         </div>
-        {showClaim && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="text-[10px] h-6 px-2 shrink-0"
-            onClick={e => { e.stopPropagation(); onClaim(); }}
-          >
-            Claim
-          </Button>
+        {!conv.assigned_agent && agents && (
+          <Select onValueChange={(email) => { onAssign(email); }}>
+            <SelectTrigger className="w-32 h-8 text-[10px]" onClick={e => e.stopPropagation()}>
+              <SelectValue placeholder="Assign..." />
+            </SelectTrigger>
+            <SelectContent>
+              {agents.map(agent => (
+                <SelectItem key={agent.id} value={agent.email}>
+                  {agent.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
       </div>
     </div>

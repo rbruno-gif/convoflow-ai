@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-const VERIFY_TOKEN = Deno.env.get('FACEBOOK_APP_SECRET');
+const VERIFY_TOKEN = Deno.env.get('FACEBOOK_VERIFY_TOKEN');
 const PAGE_ACCESS_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
 
 Deno.serve(async (req) => {

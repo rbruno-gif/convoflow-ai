@@ -28,25 +28,15 @@ import FAQApprovals from '@/pages/FAQApprovals';
 import SuperAdminDashboard from '@/pages/SuperAdminDashboard';
 import CompanyAdminDashboard from '@/pages/CompanyAdminDashboard';
 
-const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
-  const { isSuperAdmin, loading: tenantLoading } = useTenant();
-
-  if (isLoadingPublicSettings || isLoadingAuth || tenantLoading) {
+const AppRoutes = () => {
+  const { loading: tenantLoading, isSuperAdmin } = useTenant();
+  
+  if (tenantLoading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
       </div>
     );
-  }
-
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
   }
 
   return (
@@ -84,6 +74,29 @@ const AuthenticatedApp = () => {
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
+};
+
+const AuthenticatedApp = () => {
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+
+  if (isLoadingPublicSettings || isLoadingAuth) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (authError) {
+    if (authError.type === 'user_not_registered') {
+      return <UserNotRegisteredError />;
+    } else if (authError.type === 'auth_required') {
+      navigateToLogin();
+      return null;
+    }
+  }
+
+  return <AppRoutes />;
 };
 
 function App() {

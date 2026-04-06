@@ -111,7 +111,7 @@ export default function MessageThread({ conversation }) {
     ).join('\n');
 
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are ${persona}, a support agent for ${storeName}.\n\nContext:\n${kbContext}\n${faqContext}\n\nConversation:\n${recentHistory}\n\nRules:\n- Write 1-2 sentences ONLY\n- Under 30 words total\n- Plain text, no formatting, no emojis, no bold\n- Natural, conversational tone\n- If you don't know, just say you'll connect them to a human agent`,
+      prompt: `You are ${persona}, a support agent for ${storeName}.\n\nContext:\n${kbContext}\n${faqContext}\n\nConversation:\n${recentHistory}\n\nRules:\n- Write 1-2 sentences ONLY\n- Under 30 words total\n- Plain text, no formatting, no emojis, no bold\n- Natural, conversational tone\n- Try to resolve the customer's issue\n- If you cannot resolve, suggest connecting to a human agent`,
       model: "gpt_5_mini",
     });
 
@@ -127,11 +127,12 @@ export default function MessageThread({ conversation }) {
     await base44.entities.Conversation.update(conversation.id, {
       last_message: aiReply,
       last_message_time: new Date().toISOString(),
+      ai_resolution_attempted: true,
     });
     queryClient.invalidateQueries({ queryKey: ['messages', conversation.id] });
     queryClient.invalidateQueries({ queryKey: ['conversations'] });
     setSending(false);
-    toast({ title: 'AI replied' });
+    toast({ title: 'AI attempted to resolve' });
   };
 
   return (

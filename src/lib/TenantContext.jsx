@@ -17,27 +17,38 @@ export function TenantProvider({ children }) {
         const currentUser = await base44.auth.me();
         setUser(currentUser);
 
+        // Check if user is super admin
+        if (currentUser?.role === 'admin') {
+          setLoading(false);
+          return;
+        }
+
         // Get all companies this user has access to
-        const userCompanies = await base44.entities.CompanyAgent.filter({
-          email: currentUser.email,
-          status: 'active',
-        });
+        try {
+          const userCompanies = await base44.entities.CompanyAgent.filter({
+            email: currentUser.email,
+            status: 'active',
+          });
 
-        if (userCompanies.length > 0) {
-          // Fetch full company data
-          const companyIds = userCompanies.map((ca) => ca.company_id);
-          const companiesData = await Promise.all(
-            companyIds.map((id) => base44.entities.Company.filter({ id }))
-          );
-          const allCompanies = companiesData.flat();
-          setCompanies(allCompanies);
+          if (userCompanies.length > 0) {
+            // Fetch full company data
+            const companyIds = userCompanies.map((ca) => ca.company_id);
+            const companiesData = await Promise.all(
+              companyIds.map((id) => base44.entities.Company.filter({ id }))
+            );
+            const allCompanies = companiesData.flat();
+            setCompanies(allCompanies);
 
-          // Set first company as default
-          if (allCompanies.length > 0) {
-            setCurrentCompany(allCompanies[0]);
-            const role = userCompanies.find((ca) => ca.company_id === allCompanies[0].id)?.role;
-            setUserRole(role || 'agent');
+            // Set first company as default
+            if (allCompanies.length > 0) {
+              setCurrentCompany(allCompanies[0]);
+              const role = userCompanies.find((ca) => ca.company_id === allCompanies[0].id)?.role;
+              setUserRole(role || 'agent');
+            }
           }
+        } catch (entityError) {
+          // CompanyAgent entity might not exist yet
+          console.warn('CompanyAgent not available:', entityError.message);
         }
       } catch (error) {
         console.error('Failed to initialize tenant context:', error);

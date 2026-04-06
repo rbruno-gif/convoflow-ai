@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Bot, User, Send, Trash2, RefreshCw } from 'lucide-react';
+import { Bot, User, Send, Trash2, RefreshCw, Zap, Lightbulb, Flag, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -11,6 +13,10 @@ export default function AITest() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [scenario, setScenario] = useState('general');
+  const [intent, setIntent] = useState(null);
+  const [sentiment, setSentiment] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
   const bottomRef = useRef(null);
 
   const scenarios = [
@@ -32,6 +38,47 @@ export default function AITest() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const analyzeIntent = async () => {
+    setAnalyzing(true);
+    const history = messages.map(m => `${m.role === 'customer' ? 'Customer' : 'ShopBot'}: ${m.content}`).join('\n');
+    
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `Analyze the following customer support conversation and determine:
+1. The primary intent/category
+2. The overall sentiment (Positive, Neutral, or Negative)
+
+Conversation:
+${history}
+
+Return a JSON object with "intent" and "sentiment" fields.`,
+      response_json_schema: {
+        type: 'object',
+        properties: {
+          intent: { type: 'string', enum: ['order_inquiry', 'product_support', 'billing_issue', 'complaint', 'feedback', 'returns_refunds', 'shipping', 'general_question', 'other'] },
+          sentiment: { type: 'string', enum: ['Positive', 'Neutral', 'Negative'] },
+        },
+      },
+    });
+
+    setIntent(result?.intent || null);
+    setSentiment(result?.sentiment || null);
+    setAnalyzing(false);
+  };
+
+  const generateSummary = async () => {
+    setAnalyzing(true);
+    const history = messages.map(m => `${m.role === 'customer' ? 'Customer' : 'ShopBot'}: ${m.content}`).join('\n');
+    
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `Summarize the following customer support conversation in 2-3 sentences:
+
+${history}`,
+    });
+
+    setSummary(typeof result === 'string' ? result : result?.text || null);
+    setAnalyzing(false);
+  };
 
   const sendMessage = async (content) => {
     const userMsg = { role: 'customer', content, time: new Date() };
@@ -74,7 +121,27 @@ export default function AITest() {
 
   const loadScenario = () => {
     setMessages([]);
+    setIntent(null);
+    setSentiment(null);
+    setSummary(null);
     setTimeout(() => sendMessage(starterMessages[scenario]), 100);
+  };
+
+  const intentColors = {
+    order_inquiry: 'bg-blue-100 text-blue-700',
+    product_support: 'bg-purple-100 text-purple-700',
+    billing_issue: 'bg-orange-100 text-orange-700',
+    complaint: 'bg-red-100 text-red-700',
+    returns_refunds: 'bg-amber-100 text-amber-700',
+    shipping: 'bg-cyan-100 text-cyan-700',
+    general_question: 'bg-slate-100 text-slate-700',
+    other: 'bg-gray-100 text-gray-700',
+  };
+
+  const sentimentColors = {
+    Positive: 'bg-green-100 text-green-700',
+    Neutral: 'bg-slate-100 text-slate-700',
+    Negative: 'bg-red-100 text-red-700',
   };
 
   return (
@@ -121,6 +188,35 @@ export default function AITest() {
 
       {/* Chat area */}
       <div className="flex-1 flex flex-col min-h-0">
+        {/* Context Panel */}
+        {(intent || sentiment || summary) && (
+          <Card className="m-4 border-0 shadow-sm">
+            <CardContent className="p-3 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {intent && (
+                  <>
+                    <Lightbulb className="w-3.5 h-3.5 text-muted-foreground" />
+                    <Badge className={cn('text-[10px]', intentColors[intent] || intentColors.general_question)}>
+                      {intent.replace(/_/g, ' ')}
+                    </Badge>
+                  </>
+                )}
+                {sentiment && (
+                  <Badge className={cn('text-[10px]', sentimentColors[sentiment])}>
+                    {sentiment}
+                  </Badge>
+                )}
+              </div>
+              {summary && (
+                <div className="text-xs bg-background/50 p-2 rounded border border-border">
+                  <p className="font-medium text-foreground mb-1">Summary</p>
+                  <p className="text-muted-foreground">{summary}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Header */}
         <div className="px-5 py-3 border-b bg-card flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
@@ -187,6 +283,38 @@ export default function AITest() {
           )}
           <div ref={bottomRef} />
         </div>
+
+        {/* Actions */}
+        {messages.length > 0 && (
+          <div className="px-4 py-2 border-t bg-card flex gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={analyzeIntent}
+              disabled={analyzing}
+              className="gap-2 text-xs h-8"
+            >
+              <Zap className="w-3.5 h-3.5" /> Analyze Intent
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={generateSummary}
+              disabled={analyzing}
+              className="gap-2 text-xs h-8"
+            >
+              <Lightbulb className="w-3.5 h-3.5" /> Summarize
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => { setIntent(null); setSentiment(null); setSummary(null); }}
+              className="gap-2 text-xs h-8"
+            >
+              <Flag className="w-3.5 h-3.5" /> Clear
+            </Button>
+          </div>
+        )}
 
         {/* Input */}
         <div className="px-4 py-3 border-t bg-card flex gap-2">

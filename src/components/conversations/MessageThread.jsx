@@ -111,8 +111,8 @@ export default function MessageThread({ conversation }) {
     ).join('\n');
 
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `You are ${persona}, the official AI support agent for ${storeName}.\n\n${instructions ? `Instructions: ${instructions}\n\n` : ''}Knowledge base:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nConversation:\n${recentHistory}\n\nRespond briefly and naturally (2-3 sentences max). Be helpful and friendly. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect with a human agent.`,
-      model: "claude_opus_4_6",
+      prompt: `You are ${persona}, the official AI support agent for ${storeName}.\n\n${instructions ? `Instructions: ${instructions}\n\n` : ''}Knowledge base:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nConversation:\n${recentHistory}\n\nIMPORTANT: Keep your response under 40 words. Be conversational and natural. Answer in 1-2 sentences only. Be helpful and friendly. Only use information from the knowledge base and FAQs. If you cannot find the answer, apologize and offer to connect with a human agent.`,
+      model: "gpt_5_mini",
     });
 
     const aiReply = typeof response === 'string' ? response : response?.text || 'Let me connect you to a human agent for this.';

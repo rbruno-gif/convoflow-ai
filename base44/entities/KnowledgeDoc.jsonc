@@ -1,0 +1,42 @@
+{
+  "name": "KnowledgeDoc",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "website",
+        "pdf",
+        "doc"
+      ],
+      "default": "manual"
+    },
+    "source_url": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}

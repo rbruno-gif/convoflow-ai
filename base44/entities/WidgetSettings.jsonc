@@ -1,0 +1,49 @@
+{
+  "name": "WidgetSettings",
+  "type": "object",
+  "properties": {
+    "primary_color": {
+      "type": "string",
+      "default": "#3b82f6"
+    },
+    "widget_position": {
+      "type": "string",
+      "enum": [
+        "bottom-right",
+        "bottom-left"
+      ],
+      "default": "bottom-right"
+    },
+    "greeting_message": {
+      "type": "string"
+    },
+    "chatbot_name": {
+      "type": "string",
+      "default": "ShopBot"
+    },
+    "chatbot_avatar_url": {
+      "type": "string"
+    },
+    "show_branding": {
+      "type": "boolean",
+      "default": true
+    },
+    "prechat_form_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "prechat_fields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "offline_message": {
+      "type": "string"
+    },
+    "custom_css": {
+      "type": "string"
+    }
+  },
+  "required": []
+}

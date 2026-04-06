@@ -12,6 +12,12 @@ import Flagged from '@/pages/Flagged';
 import Orders from '@/pages/Orders';
 import FAQs from '@/pages/FAQs';
 import AISettings from '@/pages/AISettings';
+import Analytics from '@/pages/Analytics';
+import Tickets from '@/pages/Tickets';
+import Leads from '@/pages/Leads';
+import Flows from '@/pages/Flows';
+import KnowledgeBase from '@/pages/KnowledgeBase';
+import WidgetCustomizer from '@/pages/WidgetCustomizer';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -37,10 +43,16 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/analytics" element={<Analytics />} />
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/flagged" element={<Flagged />} />
+        <Route path="/tickets" element={<Tickets />} />
+        <Route path="/leads" element={<Leads />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/flows" element={<Flows />} />
+        <Route path="/knowledge" element={<KnowledgeBase />} />
         <Route path="/faqs" element={<FAQs />} />
+        <Route path="/widget" element={<WidgetCustomizer />} />
         <Route path="/settings" element={<AISettings />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />

@@ -1,0 +1,68 @@
+{
+  "name": "AutomationFlow",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "page_visit",
+        "time_on_site",
+        "new_visitor",
+        "after_hours",
+        "keyword",
+        "cart_abandoned",
+        "referral_source",
+        "manual"
+      ],
+      "default": "new_visitor"
+    },
+    "trigger_value": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "delay_seconds": {
+            "type": "number"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "stats_triggered": {
+      "type": "number",
+      "default": 0
+    },
+    "stats_completed": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "name",
+    "trigger"
+  ]
+}

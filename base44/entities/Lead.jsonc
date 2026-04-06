@@ -1,0 +1,67 @@
+{
+  "name": "Lead",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "company": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "chat",
+        "popup",
+        "form",
+        "facebook",
+        "instagram",
+        "whatsapp",
+        "other"
+      ],
+      "default": "chat"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "contacted",
+        "qualified",
+        "disqualified",
+        "converted"
+      ],
+      "default": "new"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "pages_visited": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "location": {
+      "type": "string"
+    },
+    "device": {
+      "type": "string"
+    },
+    "crm_synced": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "name": "Ticket",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "pending",
+        "resolved",
+        "closed"
+      ],
+      "default": "open"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium"
+    },
+    "assigned_agent": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "chat",
+        "email",
+        "facebook",
+        "instagram",
+        "whatsapp"
+      ],
+      "default": "chat"
+    },
+    "internal_notes": {
+      "type": "string"
+    },
+    "csat_score": {
+      "type": "number"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sla_due_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "customer_name",
+    "title"
+  ]
+}

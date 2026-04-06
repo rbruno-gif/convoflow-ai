@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { MessageSquare, UserCheck, Bot, Clock, CheckCircle } from 'lucide-react';
@@ -9,7 +9,37 @@ import { formatDistanceToNow } from 'date-fns';
 import MessageThread from '@/components/conversations/MessageThread';
 import ConversationActions from '@/components/conversations/ConversationActions';
 import { useToast } from '@/components/ui/use-toast';
-import { useSentiment } from '@/hooks/useSentiment.js';
+
+const sentimentCache = {};
+
+function useSentiment(conversationId, lastMessageTime) {
+  const [sentiment, setSentiment] = useState(null);
+  const prevKey = useRef(null);
+
+  useEffect(() => {
+    if (!conversationId) return;
+    const cacheKey = `${conversationId}__${lastMessageTime}`;
+    if (sentimentCache[cacheKey]) { setSentiment(sentimentCache[cacheKey]); return; }
+    if (prevKey.current === cacheKey) return;
+    prevKey.current = cacheKey;
+    let cancelled = false;
+    (async () => {
+      const messages = await base44.entities.Message.filter({ conversation_id: conversationId }, 'timestamp', 50);
+      const customerMsgs = messages.filter(m => m.sender_type === 'customer').slice(-5).map(m => m.content);
+      if (customerMsgs.length === 0) { if (!cancelled) setSentiment('Neutral'); return; }
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt: `Analyze the sentiment of the following customer messages and classify as Positive, Neutral, or Negative.\n\n${customerMsgs.map((m, i) => `${i + 1}. ${m}`).join('\n')}`,
+        response_json_schema: { type: 'object', properties: { sentiment: { type: 'string', enum: ['Positive', 'Neutral', 'Negative'] } } },
+      });
+      const score = result?.sentiment || 'Neutral';
+      sentimentCache[cacheKey] = score;
+      if (!cancelled) setSentiment(score);
+    })();
+    return () => { cancelled = true; };
+  }, [conversationId, lastMessageTime]);
+
+  return sentiment;
+}
 
 export default function AgentInbox() {
   const [user, setUser] = useState(null);

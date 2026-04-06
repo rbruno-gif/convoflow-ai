@@ -30,7 +30,7 @@ export function TenantProvider({ children }) {
             status: 'active',
           });
 
-          if (userCompanies.length > 0) {
+          if (userCompanies && userCompanies.length > 0) {
             // Fetch full company data
             const companyIds = userCompanies.map((ca) => ca.company_id);
             const companiesData = await Promise.all(
@@ -47,11 +47,13 @@ export function TenantProvider({ children }) {
             }
           }
         } catch (entityError) {
-          // CompanyAgent entity might not exist yet
+          // CompanyAgent entity might not exist yet - continue anyway
           console.warn('CompanyAgent not available:', entityError.message);
+          setCompanies([]);
         }
       } catch (error) {
         console.error('Failed to initialize tenant context:', error);
+        setCompanies([]);
       } finally {
         setLoading(false);
       }

@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import MessageThread from '@/components/conversations/MessageThread';
 import ConversationActions from '@/components/conversations/ConversationActions';
 import { useToast } from '@/components/ui/use-toast';
+import { useSentiment } from '@/hooks/useSentiment.js';
 
 export default function AgentInbox() {
   const [user, setUser] = useState(null);
@@ -109,12 +110,20 @@ export default function AgentInbox() {
   );
 }
 
+const sentimentStyles = {
+  Positive: 'bg-green-100 text-green-700',
+  Neutral: 'bg-slate-100 text-slate-600',
+  Negative: 'bg-red-100 text-red-700',
+};
+
 function ConvRow({ conv, selected, onSelect, showClaim, onClaim }) {
   const statusColor = {
     flagged: 'bg-orange-100 text-orange-700',
     human_requested: 'bg-blue-100 text-blue-700',
     active: 'bg-green-100 text-green-700',
   };
+
+  const sentiment = useSentiment(conv.id, conv.last_message_time);
 
   return (
     <div
@@ -128,6 +137,11 @@ function ConvRow({ conv, selected, onSelect, showClaim, onClaim }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
             <p className="text-sm font-medium truncate">{conv.customer_name}</p>
+            {sentiment && (
+              <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-semibold shrink-0', sentimentStyles[sentiment])}>
+                {sentiment}
+              </span>
+            )}
             {conv.unread_count > 0 && (
               <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[9px] flex items-center justify-center shrink-0">
                 {conv.unread_count}

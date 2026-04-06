@@ -20,6 +20,10 @@
       ],
       "default": "general"
     },
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign this FAQ belongs to"
+    },
     "keywords": {
       "type": "array",
       "items": {

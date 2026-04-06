@@ -1,0 +1,46 @@
+{
+  "name": "Campaign",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Campaign name (e.g., U2CMobile, Car Sales Support)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Campaign description"
+    },
+    "assigned_agents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of agent emails assigned to this campaign"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this campaign is active"
+    },
+    "ai_persona_name": {
+      "type": "string",
+      "default": "ShopBot",
+      "description": "AI persona name for this campaign"
+    },
+    "ai_instructions": {
+      "type": "string",
+      "description": "Custom AI instructions for this campaign"
+    },
+    "welcome_message": {
+      "type": "string",
+      "description": "Welcome message for this campaign"
+    },
+    "handoff_message": {
+      "type": "string",
+      "description": "Message shown when handing off to human agent"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

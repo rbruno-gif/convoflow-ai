@@ -2,6 +2,10 @@
   "name": "AgentSettings",
   "type": "object",
   "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign this settings belongs to"
+    },
     "store_name": {
       "type": "string"
     },

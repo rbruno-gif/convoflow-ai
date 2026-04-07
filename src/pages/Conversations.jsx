@@ -1,39 +1,41 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bot, User, AlertTriangle, CheckCircle, MessageSquare, Send, Flag, UserCheck } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { formatDistanceToNow, format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import ConversationList from '@/components/conversations/ConversationList';
-import MessageThread from '@/components/conversations/MessageThread';
-import ConversationActions from '@/components/conversations/ConversationActions';
+import { MessageSquare } from 'lucide-react';
+import ConversationList from '@/components/inbox/ConversationList';
+import MessageThread from '@/components/inbox/MessageThread';
+import CustomerSidebar from '@/components/inbox/CustomerSidebar';
 
 export default function Conversations() {
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('all');
 
-  const { data: conversations = [] } = useQuery({
+  const { data: conversations = [], refetch } = useQuery({
     queryKey: ['conversations'],
     queryFn: () => base44.entities.Conversation.list('-last_message_time', 100),
+    refetchInterval: 30000,
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    if (id) setSelectedId(id);
+  }, []);
 
   const filtered = conversations.filter(c => {
     if (filter === 'all') return true;
+    if (filter === 'open') return c.status === 'active' || c.status === 'waiting';
     if (filter === 'ai') return c.mode === 'ai';
-    if (filter === 'human') return c.mode === 'human';
     if (filter === 'flagged') return c.status === 'flagged' || c.status === 'human_requested';
+    if (filter === 'resolved') return c.status === 'resolved';
     return true;
   });
 
   const selected = conversations.find(c => c.id === selectedId);
 
   return (
-    <div className="flex h-full bg-background">
-      {/* Sidebar list - narrower */}
-      <div className="w-80 border-r bg-card flex flex-col min-h-0">
+    <div className="flex" style={{ height: '100vh' }}>
+      <div className="w-72 shrink-0 flex flex-col" style={{ minHeight: 0 }}>
         <ConversationList
           conversations={filtered}
           selectedId={selectedId}
@@ -43,20 +45,24 @@ export default function Conversations() {
         />
       </div>
 
-      {/* Main thread area - expanded */}
-      <div className="flex-1 flex flex-col min-w-0 bg-background">
+      <div className="flex-1 flex flex-col min-w-0" style={{ minHeight: 0 }}>
         {selected ? (
-          <MessageThread conversation={selected} />
+          <MessageThread conversation={selected} onUpdate={refetch} />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+          <div className="flex-1 flex items-center justify-center bg-gray-50">
             <div className="text-center">
-              <MessageSquare className="w-12 h-12 mx-auto mb-4 opacity-20" />
-              <p className="text-base font-medium">Select a conversation to start</p>
-              <p className="text-xs text-muted-foreground mt-1">Choose from the list to view messages</p>
+              <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                style={{ background: 'rgba(124,58,237,0.1)' }}>
+                <MessageSquare className="w-8 h-8 text-violet-400" />
+              </div>
+              <p className="text-sm font-semibold text-gray-700">Select a conversation</p>
+              <p className="text-xs text-gray-400 mt-1">Choose from the list to view messages</p>
             </div>
           </div>
         )}
       </div>
+
+      {selected && <CustomerSidebar conversation={selected} />}
     </div>
   );
 }

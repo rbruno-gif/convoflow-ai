@@ -1,22 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Users, UserPlus, Mail, Shield, User, Trash2 } from 'lucide-react';
+import { UserPlus, Mail, Shield, User, CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
 
 export default function Agents() {
   const [showInvite, setShowInvite] = useState(false);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('user');
   const [loading, setLoading] = useState(false);
+  const [invitedEmail, setInvitedEmail] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const { toast } = useToast();
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -32,12 +31,13 @@ export default function Agents() {
     if (!email) return;
     setLoading(true);
     await base44.users.inviteUser(email, role);
-    toast({ title: `Invitation sent to ${email}` });
+    setInvitedEmail(email);
     setEmail('');
     setRole('user');
     setShowInvite(false);
     qc.invalidateQueries({ queryKey: ['users'] });
     setLoading(false);
+    setTimeout(() => setInvitedEmail(null), 4000);
   };
 
   const roleColors = {
@@ -46,7 +46,6 @@ export default function Agents() {
     agent: 'bg-blue-100 text-blue-700',
     supervisor: 'bg-orange-100 text-orange-700',
   };
-
   const roleLabels = {
     admin: 'Admin',
     user: 'Agent',
@@ -68,6 +67,13 @@ export default function Agents() {
         )}
       </div>
 
+      {invitedEmail && (
+        <div className="mb-4 flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700">
+          <CheckCircle className="w-4 h-4 shrink-0" />
+          Invitation sent to <strong>{invitedEmail}</strong>
+        </div>
+      )}
+
       {showInvite && (
         <Card className="mb-6 border-0 shadow-md">
           <CardContent className="p-5 space-y-4">
@@ -75,23 +81,16 @@ export default function Agents() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Email Address</Label>
-                <Input
-                  type="email"
-                  placeholder="agent@company.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                />
+                <Input type="email" placeholder="agent@company.com" value={email} onChange={e => setEmail(e.target.value)} />
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Role</Label>
                 <Select value={role} onValueChange={setRole}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                   <SelectItem value="agent">Agent (handle chats)</SelectItem>
-                   <SelectItem value="supervisor">Supervisor (coach agents)</SelectItem>
-                   <SelectItem value="admin">Admin (full access)</SelectItem>
+                    <SelectItem value="agent">Agent (handle chats)</SelectItem>
+                    <SelectItem value="supervisor">Supervisor (coach agents)</SelectItem>
+                    <SelectItem value="admin">Admin (full access)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

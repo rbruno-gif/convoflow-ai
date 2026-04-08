@@ -74,13 +74,13 @@ export default function BrandSwitcher() {
         <div className="max-h-60 overflow-y-auto pb-2">
           {/* U2C Group first */}
           {brands.filter(b => b.slug === 'u2c-group').map(brand => (
-            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} isGroup />
+            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { setOpen(false); switchBrand(brand.id); }} isGroup />
           ))}
           {brands.some(b => b.slug === 'u2c-group') && brands.some(b => b.slug !== 'u2c-group') && (
             <div className="mx-3 my-1 border-t border-white/10" />
           )}
           {brands.filter(b => b.slug !== 'u2c-group').map(brand => (
-            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} />
+            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { setOpen(false); switchBrand(brand.id); }} />
           ))}
         </div>
       </div>

@@ -17,6 +17,7 @@ export default function TeamChatLayout() {
   const [isInternalNote, setIsInternalNote] = useState(false);
   const { activeBrandId } = useBrand();
   const qc = useQueryClient();
+  const [channelsInitialized, setChannelsInitialized] = useState(false);
 
   const { data: channels = [], refetch: refetchChannels } = useQuery({
     queryKey: ['channels', activeBrandId],
@@ -24,6 +25,39 @@ export default function TeamChatLayout() {
       ? base44.entities.Channel.filter({ brand_id: activeBrandId }, 'name', 100)
       : [],
   });
+
+  // Auto-create default channels if none exist
+  useEffect(() => {
+    const initDefaultChannels = async () => {
+      if (!activeBrandId || channelsInitialized || channels.length > 0) return;
+      
+      try {
+        const defaultChannels = [
+          { name: 'general', description: 'General team discussion' },
+          { name: 'support', description: 'Support team coordination' },
+          { name: 'escalations', description: 'High priority escalations' },
+          { name: 'announcements', description: 'Team announcements' },
+        ];
+        
+        for (const ch of defaultChannels) {
+          await base44.entities.Channel.create({
+            brand_id: activeBrandId,
+            ...ch,
+            is_default: true,
+            members: [],
+          });
+        }
+        
+        refetchChannels();
+      } catch (err) {
+        console.error('Failed to create default channels:', err);
+      } finally {
+        setChannelsInitialized(true);
+      }
+    };
+    
+    initDefaultChannels();
+  }, [activeBrandId, channels.length, channelsInitialized, refetchChannels]);
 
   const { data: messages = [] } = useQuery({
     queryKey: ['channel-messages', selectedChannelId],

@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       message_type: 'text',
     });
 
-    // Step 6: Get AI response from knowledge base
+    // Step 6: Get AI response from knowledge base using LLM
     let aiResponse = null;
     try {
       const kbEntries = await base44.asServiceRole.entities.KnowledgeDoc.filter({
@@ -111,13 +111,16 @@ Deno.serve(async (req) => {
       });
 
       if (kbEntries && kbEntries.length > 0) {
-        const lowerBody = body.toLowerCase();
-        const match = kbEntries.find(
-          (entry) =>
-            entry.title &&
-            lowerBody.includes(entry.title.toLowerCase().slice(0, 20))
-        );
-        if (match) aiResponse = match.content;
+        const kbContext = kbEntries
+          .map((entry) => `# ${entry.title}\n${entry.content}`)
+          .join('\n\n');
+
+        const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: `You are a helpful customer support assistant. Based on the knowledge base below, answer the customer's question directly and concisely. If the answer is not in the knowledge base, say "I don't have that information available."\n\nKNOWLEDGE BASE:\n${kbContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT ANSWER:`,
+          model: 'gpt_5_mini',
+        });
+
+        aiResponse = typeof result === 'string' ? result : result?.text || null;
       }
     } catch (e) {
       console.error('KB lookup failed:', e);

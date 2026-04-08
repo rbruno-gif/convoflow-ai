@@ -1,0 +1,60 @@
+{
+  "name": "Sequence",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "draft"
+      ],
+      "default": "draft"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          },
+          "message_type": {
+            "type": "string"
+          },
+          "delay_hours": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "subscriber_count": {
+      "type": "number",
+      "default": 0
+    },
+    "total_sent": {
+      "type": "number",
+      "default": 0
+    },
+    "reply_rate": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "brand_id",
+    "name"
+  ]
+}

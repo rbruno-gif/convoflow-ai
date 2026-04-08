@@ -1,0 +1,43 @@
+{
+  "name": "KeywordTrigger",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "keyword": {
+      "type": "string"
+    },
+    "match_type": {
+      "type": "string",
+      "enum": [
+        "exact",
+        "contains",
+        "intent"
+      ],
+      "default": "contains"
+    },
+    "flow_id": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "triggered_count": {
+      "type": "number",
+      "default": 0
+    },
+    "intent_confidence_threshold": {
+      "type": "number",
+      "default": 0.75
+    },
+    "description": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "brand_id",
+    "keyword"
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "name": "Subscriber",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "chat",
+        "whatsapp",
+        "sms",
+        "email",
+        "facebook",
+        "instagram"
+      ],
+      "default": "chat"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "custom_fields": {
+      "type": "object"
+    },
+    "is_opted_in": {
+      "type": "boolean",
+      "default": true
+    },
+    "opted_out_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "opted_out_channel": {
+      "type": "string"
+    },
+    "last_interaction": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "flow_history": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "active_sequences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source": {
+      "type": "string"
+    },
+    "ref_url": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "brand_id",
+    "name"
+  ]
+}

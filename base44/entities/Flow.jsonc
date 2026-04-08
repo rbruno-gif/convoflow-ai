@@ -1,0 +1,91 @@
+{
+  "name": "Flow",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "paused",
+        "archived"
+      ],
+      "default": "draft"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "keyword",
+        "subscribe",
+        "button_click",
+        "tag_added",
+        "field_updated",
+        "schedule",
+        "webhook",
+        "page_visit",
+        "comment"
+      ],
+      "default": "keyword"
+    },
+    "trigger_value": {
+      "type": "string"
+    },
+    "trigger_match": {
+      "type": "string",
+      "enum": [
+        "exact",
+        "contains"
+      ],
+      "default": "contains"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "template_id": {
+      "type": "string"
+    },
+    "total_entered": {
+      "type": "number",
+      "default": 0
+    },
+    "total_completed": {
+      "type": "number",
+      "default": 0
+    },
+    "conversion_goal": {
+      "type": "string"
+    },
+    "conversion_count": {
+      "type": "number",
+      "default": 0
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "brand_id",
+    "name"
+  ]
+}

@@ -1,0 +1,97 @@
+{
+  "name": "Broadcast",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "image",
+        "card",
+        "flow"
+      ],
+      "default": "text"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "sms",
+        "email",
+        "chat"
+      ],
+      "default": "chat"
+    },
+    "segment_filters": {
+      "type": "object"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "sending",
+        "sent",
+        "cancelled"
+      ],
+      "default": "draft"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "smart_send_time": {
+      "type": "boolean",
+      "default": false
+    },
+    "estimated_reach": {
+      "type": "number",
+      "default": 0
+    },
+    "delivered_count": {
+      "type": "number",
+      "default": 0
+    },
+    "opened_count": {
+      "type": "number",
+      "default": 0
+    },
+    "clicked_count": {
+      "type": "number",
+      "default": 0
+    },
+    "replied_count": {
+      "type": "number",
+      "default": 0
+    },
+    "opted_out_count": {
+      "type": "number",
+      "default": 0
+    },
+    "conversion_goal": {
+      "type": "string"
+    },
+    "conversion_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "brand_id",
+    "name",
+    "message"
+  ]
+}

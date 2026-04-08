@@ -1,0 +1,44 @@
+{
+  "name": "CustomField",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "key": {
+      "type": "string"
+    },
+    "field_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "number",
+        "date",
+        "boolean",
+        "dropdown"
+      ],
+      "default": "text"
+    },
+    "dropdown_options": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "description": {
+      "type": "string"
+    },
+    "is_required": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "brand_id",
+    "name",
+    "key"
+  ]
+}

@@ -206,6 +206,7 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
             onChange={(e) => setDepartmentId(e.target.value)}
             className="w-full px-3 py-2 text-sm bg-background rounded-lg border border-border"
           >
+            <option value="">Select a department...</option>
             {departments.map(dept => (
               <option key={dept.id} value={dept.id}>{dept.name}</option>
             ))}

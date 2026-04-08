@@ -4,14 +4,12 @@ import { base44 } from '@/api/base44Client';
 import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
 
 export default function MessageThread({ conversation, onUpdate, onInsertReply, externalReply }) {
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [actionState, setActionState] = useState({});
   const [user, setUser] = useState(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (externalReply) setReply(externalReply);
@@ -44,118 +42,91 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     setSending(true);
     const content = reply.trim();
     setReply('');
-    try {
-      await base44.entities.Message.create({
-        conversation_id: conversation.id,
-        sender_type: 'agent',
-        sender_name: user?.full_name || 'Agent',
-        content,
-        timestamp: new Date().toISOString(),
-        message_type: 'text',
-      });
-      await base44.entities.Conversation.update(conversation.id, {
-        last_message: content,
-        last_message_time: new Date().toISOString(),
-      });
-      qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
-      qc.invalidateQueries({ queryKey: ['conversations'] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to send message', variant: 'destructive' });
-      setReply(content);
-    } finally {
-      setSending(false);
-    }
+    await base44.entities.Message.create({
+      conversation_id: conversation.id,
+      sender_type: 'agent',
+      sender_name: user?.full_name || 'Agent',
+      content,
+      timestamp: new Date().toISOString(),
+      message_type: 'text',
+    });
+    await base44.entities.Conversation.update(conversation.id, {
+      last_message: content,
+      last_message_time: new Date().toISOString(),
+    });
+    qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    setSending(false);
   };
 
   const handleAIReply = async () => {
     setSending(true);
     setAction('ai', 'loading');
-    try {
-      const lastUserMsg = [...messages].reverse().find(m => m.sender_type === 'customer');
-      if (!lastUserMsg) { setSending(false); setAction('ai', null); return; }
+    const lastUserMsg = [...messages].reverse().find(m => m.sender_type === 'customer');
+    if (!lastUserMsg) { setSending(false); setAction('ai', null); return; }
 
-      const [faqs, knowledgeDocs, settingsList] = await Promise.all([
-        base44.entities.FAQ.filter({ is_active: true }),
-        base44.entities.KnowledgeDoc.filter({ is_active: true }),
-        base44.entities.AgentSettings.list(),
-      ]);
+    const [faqs, knowledgeDocs, settingsList] = await Promise.all([
+      base44.entities.FAQ.filter({ is_active: true }),
+      base44.entities.KnowledgeDoc.filter({ is_active: true }),
+      base44.entities.AgentSettings.list(),
+    ]);
 
-      const s = settingsList[0];
-      const instructions = s?.ai_instructions || '';
-      const persona = s?.ai_persona_name || 'U2C AI Assistant';
-      const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-      const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
-      const recentHistory = messages.slice(-10).map(m =>
-        `${m.sender_type === 'customer' ? 'Customer' : persona}: ${m.content}`
-      ).join('\n');
+    const s = settingsList[0];
+    const instructions = s?.ai_instructions || '';
+    const persona = s?.ai_persona_name || 'U2C AI Assistant';
+    const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+    const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
+    const recentHistory = messages.slice(-10).map(m =>
+      `${m.sender_type === 'customer' ? 'Customer' : persona}: ${m.content}`
+    ).join('\n');
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `${instructions}\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCONVERSATION:\n${recentHistory}\n\nRespond as ${persona}. Be concise, warm, and helpful.`,
-        model: 'gpt_5_mini',
-      });
+    const response = await base44.integrations.Core.InvokeLLM({
+      prompt: `${instructions}\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCONVERSATION:\n${recentHistory}\n\nRespond as ${persona}. Be concise, warm, and helpful.`,
+      model: 'gpt_5_mini',
+    });
 
-      const aiReply = typeof response === 'string' ? response : response?.text || 'Let me connect you with a human agent.';
-      await base44.entities.Message.create({
-        conversation_id: conversation.id,
-        sender_type: 'ai',
-        sender_name: persona,
-        content: aiReply,
-        timestamp: new Date().toISOString(),
-        message_type: 'text',
-      });
-      await base44.entities.Conversation.update(conversation.id, {
-        last_message: aiReply,
-        last_message_time: new Date().toISOString(),
-        ai_resolution_attempted: true,
-      });
-      qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
-      qc.invalidateQueries({ queryKey: ['conversations'] });
-      setAction('ai', 'done');
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'AI reply failed', variant: 'destructive' });
-      setAction('ai', null);
-    } finally {
-      setSending(false);
-    }
+    const aiReply = typeof response === 'string' ? response : response?.text || 'Let me connect you with a human agent.';
+    await base44.entities.Message.create({
+      conversation_id: conversation.id,
+      sender_type: 'ai',
+      sender_name: persona,
+      content: aiReply,
+      timestamp: new Date().toISOString(),
+      message_type: 'text',
+    });
+    await base44.entities.Conversation.update(conversation.id, {
+      last_message: aiReply,
+      last_message_time: new Date().toISOString(),
+      ai_resolution_attempted: true,
+    });
+    qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    setSending(false);
+    setAction('ai', 'done');
   };
 
   const flagConversation = async () => {
     setAction('flag', 'loading');
-    try {
-      await base44.entities.Conversation.update(conversation.id, { status: 'flagged' });
-      qc.invalidateQueries({ queryKey: ['conversations'] });
-      setAction('flag', 'done');
-      onUpdate?.();
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to flag', variant: 'destructive' });
-      setAction('flag', null);
-    }
+    await base44.entities.Conversation.update(conversation.id, { status: 'flagged' });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    setAction('flag', 'done');
+    onUpdate?.();
   };
 
   const handoffToAgent = async () => {
     setAction('handoff', 'loading');
-    try {
-      await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'human_requested' });
-      qc.invalidateQueries({ queryKey: ['conversations'] });
-      setAction('handoff', 'done');
-      onUpdate?.();
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to handoff', variant: 'destructive' });
-      setAction('handoff', null);
-    }
+    await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'human_requested' });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    setAction('handoff', 'done');
+    onUpdate?.();
   };
 
   const resolveConversation = async () => {
     setAction('resolve', 'loading');
-    try {
-      await base44.entities.Conversation.update(conversation.id, { status: 'resolved', resolution_status: 'resolved' });
-      qc.invalidateQueries({ queryKey: ['conversations'] });
-      setAction('resolve', 'done');
-      onUpdate?.();
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to resolve', variant: 'destructive' });
-      setAction('resolve', null);
-    }
+    await base44.entities.Conversation.update(conversation.id, { status: 'resolved', resolution_status: 'resolved' });
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    setAction('resolve', 'done');
+    onUpdate?.();
   };
 
   const ActionBtn = ({ id, icon: Icon, label, onClick, color = 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' }) => {

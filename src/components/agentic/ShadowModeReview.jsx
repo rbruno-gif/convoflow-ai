@@ -3,7 +3,6 @@ import { base44 } from '@/api/base44Client';
 import { Eye, ThumbsUp, ThumbsDown, Bot, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
 
 const TOOL_LABELS = {
   knowledge_lookup: 'KB Lookup',
@@ -20,7 +19,6 @@ const TOOL_LABELS = {
 
 export default function ShadowModeReview({ brandId }) {
   const qc = useQueryClient();
-  const { toast } = useToast();
 
   const { data: actions = [] } = useQuery({
     queryKey: ['agentic-shadow-actions', brandId],
@@ -46,21 +44,13 @@ export default function ShadowModeReview({ brandId }) {
   const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
 
   const markVerdict = async (actionId, verdict) => {
-    try {
-      await base44.entities.AgenticAction.update(actionId, { shadow_verdict: verdict, brand_id: brandId });
-      qc.invalidateQueries({ queryKey: ['agentic-shadow-actions', brandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to update verdict', variant: 'destructive' });
-    }
+    await base44.entities.AgenticAction.update(actionId, { shadow_verdict: verdict });
+    qc.invalidateQueries({ queryKey: ['agentic-shadow-actions', brandId] });
   };
 
   const goLive = async (agent) => {
-    try {
-      await base44.entities.AgenticAgent.update(agent.id, { mode: 'live', brand_id: brandId });
-      qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to switch to live mode', variant: 'destructive' });
-    }
+    await base44.entities.AgenticAgent.update(agent.id, { mode: 'live' });
+    qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
   };
 
   return (

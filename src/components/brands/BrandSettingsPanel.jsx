@@ -10,13 +10,12 @@ const TABS = [
   { key: 'agents', label: 'Agents', icon: Users },
 ];
 
-export default function BrandSettingsPanel({ brand, onClose, onSave, onArchive, onDelete }) {
+export default function BrandSettingsPanel({ brand, onClose, onSave, onArchive }) {
   const [tab, setTab] = useState('general');
   const [form, setForm] = useState({ ...brand });
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [showConfirmArchive, setShowConfirmArchive] = useState(false);
-  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   useEffect(() => { setForm({ ...brand }); }, [brand.id]);
 
@@ -170,26 +169,15 @@ export default function BrandSettingsPanel({ brand, onClose, onSave, onArchive, 
           {saved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : 'Save Changes'}
         </button>
         {!showConfirmArchive ? (
-         <button onClick={() => setShowConfirmArchive(true)}
-           className="w-full py-2 rounded-xl text-xs text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5">
-           <Trash2 className="w-3.5 h-3.5" /> Archive Brand
-         </button>
+          <button onClick={() => setShowConfirmArchive(true)}
+            className="w-full py-2 rounded-xl text-xs text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center justify-center gap-1.5">
+            <Trash2 className="w-3.5 h-3.5" /> Archive Brand
+          </button>
         ) : (
-         <div className="flex gap-2">
-           <button onClick={() => setShowConfirmArchive(false)} className="flex-1 py-2 rounded-xl border border-gray-200 text-xs text-gray-500 hover:bg-gray-50">Cancel</button>
-           <button onClick={onArchive} className="flex-1 py-2 rounded-xl bg-red-600 text-white text-xs font-semibold hover:bg-red-700">Confirm Archive</button>
-         </div>
-        )}
-        {!showConfirmDelete ? (
-         <button onClick={() => setShowConfirmDelete(true)}
-           className="w-full py-2 rounded-xl text-xs text-red-600 hover:bg-red-50 border border-red-200 transition-colors flex items-center justify-center gap-1.5 font-semibold">
-           <Trash2 className="w-3.5 h-3.5" /> Permanently Delete Brand
-         </button>
-        ) : (
-         <div className="flex gap-2">
-           <button onClick={() => setShowConfirmDelete(false)} className="flex-1 py-2 rounded-xl border border-gray-200 text-xs text-gray-500 hover:bg-gray-50">Cancel</button>
-           <button onClick={onDelete} className="flex-1 py-2 rounded-xl bg-red-700 text-white text-xs font-semibold hover:bg-red-800">Delete Forever</button>
-         </div>
+          <div className="flex gap-2">
+            <button onClick={() => setShowConfirmArchive(false)} className="flex-1 py-2 rounded-xl border border-gray-200 text-xs text-gray-500 hover:bg-gray-50">Cancel</button>
+            <button onClick={onArchive} className="flex-1 py-2 rounded-xl bg-red-600 text-white text-xs font-semibold hover:bg-red-700">Confirm Archive</button>
+          </div>
         )}
       </div>
     </div>

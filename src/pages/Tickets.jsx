@@ -167,9 +167,8 @@ export default function Tickets() {
 
       {showNew && (
         <NewTicketModal
-          brandId={activeBrandId}
           onClose={() => setShowNew(false)}
-          onCreate={() => { qc.invalidateQueries({ queryKey: ['tickets', activeBrandId] }); setShowNew(false); }}
+          onCreate={() => { qc.invalidateQueries({ queryKey: ['tickets'] }); setShowNew(false); }}
         />
       )}
     </div>

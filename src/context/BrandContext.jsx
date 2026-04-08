@@ -1,106 +1,19 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 
 const BrandContext = createContext(null);
 
-const STORAGE_KEY = 'u2c_active_brand';
-
-function loadStoredBrand() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed?.id && parsed?.name) return parsed;
-    }
-    // Migration: old key stored only the ID
-    const oldId = localStorage.getItem('u2c_active_brand_id');
-    if (oldId) {
-      localStorage.removeItem('u2c_active_brand_id');
-      return { id: oldId };
-    }
-  } catch { /* ignore */ }
-  return null;
-}
-
-function persistBrand(brand) {
-  try {
-    if (brand) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        id: brand.id,
-        name: brand.name,
-        slug: brand.slug,
-        primary_color: brand.primary_color,
-      }));
-    } else {
-      localStorage.removeItem(STORAGE_KEY);
-    }
-    // Clean up legacy key
-    localStorage.removeItem('u2c_active_brand_id');
-  } catch { /* ignore */ }
-}
-
 export function BrandProvider({ children }) {
-  const [activeBrand, setActiveBrand] = useState(loadStoredBrand);
+  const [activeBrandId, setActiveBrandId] = useState(() => localStorage.getItem('activeBrandId') || null);
   const [user, setUser] = useState(null);
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [initError, setInitError] = useState(null);
-  const qc = useQueryClient();
 
   useEffect(() => {
-    const initBrand = async () => {
-      try {
-        const u = await base44.auth.me();
-        setUser(u);
-
-        // Fetch all available brands for this user
-        const allBrands = await base44.entities.Brand.list('-created_date', 100);
-
-        // Filter based on user role (admin sees all, others see assigned)
-        let accessibleBrands = allBrands;
-        if (u?.role !== 'admin') {
-          accessibleBrands = allBrands.filter(b =>
-            b.assigned_agents?.includes(u?.email) || b.slug === 'u2c-group'
-          );
-        }
-
-        // Try to use stored brand if valid
-        const stored = loadStoredBrand();
-        let selectedBrand = null;
-        if (stored?.id && accessibleBrands.some(b => b.id === stored.id)) {
-          selectedBrand = accessibleBrands.find(b => b.id === stored.id);
-        } else if (accessibleBrands.length > 0) {
-          selectedBrand = accessibleBrands[0];
-        }
-
-        if (selectedBrand) {
-          const brandData = {
-            id: selectedBrand.id,
-            name: selectedBrand.name,
-            slug: selectedBrand.slug,
-            primary_color: selectedBrand.primary_color,
-          };
-          setActiveBrand(brandData);
-          persistBrand(brandData);
-        } else {
-          setActiveBrand(null);
-          persistBrand(null);
-        }
-
-        setIsInitialized(true);
-      } catch (err) {
-        console.error('Failed to initialize brand:', err);
-        setInitError(err.message);
-        setIsInitialized(true);
-      }
-    };
-
-    initBrand();
+    base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  // Fetch all brands once on mount (used for switcher)
   const { data: allBrands = [] } = useQuery({
-    queryKey: ['brands-all'],
+    queryKey: ['brands'],
     queryFn: () => base44.entities.Brand.filter({ is_archived: false }, '-created_date', 100),
     enabled: !!user,
   });
@@ -108,38 +21,50 @@ export function BrandProvider({ children }) {
   // Role-based brand visibility
   const accessibleBrands = (() => {
     if (!user) return [];
+    // Admin sees all brands
     if (user.role === 'admin') return allBrands;
+    // Others see only brands they're assigned to
     return allBrands.filter(b =>
-      b.assigned_agents?.includes(user.email) || b.slug === 'u2c-group'
+      b.assigned_agents?.includes(user.email)
     );
   })();
 
-  const switchBrand = useCallback((brandId) => {
-    const brand = [...accessibleBrands, ...allBrands].find(b => b.id === brandId);
-    if (brand) {
-      const brandData = {
-        id: brand.id,
-        name: brand.name,
-        slug: brand.slug,
-        primary_color: brand.primary_color,
-      };
-      setActiveBrand(brandData);
-      persistBrand(brandData);
-      // Invalidate all queries so they refetch with the new brand context
-      qc.invalidateQueries();
+  const activeBrands = accessibleBrands.filter(b => b.is_active);
+
+  // Auto-select: prefer stored brand, fallback to first accessible
+  useEffect(() => {
+    if (!activeBrandId && accessibleBrands.length > 0) {
+      const first = accessibleBrands[0];
+      setActiveBrandId(first.id);
+      localStorage.setItem('activeBrandId', first.id);
     }
-  }, [accessibleBrands, allBrands, qc]);
+    // If stored brand is no longer accessible, reset
+    if (activeBrandId && accessibleBrands.length > 0) {
+      const stillAccessible = accessibleBrands.find(b => b.id === activeBrandId);
+      if (!stillAccessible) {
+        const first = accessibleBrands[0];
+        setActiveBrandId(first.id);
+        localStorage.setItem('activeBrandId', first.id);
+      }
+    }
+  }, [accessibleBrands, activeBrandId]);
+
+  const switchBrand = (brandId) => {
+    setActiveBrandId(brandId);
+    localStorage.setItem('activeBrandId', brandId);
+  };
+
+  const activeBrand = accessibleBrands.find(b => b.id === activeBrandId) || accessibleBrands[0] || null;
 
   return (
     <BrandContext.Provider value={{
       activeBrand,
-      activeBrandId: activeBrand?.id,
+      activeBrandId,
       brands: accessibleBrands,
       allBrands,
-      isInitialized,
+      activeBrands,
       switchBrand,
       user,
-      initError,
     }}>
       {children}
     </BrandContext.Provider>
@@ -147,9 +72,5 @@ export function BrandProvider({ children }) {
 }
 
 export function useBrand() {
-  const context = useContext(BrandContext);
-  if (!context) {
-    throw new Error('useBrand must be used within BrandProvider');
-  }
-  return context;
+  return useContext(BrandContext);
 }

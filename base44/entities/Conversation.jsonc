@@ -6,99 +6,56 @@
       "type": "string",
       "description": "Brand this conversation belongs to"
     },
-    "department_id": {
+    "customer_name": {
       "type": "string",
-      "description": "Department this conversation is assigned to"
+      "description": "Customer's name from Facebook"
     },
-    "customer_id": {
+    "customer_fb_id": {
       "type": "string",
-      "description": "Reference to CustomerProfile entity"
+      "description": "Facebook user ID"
     },
-    "channel": {
+    "customer_avatar": {
       "type": "string",
-      "enum": [
-        "chat",
-        "email",
-        "whatsapp",
-        "sms",
-        "voice",
-        "messenger"
-      ],
-      "default": "chat",
-      "description": "Communication channel"
+      "description": "Customer avatar URL"
     },
-    "channel_id": {
+    "campaign_id": {
       "type": "string",
-      "description": "External ID for channel-specific conversations (e.g., sender_id for messenger)"
+      "description": "Campaign this conversation belongs to"
     },
     "status": {
       "type": "string",
       "enum": [
-        "open",
-        "pending",
+        "active",
+        "waiting",
+        "flagged",
         "resolved",
-        "archived"
+        "human_requested"
       ],
-      "default": "open"
+      "default": "active"
     },
-    "priority": {
+    "mode": {
       "type": "string",
       "enum": [
-        "low",
-        "normal",
-        "high",
-        "urgent"
+        "ai",
+        "human"
       ],
-      "default": "normal"
+      "default": "ai",
+      "description": "Whether AI or human is handling"
     },
-    "assigned_agent_id": {
+    "assigned_agent": {
       "type": "string",
-      "description": "Agent ID (null = unassigned)"
+      "description": "Agent email assigned to this convo"
     },
-    "queue_position": {
-      "type": "number",
-      "description": "Position in queue (null if not in queue)"
+    "last_message": {
+      "type": "string"
     },
-    "priority_lane": {
+    "last_message_time": {
       "type": "string",
-      "enum": [
-        "vip",
-        "standard",
-        "low"
-      ],
-      "default": "standard"
+      "format": "date-time"
     },
-    "wait_time_seconds": {
+    "unread_count": {
       "type": "number",
       "default": 0
-    },
-    "first_response_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "last_message_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "resolved_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "sla_first_response_due_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "sla_resolution_due_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "sla_first_response_breached": {
-      "type": "boolean",
-      "default": false
-    },
-    "sla_resolution_breached": {
-      "type": "boolean",
-      "default": false
     },
     "tags": {
       "type": "array",
@@ -106,55 +63,78 @@
         "type": "string"
       }
     },
-    "internal_notes": {
+    "order_intent": {
+      "type": "boolean",
+      "default": false,
+      "description": "AI detected order intent"
+    },
+    "flagged_reason": {
+      "type": "string"
+    },
+    "sentiment": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "default": "neutral",
+      "description": "Detected sentiment from latest messages"
+    },
+    "is_urgent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Auto-flagged as urgent (negative sentiment + keywords)"
+    },
+    "sentiment_updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When sentiment was last analyzed"
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "order_inquiry",
+        "product_support",
+        "billing_issue",
+        "complaint",
+        "feedback",
+        "general_question",
+        "returns_refunds",
+        "shipping",
+        "technical_support",
+        "other"
+      ],
+      "default": "general_question",
+      "description": "Detected conversation intent"
+    },
+    "conversation_summary": {
+      "type": "string",
+      "description": "AI-generated summary of conversation"
+    },
+    "key_topics": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Key topics/keywords extracted from conversation"
     },
-    "customer_name": {
-      "type": "string"
+    "resolution_status": {
+      "type": "string",
+      "enum": [
+        "unresolved",
+        "resolved",
+        "escalated"
+      ],
+      "default": "unresolved"
     },
-    "customer_email": {
-      "type": "string"
-    },
-    "customer_avatar": {
-      "type": "string"
-    },
-    "unread_count": {
-      "type": "number",
-      "default": 0
-    },
-    "transfer_history": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "from_agent_id": {
-            "type": "string"
-          },
-          "to_agent_id": {
-            "type": "string"
-          },
-          "to_department_id": {
-            "type": "string"
-          },
-          "handover_note": {
-            "type": "string"
-          },
-          "transferred_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      }
+    "ai_resolution_attempted": {
+      "type": "boolean",
+      "default": false,
+      "description": "AI attempted to resolve before handoff"
     }
   },
   "required": [
-    "brand_id",
-    "department_id",
-    "customer_id",
-    "channel",
     "customer_name"
   ]
 }

@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import { useToast } from '@/components/ui/use-toast';
-import { Zap, Plus, Edit2, Trash2, ToggleRight, ToggleLeft, X, MessageSquare, AlertCircle } from 'lucide-react';
+import { Zap, Plus, Edit2, Trash2, ToggleRight, ToggleLeft, X, MessageSquare } from 'lucide-react';
 
 const TRIGGERS = [
   { value: 'outside_hours', label: 'Outside Business Hours', desc: 'Auto-sends when customer messages outside operating hours' },
@@ -18,82 +17,32 @@ const MERGE_FIELDS = ['{customer_name}', '{brand_name}', '{business_hours}', '{a
 const BLANK = { name: '', trigger: 'outside_hours', trigger_value: '', message: '', is_active: true };
 
 export default function AutoReplies() {
-  const { activeBrandId, activeBrand, isInitialized } = useBrand();
+  const { activeBrandId, activeBrand } = useBrand();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   const qc = useQueryClient();
-  const { toast } = useToast();
 
   const { data: replies = [] } = useQuery({
     queryKey: ['auto-replies', activeBrandId],
-    queryFn: () => activeBrandId ? base44.entities.AutoReply.filter({ brand_id: activeBrandId }) : [],
-    enabled: !!activeBrandId && isInitialized,
+    queryFn: () => activeBrandId ? base44.entities.AutoReply.filter({ brand_id: activeBrandId }) : base44.entities.AutoReply.list(),
   });
 
   const { data: cannedResponses = [] } = useQuery({
     queryKey: ['canned', activeBrandId],
-    queryFn: () => activeBrandId ? base44.entities.CannedResponse.filter({ brand_id: activeBrandId }) : [],
-    enabled: !!activeBrandId && isInitialized,
+    queryFn: () => activeBrandId ? base44.entities.CannedResponse.filter({ brand_id: activeBrandId }) : base44.entities.CannedResponse.list(),
   });
 
   const save = async () => {
-    if (!activeBrandId) {
-      setError('Brand not selected');
-      return;
-    }
-    if (!form.name?.trim()) {
-      setError('Name is required');
-      return;
-    }
     setSaving(true);
-    setError('');
-    try {
-      const payload = { ...form, brand_id: activeBrandId };
-      if (form.id) await base44.entities.AutoReply.update(form.id, payload);
-      else await base44.entities.AutoReply.create(payload);
-      toast({ title: 'Saved' });
-      qc.invalidateQueries({ queryKey: ['auto-replies', activeBrandId] });
-      setForm(null);
-    } catch (err) {
-      setError(err.message);
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    } finally {
-      setSaving(false);
-    }
+    const payload = { ...form, brand_id: activeBrandId };
+    if (form.id) await base44.entities.AutoReply.update(form.id, payload);
+    else await base44.entities.AutoReply.create(payload);
+    qc.invalidateQueries({ queryKey: ['auto-replies', activeBrandId] });
+    setForm(null); setSaving(false);
   };
 
-  const del = async (id) => {
-    try {
-      await base44.entities.AutoReply.delete(id);
-      toast({ title: 'Deleted' });
-      qc.invalidateQueries({ queryKey: ['auto-replies', activeBrandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  const toggle = async (r) => {
-    try {
-      await base44.entities.AutoReply.update(r.id, { is_active: !r.is_active });
-      qc.invalidateQueries({ queryKey: ['auto-replies', activeBrandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-    }
-  };
-
-  if (!isInitialized || !activeBrandId) {
-    return (
-      <div className="p-6 max-w-4xl">
-        <div className="flex items-center justify-center py-12">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const del = async (id) => { await base44.entities.AutoReply.delete(id); qc.invalidateQueries({ queryKey: ['auto-replies', activeBrandId] }); };
+  const toggle = async (r) => { await base44.entities.AutoReply.update(r.id, { is_active: !r.is_active }); qc.invalidateQueries({ queryKey: ['auto-replies', activeBrandId] }); };
 
   return (
     <div className="p-6 max-w-4xl">
@@ -184,12 +133,6 @@ export default function AutoReplies() {
               <button onClick={() => setForm(null)}><X className="w-4 h-4 text-gray-400" /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
-              {error && (
-                <div className="flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              )}
               {form.type === 'canned' ? (
                 <>
                   <Field label="Shortcut (e.g. /refund)" value={form.shortcut || ''} onChange={v => setForm(f => ({ ...f, shortcut: v }))} placeholder="/shortcut" />
@@ -229,26 +172,13 @@ export default function AutoReplies() {
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={() => setForm(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600">Cancel</button>
               <button onClick={async () => {
-                if (!activeBrandId) {
-                  setError('Brand not selected');
-                  return;
-                }
                 setSaving(true);
-                setError('');
-                try {
-                  if (form.type === 'canned') {
-                    const payload = { shortcut: form.shortcut, title: form.title, content: form.content, is_shared: form.is_shared, brand_id: activeBrandId };
-                    await base44.entities.CannedResponse.create(payload);
-                    toast({ title: 'Saved' });
-                    qc.invalidateQueries({ queryKey: ['canned', activeBrandId] });
-                  } else { await save(); }
-                  setForm(null);
-                } catch (err) {
-                  setError(err.message);
-                  toast({ title: 'Error', description: err.message, variant: 'destructive' });
-                } finally {
-                  setSaving(false);
-                }
+                if (form.type === 'canned') {
+                  const payload = { shortcut: form.shortcut, title: form.title, content: form.content, is_shared: form.is_shared, brand_id: activeBrandId };
+                  await base44.entities.CannedResponse.create(payload);
+                  qc.invalidateQueries({ queryKey: ['canned', activeBrandId] });
+                } else { await save(); }
+                setForm(null); setSaving(false);
               }} disabled={saving}
                 className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold disabled:opacity-40"
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>

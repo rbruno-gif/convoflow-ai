@@ -9,111 +9,9 @@
       "type": "string",
       "default": "America/New_York"
     },
-    "monday": {
+    "schedule": {
       "type": "object",
-      "properties": {
-        "is_open": {
-          "type": "boolean",
-          "default": true
-        },
-        "open_time": {
-          "type": "string",
-          "description": "HH:MM format"
-        },
-        "close_time": {
-          "type": "string"
-        }
-      }
-    },
-    "tuesday": {
-      "type": "object",
-      "properties": {
-        "is_open": {
-          "type": "boolean",
-          "default": true
-        },
-        "open_time": {
-          "type": "string"
-        },
-        "close_time": {
-          "type": "string"
-        }
-      }
-    },
-    "wednesday": {
-      "type": "object",
-      "properties": {
-        "is_open": {
-          "type": "boolean",
-          "default": true
-        },
-        "open_time": {
-          "type": "string"
-        },
-        "close_time": {
-          "type": "string"
-        }
-      }
-    },
-    "thursday": {
-      "type": "object",
-      "properties": {
-        "is_open": {
-          "type": "boolean",
-          "default": true
-        },
-        "open_time": {
-          "type": "string"
-        },
-        "close_time": {
-          "type": "string"
-        }
-      }
-    },
-    "friday": {
-      "type": "object",
-      "properties": {
-        "is_open": {
-          "type": "boolean",
-          "default": true
-        },
-        "open_time": {
-          "type": "string"
-        },
-        "close_time": {
-          "type": "string"
-        }
-      }
-    },
-    "saturday": {
-      "type": "object",
-      "properties": {
-        "is_open": {
-          "type": "boolean",
-          "default": false
-        },
-        "open_time": {
-          "type": "string"
-        },
-        "close_time": {
-          "type": "string"
-        }
-      }
-    },
-    "sunday": {
-      "type": "object",
-      "properties": {
-        "is_open": {
-          "type": "boolean",
-          "default": false
-        },
-        "open_time": {
-          "type": "string"
-        },
-        "close_time": {
-          "type": "string"
-        }
-      }
+      "description": "day -> { open, close, closed } e.g. monday: { open: '09:00', close: '18:00', closed: false }"
     },
     "holidays": {
       "type": "array",
@@ -121,23 +19,18 @@
         "type": "object",
         "properties": {
           "date": {
-            "type": "string",
-            "format": "date"
-          },
-          "name": {
             "type": "string"
           },
-          "is_open": {
-            "type": "boolean",
-            "default": false
-          },
-          "custom_message": {
+          "label": {
             "type": "string"
           }
         }
       }
     },
-    "sla_pauses_outside_hours": {
+    "outside_hours_message": {
+      "type": "string"
+    },
+    "is_active": {
       "type": "boolean",
       "default": true
     }

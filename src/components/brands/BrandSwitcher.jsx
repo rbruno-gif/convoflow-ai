@@ -3,39 +3,17 @@ import { ChevronDown, Check } from 'lucide-react';
 import { useBrand } from '@/context/BrandContext';
 
 export default function BrandSwitcher() {
-  const { activeBrand, brands, switchBrand, isInitialized } = useBrand();
+  const { activeBrand, brands, switchBrand } = useBrand();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
-    if (!open) return;
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
-    const handleClickOutside = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        setOpen(false);
-      }
-    };
-
-    // Use a small delay to avoid the click that opened the menu from closing it
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
-    }, 0);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [open]);
-
-  if (!activeBrand) return null;
+  if (!activeBrand || brands.length === 0) return null;
 
   return (
     <div ref={ref} className="relative px-3 pb-3">
@@ -46,9 +24,9 @@ export default function BrandSwitcher() {
       >
         <BrandAvatar brand={activeBrand} size={28} />
         <div className="flex-1 min-w-0 text-left">
-          <p className="text-xs font-semibold text-white truncate">{activeBrand?.name || 'Loading...'}</p>
+          <p className="text-xs font-semibold text-white truncate">{activeBrand.name}</p>
           <p className="text-[10px] text-gray-400 truncate">
-            {activeBrand?.slug === 'u2c-group' ? '⚡ Super Admin' : activeBrand?.slug}
+            {activeBrand.slug === 'u2c-group' ? '⚡ Super Admin' : activeBrand.slug}
           </p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -74,13 +52,13 @@ export default function BrandSwitcher() {
         <div className="max-h-60 overflow-y-auto pb-2">
           {/* U2C Group first */}
           {brands.filter(b => b.slug === 'u2c-group').map(brand => (
-            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { setOpen(false); switchBrand(brand.id); }} isGroup />
+            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} isGroup />
           ))}
           {brands.some(b => b.slug === 'u2c-group') && brands.some(b => b.slug !== 'u2c-group') && (
             <div className="mx-3 my-1 border-t border-white/10" />
           )}
           {brands.filter(b => b.slug !== 'u2c-group').map(brand => (
-            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { setOpen(false); switchBrand(brand.id); }} />
+            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} />
           ))}
         </div>
       </div>
@@ -89,16 +67,10 @@ export default function BrandSwitcher() {
 }
 
 function BrandOption({ brand, active, onSelect, isGroup }) {
-  const handleClick = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onSelect();
-  };
-
   return (
     <button
-      onClick={handleClick}
-      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 transition-colors text-left"
+      onClick={onSelect}
+      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 transition-colors"
     >
       <BrandAvatar brand={brand} size={24} />
       <div className="flex-1 min-w-0 text-left">

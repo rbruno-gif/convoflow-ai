@@ -3,82 +3,33 @@
   "type": "object",
   "properties": {
     "brand_id": {
-      "type": "string",
-      "description": "Brand context; null for U2C Group level actions"
+      "type": "string"
     },
     "actor_email": {
-      "type": "string",
-      "description": "Email of user who performed action"
+      "type": "string"
     },
     "actor_name": {
       "type": "string"
     },
-    "actor_role": {
+    "action": {
       "type": "string",
-      "description": "Role at time of action"
-    },
-    "action_type": {
-      "type": "string",
-      "enum": [
-        "BRAND_CREATED",
-        "BRAND_UPDATED",
-        "BRAND_DEACTIVATED",
-        "BRAND_ARCHIVED",
-        "BRAND_DELETED",
-        "DEPT_CREATED",
-        "DEPT_UPDATED",
-        "DEPT_DELETED",
-        "AGENT_INVITED",
-        "AGENT_ACTIVATED",
-        "AGENT_DEACTIVATED",
-        "AGENT_DELETED",
-        "ROLE_CREATED",
-        "ROLE_UPDATED",
-        "ROLE_DELETED",
-        "CUSTOMER_CREATED",
-        "CUSTOMER_MERGED",
-        "CUSTOMER_DELETED",
-        "SETTINGS_UPDATED",
-        "DATA_EXPORTED",
-        "CONVERSATION_CREATED",
-        "AGENT_LOGIN",
-        "PERMISSIONS_CHANGED"
-      ]
+      "description": "e.g. transfer_conversation, delete_faq, export_report"
     },
     "target_type": {
-      "type": "string",
-      "description": "What was acted on (Brand, Department, Agent, etc.)"
-    },
-    "target_id": {
-      "type": "string",
-      "description": "ID of target resource"
-    },
-    "target_name": {
-      "type": "string",
-      "description": "Name of target for readability"
-    },
-    "before_value": {
-      "type": "object",
-      "description": "Previous state (JSON)"
-    },
-    "after_value": {
-      "type": "object",
-      "description": "New state (JSON)"
-    },
-    "ip_address": {
       "type": "string"
     },
-    "user_agent": {
+    "target_id": {
       "type": "string"
     },
     "details": {
-      "type": "string",
-      "description": "Additional context"
+      "type": "string"
+    },
+    "ip_address": {
+      "type": "string"
     }
   },
   "required": [
-    "action_type",
-    "actor_email",
-    "target_type"
+    "action",
+    "actor_email"
   ]
 }

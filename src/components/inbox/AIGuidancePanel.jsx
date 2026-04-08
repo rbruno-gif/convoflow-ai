@@ -1,153 +1,180 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useBrand } from '@/context/BrandContext';
-import { Send, Lightbulb, TrendingUp, HelpCircle, Copy } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Bot, Zap, BookOpen, MessageSquare, ChevronDown, ChevronUp, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-const sentimentEmojis = {
-  frustrated: '😤',
-  neutral: '😐',
-  satisfied: '😊',
-};
+export default function AIGuidancePanel({ conversation, onInsertReply }) {
+  const [loading, setLoading] = useState(false);
+  const [suggestion, setSuggestion] = useState('');
+  const [similarConvos, setSimilarConvos] = useState([]);
+  const [relevantFAQs, setRelevantFAQs] = useState([]);
+  const [expanded, setExpanded] = useState({ suggestion: true, faqs: true, similar: false });
 
-export default function AIGuidancePanel({ conversation }) {
-  const { activeBrandId } = useBrand();
+  const sentimentConfig = {
+    positive: { label: 'Satisfied', color: '#10b981', bg: '#f0fdf4', emoji: '😊' },
+    neutral: { label: 'Neutral', color: '#6b7280', bg: '#f9fafb', emoji: '😐' },
+    negative: { label: 'Frustrated', color: '#ef4444', bg: '#fef2f2', emoji: '😞' },
+  };
+  const sentiment = sentimentConfig[conversation?.sentiment || 'neutral'];
 
-  const { data: suggestedReply } = useQuery({
-    queryKey: ['ai-suggestion', conversation.id],
-    queryFn: async () => {
-      // In real implementation, call AI to generate suggestion based on conversation history
-      return 'Thank you for reaching out! How can we help you today?';
-    },
-  });
+  useEffect(() => {
+    if (!conversation?.last_message) return;
+    generateGuidance();
+  }, [conversation?.id, conversation?.last_message]);
 
-  const { data: similarConversations = [] } = useQuery({
-    queryKey: ['similar-conversations', conversation.id],
-    queryFn: () => activeBrandId
-      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-created_date', 3)
-          .then(convs => convs.slice(0, 3))
-      : [],
-  });
+  const generateGuidance = async () => {
+    if (!conversation?.last_message) return;
+    setLoading(true);
+    setSuggestion('');
 
-  const { data: relevantKB = [] } = useQuery({
-    queryKey: ['relevant-kb', conversation.id],
-    queryFn: () => activeBrandId
-      ? base44.entities.KnowledgeBase.filter({
-          brand_id: activeBrandId,
-          status: 'approved',
-        }, '-usage_count', 3)
-      : [],
-  });
+    const brandId = conversation.brand_id;
+    const [faqs, knowledgeDocs, messages] = await Promise.all([
+      brandId ? base44.entities.FAQ.filter({ brand_id: brandId, is_active: true }) : base44.entities.FAQ.filter({ is_active: true }),
+      brandId ? base44.entities.KnowledgeDoc.filter({ brand_id: brandId, is_active: true }) : base44.entities.KnowledgeDoc.filter({ is_active: true }),
+      base44.entities.Message.filter({ conversation_id: conversation.id }, 'timestamp', 20),
+    ]);
+
+    // Find relevant FAQs
+    const lastMsg = conversation.last_message?.toLowerCase() || '';
+    const relevant = faqs.filter(f =>
+      f.question?.toLowerCase().split(' ').some(w => w.length > 4 && lastMsg.includes(w)) ||
+      f.keywords?.some(k => lastMsg.includes(k.toLowerCase()))
+    ).slice(0, 3);
+    setRelevantFAQs(relevant);
+
+    // Similar resolved conversations
+    const resolved = await (brandId
+      ? base44.entities.Conversation.filter({ brand_id: brandId, status: 'resolved' }, '-created_date', 50)
+      : base44.entities.Conversation.filter({ status: 'resolved' }, '-created_date', 50));
+    const similar = resolved.filter(c => c.id !== conversation.id && c.intent === conversation.intent).slice(0, 3);
+    setSimilarConvos(similar);
+
+    // Generate AI suggestion
+    const faqContext = faqs.slice(0, 20).map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+    const kbContext = knowledgeDocs.slice(0, 5).map(d => `${d.title}: ${d.content?.substring(0, 300)}`).join('\n\n');
+    const history = messages.slice(-6).map(m => `${m.sender_type}: ${m.content}`).join('\n');
+
+    const result = await base44.integrations.Core.InvokeLLM({
+      prompt: `You are an AI assistant helping a customer support agent reply to a customer message.
+
+KNOWLEDGE BASE:
+${kbContext}
+
+FAQS:
+${faqContext}
+
+CONVERSATION HISTORY:
+${history}
+
+CUSTOMER'S LATEST MESSAGE: "${conversation.last_message}"
+
+Write a helpful, professional suggested reply for the agent to send. Be concise (2-4 sentences max). Do not include a greeting or sign-off.`,
+    });
+
+    setSuggestion(typeof result === 'string' ? result : result?.text || '');
+    setLoading(false);
+  };
+
+  const toggle = (key) => setExpanded(e => ({ ...e, [key]: !e[key] }));
 
   return (
-    <div className="w-80 border-l overflow-y-auto flex flex-col">
-      <Tabs defaultValue="guidance" className="flex flex-col h-full">
-        <TabsList className="w-full rounded-none border-b">
-          <TabsTrigger value="guidance" className="flex-1">
-            AI Guidance
-          </TabsTrigger>
-          <TabsTrigger value="profile" className="flex-1">
-            Profile
-          </TabsTrigger>
-        </TabsList>
+    <div className="w-72 shrink-0 border-l border-gray-100 bg-white flex flex-col overflow-y-auto">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.1)' }}>
+          <Bot className="w-4 h-4 text-violet-600" />
+        </div>
+        <p className="text-xs font-bold text-gray-800">AI Guidance</p>
+        <button onClick={generateGuidance} disabled={loading}
+          className="ml-auto p-1 hover:bg-gray-100 rounded-lg disabled:opacity-50">
+          {loading ? <Loader2 className="w-3.5 h-3.5 text-violet-500 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-violet-500" />}
+        </button>
+      </div>
 
-        <TabsContent value="guidance" className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Sentiment Indicator */}
-          <div className="bg-card border rounded-lg p-3">
-            <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" />
-              Sentiment
-            </p>
-            <p className="text-2xl">
-              {sentimentEmojis['neutral']} Neutral
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Updates after each customer message
-            </p>
-          </div>
+      {/* Sentiment */}
+      <div className="px-4 py-2.5 border-b border-gray-100">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1.5">Customer Sentiment</p>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: sentiment.bg }}>
+          <span className="text-base">{sentiment.emoji}</span>
+          <span className="text-xs font-semibold" style={{ color: sentiment.color }}>{sentiment.label}</span>
+        </div>
+      </div>
 
-          {/* Suggested Reply */}
-          {suggestedReply && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
-              <p className="text-xs font-semibold text-blue-900 flex items-center gap-1">
-                <Lightbulb className="w-3 h-3" />
-                Suggested Reply
-              </p>
-              <p className="text-sm text-blue-900">{suggestedReply}</p>
-              <Button
-                size="sm"
-                className="w-full gap-1"
-                onClick={() => {
-                  // Insert into composer
-                }}
-              >
-                <Send className="w-3 h-3" />
-                Insert
-              </Button>
-            </div>
-          )}
-
-          {/* Relevant KB Articles */}
-          {relevantKB.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
-                <HelpCircle className="w-3 h-3" />
-                Relevant KB Articles
-              </p>
-              {relevantKB.map(article => (
-                <div key={article.id} className="bg-card border rounded-lg p-2 text-xs space-y-1">
-                  <p className="font-medium line-clamp-2">{article.question}</p>
-                  <p className="text-muted-foreground line-clamp-2">{article.answer}</p>
-                  <Button size="sm" variant="outline" className="w-full text-xs gap-1">
-                    <Copy className="w-3 h-3" />
-                    Send
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Similar Conversations */}
-          {similarConversations.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">
-                Similar Past Conversations
-              </p>
-              {similarConversations.map(conv => (
-                <button
-                  key={conv.id}
-                  className="w-full text-left bg-card border rounded-lg p-2 hover:bg-muted transition-colors"
-                >
-                  <p className="text-xs font-medium">{conv.customer_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {conv.status} · {conv.priority}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="profile" className="flex-1 overflow-y-auto p-4">
-          <div className="space-y-3">
-            <div className="bg-card border rounded-lg p-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Customer</p>
-              <p className="font-medium">{conversation.customer_name}</p>
-              <p className="text-xs text-muted-foreground">{conversation.customer_email}</p>
-            </div>
-
-            <div className="bg-card border rounded-lg p-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">Conversation</p>
-              <div className="space-y-1 text-xs">
-                <p>Status: <span className="font-medium capitalize">{conversation.status}</span></p>
-                <p>Channel: <span className="font-medium capitalize">{conversation.channel}</span></p>
-                <p>Priority: <span className="font-medium capitalize">{conversation.priority}</span></p>
+      {/* Suggested reply */}
+      <div className="border-b border-gray-100">
+        <button onClick={() => toggle('suggestion')}
+          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Suggested Reply</span>
+          {expanded.suggestion ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+        </button>
+        {expanded.suggestion && (
+          <div className="px-4 pb-3">
+            {loading ? (
+              <div className="flex items-center gap-2 py-3 text-gray-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-xs">Generating suggestion...</span>
               </div>
-            </div>
+            ) : suggestion ? (
+              <div>
+                <p className="text-xs text-gray-700 leading-relaxed bg-violet-50 rounded-xl p-3 border border-violet-100 mb-2">{suggestion}</p>
+                <button onClick={() => onInsertReply?.(suggestion)}
+                  className="w-full py-1.5 text-xs font-semibold rounded-lg text-white transition-colors"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+                  Insert Reply
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 py-2">No suggestion available</p>
+            )}
           </div>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
+
+      {/* Relevant FAQs */}
+      <div className="border-b border-gray-100">
+        <button onClick={() => toggle('faqs')}
+          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Relevant FAQs ({relevantFAQs.length})</span>
+          {expanded.faqs ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+        </button>
+        {expanded.faqs && (
+          <div className="px-4 pb-3 space-y-2">
+            {relevantFAQs.length === 0 ? (
+              <p className="text-xs text-gray-400">No relevant FAQs found</p>
+            ) : relevantFAQs.map(faq => (
+              <div key={faq.id} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <p className="text-[11px] font-semibold text-gray-800 mb-1">{faq.question}</p>
+                <p className="text-[11px] text-gray-500 line-clamp-2 mb-2">{faq.answer}</p>
+                <button onClick={() => onInsertReply?.(faq.answer)}
+                  className="text-[10px] font-semibold text-violet-600 hover:text-violet-800 flex items-center gap-1">
+                  <MessageSquare className="w-3 h-3" /> Use this answer
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Similar conversations */}
+      <div>
+        <button onClick={() => toggle('similar')}
+          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Similar Resolved ({similarConvos.length})</span>
+          {expanded.similar ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+        </button>
+        {expanded.similar && (
+          <div className="px-4 pb-3 space-y-2">
+            {similarConvos.length === 0 ? (
+              <p className="text-xs text-gray-400">No similar conversations</p>
+            ) : similarConvos.map(c => (
+              <div key={c.id} className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <p className="text-[11px] font-semibold text-gray-800">{c.customer_name}</p>
+                <p className="text-[11px] text-gray-500 line-clamp-2 mt-0.5">{c.conversation_summary || c.last_message}</p>
+                <span className="text-[10px] text-green-600 mt-1 block">✓ Resolved</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

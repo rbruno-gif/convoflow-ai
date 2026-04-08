@@ -6,35 +6,29 @@
       "type": "string"
     },
     "department_id": {
-      "type": "string",
-      "description": "null = available across brand"
-    },
-    "agent_id": {
-      "type": "string",
-      "description": "null = shared, populated = personal"
+      "type": "string"
     },
     "shortcut": {
       "type": "string",
-      "description": "Trigger shortcut (e.g. 'refund')"
+      "description": "e.g. /refund"
     },
     "title": {
       "type": "string"
     },
     "content": {
-      "type": "string",
-      "description": "Rich text with merge fields: {customer_name} {brand_name} {agent_name} {estimated_wait}"
+      "type": "string"
     },
     "is_shared": {
       "type": "boolean",
-      "description": "true = shared with all agents in brand, false = personal"
+      "default": false,
+      "description": "true = team-wide, false = personal"
     },
-    "usage_count": {
-      "type": "number",
-      "default": 0
-    },
-    "last_used_at": {
+    "owner_email": {
       "type": "string",
-      "format": "date-time"
+      "description": "Agent email for personal responses"
+    },
+    "category": {
+      "type": "string"
     }
   },
   "required": [

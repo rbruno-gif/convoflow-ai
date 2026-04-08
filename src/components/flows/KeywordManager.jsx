@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Hash, Plus, Trash2, X, CheckCircle, Zap, Bot } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 
 export default function KeywordManager({ brandId }) {
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
   const qc = useQueryClient();
-  const { toast } = useToast();
 
   const { data: keywords = [] } = useQuery({
     queryKey: ['keywords', brandId],
@@ -21,33 +19,21 @@ export default function KeywordManager({ brandId }) {
   });
 
   const save = async () => {
-    try {
-      const payload = { ...form, brand_id: brandId };
-      if (form.id) await base44.entities.KeywordTrigger.update(form.id, payload);
-      else await base44.entities.KeywordTrigger.create(payload);
-      qc.invalidateQueries({ queryKey: ['keywords', brandId] });
-      setSaved(true); setTimeout(() => { setSaved(false); setForm(null); }, 1500);
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to save keyword', variant: 'destructive' });
-    }
+    const payload = { ...form, brand_id: brandId };
+    if (form.id) await base44.entities.KeywordTrigger.update(form.id, payload);
+    else await base44.entities.KeywordTrigger.create(payload);
+    qc.invalidateQueries({ queryKey: ['keywords', brandId] });
+    setSaved(true); setTimeout(() => { setSaved(false); setForm(null); }, 1500);
   };
 
   const toggleActive = async (kw) => {
-    try {
-      await base44.entities.KeywordTrigger.update(kw.id, { is_active: !kw.is_active, brand_id: brandId });
-      qc.invalidateQueries({ queryKey: ['keywords', brandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to toggle keyword', variant: 'destructive' });
-    }
+    await base44.entities.KeywordTrigger.update(kw.id, { is_active: !kw.is_active });
+    qc.invalidateQueries({ queryKey: ['keywords', brandId] });
   };
 
   const del = async (id) => {
-    try {
-      await base44.entities.KeywordTrigger.delete(id);
-      qc.invalidateQueries({ queryKey: ['keywords', brandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to delete keyword', variant: 'destructive' });
-    }
+    await base44.entities.KeywordTrigger.delete(id);
+    qc.invalidateQueries({ queryKey: ['keywords', brandId] });
   };
 
   const EXAMPLES = [

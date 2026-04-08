@@ -5,14 +5,19 @@
     "brand_id": {
       "type": "string"
     },
-    "ai_agent_id": {
+    "agent_id": {
+      "type": "string",
+      "description": "AgenticAgent ID"
+    },
+    "agent_name": {
       "type": "string"
     },
     "conversation_id": {
       "type": "string"
     },
-    "customer_id": {
-      "type": "string"
+    "session_id": {
+      "type": "string",
+      "description": "Groups all actions from one reasoning loop"
     },
     "step": {
       "type": "string",
@@ -20,7 +25,6 @@
         "understand",
         "plan",
         "execute",
-        "approval",
         "verify",
         "respond",
         "log"
@@ -31,44 +35,62 @@
       "type": "string"
     },
     "input_data": {
-      "type": "object",
-      "description": "JSON input to the tool"
+      "type": "string"
     },
-    "output_data": {
-      "type": "object",
-      "description": "JSON output from the tool"
-    },
-    "reasoning": {
-      "type": "string",
-      "description": "Why the AI chose this action"
+    "output_result": {
+      "type": "string"
     },
     "status": {
       "type": "string",
       "enum": [
-        "proposed",
+        "success",
+        "failed",
+        "pending_approval",
         "approved",
         "rejected",
-        "executed",
-        "failed"
+        "skipped"
       ],
-      "default": "proposed"
+      "default": "success"
+    },
+    "approval_required": {
+      "type": "boolean",
+      "default": false
     },
     "approved_by": {
-      "type": "string",
-      "description": "Agent ID who approved"
+      "type": "string"
     },
     "approved_at": {
       "type": "string",
       "format": "date-time"
     },
-    "error_message": {
+    "autonomous": {
+      "type": "boolean",
+      "default": true,
+      "description": "true = AI acted alone; false = human approved"
+    },
+    "intent_classified": {
       "type": "string"
+    },
+    "confidence_score": {
+      "type": "number"
+    },
+    "shadow_mode": {
+      "type": "boolean",
+      "default": false
+    },
+    "shadow_verdict": {
+      "type": "string",
+      "enum": [
+        "correct",
+        "incorrect",
+        "pending"
+      ],
+      "default": "pending"
     }
   },
   "required": [
     "brand_id",
-    "ai_agent_id",
-    "conversation_id",
+    "agent_id",
     "step"
   ]
 }

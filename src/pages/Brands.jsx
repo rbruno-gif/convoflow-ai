@@ -38,12 +38,6 @@ export default function Brands() {
     if (selected?.id === brandId) setSelected(null);
   };
 
-  const handleDelete = async (brandId) => {
-    await base44.entities.Brand.delete(brandId);
-    refetch();
-    if (selected?.id === brandId) setSelected(null);
-  };
-
   const selectedBrand = brands.find(b => b.id === selected?.id);
 
   return (
@@ -100,7 +94,6 @@ export default function Brands() {
               setSelected({ ...selectedBrand, ...data });
             }}
             onArchive={() => handleArchive(selectedBrand.id)}
-            onDelete={() => handleDelete(selectedBrand.id)}
           />
         </div>
       )}
@@ -110,15 +103,7 @@ export default function Brands() {
         <NewBrandWizard
           onClose={() => setShowWizard(false)}
           onCreate={async (data) => {
-            const brand = await base44.entities.Brand.create(data);
-            
-            // Auto-provision default channels
-            const user = await base44.auth.me();
-            await base44.functions.invoke('provisionBrandChannels', {
-              brandId: brand.id,
-              userId: user.email,
-            });
-            
+            await base44.entities.Brand.create(data);
             refetch();
             setShowWizard(false);
           }}

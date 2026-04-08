@@ -1,161 +1,223 @@
-/* eslint-disable no-undef */
-/// <reference lib="deno.window" />
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 Deno.serve(async (req) => {
   try {
-    if (req.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405 });
-    }
+    // Parse form-encoded body from Twilio
+    const text = await req.text();
+    console.log('RAW Twilio body:', text);
 
-    const url = new URL(req.url);
-    const brandSlug = url.searchParams.get('brand');
-    const webhookToken = url.searchParams.get('token');
+    const parsed = JSON.parse(text);
+    console.log('Parsed JSON body:', parsed);
 
-    if (!brandSlug || !webhookToken) {
-      return Response.json({ response: 'Invalid request' }, { status: 200 });
+    const from = parsed.from;
+    const body = parsed.body;
+    const profileName = parsed['profile name'] || 'Customer';
+    const brandId = parsed.brand_id || null;
+
+    console.log('Incoming Twilio Messenger webhook:', { from, body, profileName });
+
+    if (!from || !body) {
+      return new Response('OK', { status: 200 });
     }
 
     const base44 = createClientFromRequest(req);
 
-    // 1. Look up MessengerWebhook record
-    const webhooks = await base44.asServiceRole.entities.MessengerWebhook.filter(
-      { webhook_token: webhookToken, is_active: true },
-      '-created_date',
-      1
-    );
-
-    if (webhooks.length === 0) {
-      return Response.json({ response: '' }, { status: 200 });
-    }
-
-    const webhook = webhooks[0];
-
-    // Verify brand slug matches
-    const brands = await base44.asServiceRole.entities.Brand.filter(
-      { id: webhook.brand_id },
-      '-created_date',
-      1
-    );
-
-    if (brands.length === 0 || brands[0].slug !== brandSlug) {
-      return Response.json({ response: '' }, { status: 200 });
-    }
-
-    const brand = brands[0];
-
-    // 2. Parse payload
-    const payload = await req.json();
-    const { from, body, profile_name } = payload;
-
-    if (!from || !body) {
-      return Response.json({ response: '' }, { status: 200 });
-    }
-
-    // Check allowed sender IDs filter
-    if (webhook.allowed_sender_ids && webhook.allowed_sender_ids.length > 0) {
-      if (!webhook.allowed_sender_ids.includes(from)) {
-        return Response.json({ response: '' }, { status: 200 });
-      }
-    }
-
-    // 3. Find or create customer profile
-    let customer = null;
-    const customers = await base44.asServiceRole.entities.CustomerProfile.filter(
-      { brand_id: brand.id, facebook_messenger_id: from },
-      '-created_date',
-      1
-    );
-
-    if (customers.length > 0) {
-      customer = customers[0];
-    } else {
-      customer = await base44.asServiceRole.entities.CustomerProfile.create({
-        brand_id: brand.id,
-        name: profile_name || 'Facebook Customer',
-        facebook_messenger_id: from,
-        preferred_channel: 'facebook_messenger',
-      });
-    }
-
-    // 4. Find or create conversation
-    let conversations = await base44.asServiceRole.entities.Conversation.filter(
-      {
-        brand_id: brand.id,
-        customer_id: customer.id,
-        channel: 'messenger',
-        status: 'open',
-      },
-      '-created_date',
-      1
-    );
+    // Get or create conversation
+    const existing = await base44.asServiceRole.entities.Conversation.filter({
+      customer_fb_id: from,
+    });
 
     let conversation;
-    if (conversations.length > 0) {
-      conversation = conversations[0];
+    if (existing.length > 0) {
+      conversation = existing[0];
+      await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+        last_message: body.slice(0, 200),
+        last_message_time: new Date().toISOString(),
+        unread_count: (conversation.unread_count || 0) + 1,
+        status: 'active',
+      });
     } else {
       conversation = await base44.asServiceRole.entities.Conversation.create({
-        brand_id: brand.id,
-        customer_id: customer.id,
-        channel: 'messenger',
-        channel_id: from,
-        department_id: webhook.department_id,
-        status: 'open',
-        priority: 'normal',
-        customer_name: customer.name,
-        customer_email: customer.email || `${from}@facebook.com`,
+        customer_name: profileName,
+        customer_fb_id: from,
+        brand_id: brandId,
+        status: 'active',
+        mode: 'ai',
+        last_message: body.slice(0, 200),
+        last_message_time: new Date().toISOString(),
         unread_count: 1,
+        tags: ['facebook', 'twilio'],
       });
     }
 
-    // 5. Save incoming message
+    // Save incoming customer message
     await base44.asServiceRole.entities.Message.create({
-      brand_id: brand.id,
       conversation_id: conversation.id,
+      brand_id: brandId,
       sender_type: 'customer',
-      sender_id: from,
-      sender_name: profile_name || 'Customer',
+      sender_name: profileName,
       content: body,
+      timestamp: new Date().toISOString(),
+      is_read: false,
+      message_type: 'text',
     });
 
-    // 6. Generate AI response
-    let aiResponse = webhook.auto_reply_message || 'Thanks for your message! An agent will be with you shortly.';
+    // Only AI-mode conversations get auto-replies
+    if (conversation.mode !== 'human') {
+      // Fetch AI context (brand-scoped if brand_id provided)
+      const faqFilter = brandId ? { is_active: true, brand_id: brandId } : { is_active: true };
+      const kbFilter = brandId ? { is_active: true, brand_id: brandId } : { is_active: true };
+      const settingsFilter = brandId ? { brand_id: brandId } : {};
 
-    try {
-      const claudeResponse = await base44.functions.invoke('generateClaudeResponse', {
-        brandId: brand.id,
-        conversationId: conversation.id,
-        customerMessage: body,
-        previousMessages: [],
+      const [settingsList, faqs, knowledgeDocs] = await Promise.all([
+        brandId ? base44.asServiceRole.entities.AgentSettings.filter(settingsFilter) : base44.asServiceRole.entities.AgentSettings.list(),
+        base44.asServiceRole.entities.FAQ.filter(faqFilter),
+        base44.asServiceRole.entities.KnowledgeDoc.filter(kbFilter),
+      ]);
+
+      const settings = settingsList[0];
+      const persona = settings?.ai_persona_name || 'Victor';
+      const instructions = settings?.ai_instructions || `You are Victor, a friendly and professional customer support agent for U2C Mobile — an affordable wireless carrier operating on AT&T, T-Mobile, and Verizon networks.
+
+HOW TO START A CONVERSATION:
+When a customer says hi, hello, hey, hola, or any greeting, always respond warmly with:
+"Hi! 👋 Welcome to U2C Mobile! I'm Victor, your virtual assistant. I'm here to help you with plans, activation, billing, devices, and more. What can I help you with today?"
+If the customer writes in Spanish, respond entirely in Spanish for the rest of the conversation and introduce yourself as Victor in Spanish.
+
+WHAT YOU HELP WITH:
+- Plans and pricing (On The Go+, Unlimited Eco, Venture, Shine, Ultra)
+- Activating a new line or SIM card (physical or eSIM)
+- Bring Your Own Device (BYOD) compatibility
+- Number porting from another carrier
+- Top-ups and add-ons (via the U2C Mobile app)
+- Billing questions
+- International calling (90+ countries included)
+- Technical support (no signal, activation issues, app problems)
+- Device compatibility
+
+HOW TO HANDLE THE CONVERSATION:
+- Always be warm, concise, and helpful
+- Introduce yourself as Victor at the start of every new conversation
+- Ask one question at a time — never overwhelm the customer
+- If a customer asks about pricing, always direct them to: retail.u2cmobile.com/plans
+- If a customer wants to activate, direct them to download the U2C Mobile app or visit retail.u2cmobile.com/plans
+- If a customer has a technical issue, ask: "Can you tell me what device you're using and what network you're on?" before troubleshooting
+- Never make up prices or plan details — direct to the website if unsure
+- Keep responses short and conversational — no long paragraphs
+- Use emojis occasionally to keep the tone friendly 😊📱
+
+WHEN TO HAND OFF TO A HUMAN AGENT:
+Say "Let me connect you with one of our U2C Mobile team members who can better assist you! 🙏" and escalate when:
+- Customer is angry, frustrated, or uses aggressive language
+- Billing dispute or incorrect charge complaint
+- Activation has failed more than once
+- Number porting issue lasting more than 24 hours
+- Customer explicitly says "speak to a human", "real person", "agent", or "representative"
+- Account security or fraud concern
+- Any issue Victor cannot resolve after 2 attempts
+
+HOW TO END A CONVERSATION:
+When the customer's issue is resolved, or they say thanks, bye, thank you, gracias, or any closing words, always respond with:
+"You're welcome! 😊 Is there anything else I can help you with today?"
+If they confirm they're done, close with:
+"Thank you for choosing U2C Mobile! Have a wonderful day. If you ever need help, Victor is always here for you. 📱✨"
+After the closing message, stop engaging unless the customer writes again.
+
+NEVER:
+- Make up plan prices or features
+- Promise refunds or credits without escalating to a human
+- Engage in topics unrelated to U2C Mobile
+- Respond rudely or dismissively
+- Continue engaging after the customer has clearly ended the conversation
+- Pretend to be a human if the customer sincerely asks if you are an AI
+
+ABOUT U2C MOBILE:
+- Networks: AT&T, T-Mobile, Verizon
+- Plans start at $10/month
+- No contracts ever
+- Physical SIM and eSIM available
+- App available on iOS and Android
+- International calling to 90+ countries included
+- BYOD compatible with GSM unlocked, AT&T, T-Mobile, Verizon, and some CDMA phones
+
+CONTACT INFO TO SHARE WHEN NEEDED:
+- Website: u2cmobile.com
+- Activate online: retail.u2cmobile.com/plans
+- Support email: support@u2cmobile.com
+- Phone: +1 757-919-1555
+- App: Search "U2C Mobile" on App Store or Google Play`;
+
+      const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+      const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n').slice(0, 500);
+
+      // Fetch recent conversation history
+      const recentMessages = await base44.asServiceRole.entities.Message.filter(
+        { conversation_id: conversation.id },
+        'timestamp',
+        3
+      );
+      const history = recentMessages
+        .map(m => `${m.sender_type === 'customer' ? 'Customer' : persona}: ${m.content}`)
+        .join('\n');
+
+      const prompt = `${instructions}
+
+KNOWLEDGE BASE:
+${kbContext}
+
+FAQs:
+${faqContext}
+
+CONVERSATION HISTORY:
+${history}
+
+Customer: ${body}
+
+Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer's message.`;
+
+      const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt,
+        model: 'gemini_3_flash',
       });
 
-      if (claudeResponse.data?.response) {
-        aiResponse = claudeResponse.data.response;
-      }
-    } catch (aiError) {
-      console.error('AI response generation failed:', aiError);
+      const aiReply = typeof aiResponse === 'string' ? aiResponse : aiResponse?.text || "I'm here to help! Let me connect you with a team member.";
+
+      // Save AI reply as message
+      await base44.asServiceRole.entities.Message.create({
+        conversation_id: conversation.id,
+        brand_id: brandId,
+        sender_type: 'ai',
+        sender_name: persona,
+        content: aiReply,
+        timestamp: new Date().toISOString(),
+        is_read: true,
+        message_type: 'text',
+      });
+
+      // Update conversation with AI reply
+      await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+        last_message: aiReply.slice(0, 200),
+        last_message_time: new Date().toISOString(),
+        ai_resolution_attempted: true,
+      });
+
+      console.log('AI reply generated for', from);
+
+      return new Response(aiReply, {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain' },
+      });
     }
 
-    // 7. Save AI response message
-    await base44.asServiceRole.entities.Message.create({
-      brand_id: brand.id,
-      conversation_id: conversation.id,
-      sender_type: 'ai',
-      sender_id: 'messenger-bot',
-      sender_name: brand.ai_persona_name || 'Support Bot',
-      content: aiResponse,
+    return new Response('', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' },
     });
-
-    // 8. Update webhook stats
-    await base44.asServiceRole.entities.MessengerWebhook.update(webhook.id, {
-      last_triggered_at: new Date().toISOString(),
-      total_messages_received: (webhook.total_messages_received || 0) + 1,
-    });
-
-    // 9. Return response
-    return Response.json({ response: aiResponse }, { status: 200 });
   } catch (error) {
-    console.error('Webhook error:', error);
-    return Response.json({ response: 'Thanks for your message. We will get back to you shortly.' }, { status: 200 });
+    console.error('messengerWebhook error:', error);
+    return new Response('', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' },
+    });
   }
 });

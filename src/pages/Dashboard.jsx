@@ -1,47 +1,33 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import BrandSelectorGrid from '@/components/brands/BrandSelectorGrid';
 import GroupDashboard from '@/pages/GroupDashboard';
-import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight, Phone } from 'lucide-react';
+import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow, subDays, format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
-  const { activeBrandId, activeBrand, isInitialized } = useBrand();
+  const { activeBrandId, activeBrand } = useBrand();
 
-  const { data: conversations = [], isLoading: convosLoading } = useQuery({
-    queryKey: ['dashboard-conversations', activeBrandId],
+  const { data: conversations = [] } = useQuery({
+    queryKey: ['conversations', activeBrandId],
     queryFn: () => activeBrandId
-      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-created_date', 100)
-      : [],
-    enabled: !!activeBrandId && isInitialized,
+      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_time', 100)
+      : base44.entities.Conversation.list('-last_message_time', 100),
     refetchInterval: 30000,
   });
-
-  const { data: tickets = [], isLoading: ticketsLoading } = useQuery({
-    queryKey: ['dashboard-tickets', activeBrandId],
+  const { data: tickets = [] } = useQuery({
+    queryKey: ['tickets', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.Ticket.filter({ brand_id: activeBrandId }, '-created_date', 50)
-      : [],
-    enabled: !!activeBrandId && isInitialized,
+      : base44.entities.Ticket.list('-created_date', 50),
   });
-
-  const { data: leads = [], isLoading: leadsLoading } = useQuery({
-    queryKey: ['dashboard-leads', activeBrandId],
+  const { data: leads = [] } = useQuery({
+    queryKey: ['leads', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.Lead.filter({ brand_id: activeBrandId }, '-created_date', 50)
-      : [],
-    enabled: !!activeBrandId && isInitialized,
-  });
-
-  const { data: voiceCalls = [], isLoading: callsLoading } = useQuery({
-    queryKey: ['dashboard-voice-calls', activeBrandId],
-    queryFn: () => activeBrandId
-      ? base44.entities.VoiceCall.filter({ brand_id: activeBrandId }, '-created_date', 20)
-      : [],
-    enabled: !!activeBrandId && isInitialized,
+      : base44.entities.Lead.list('-created_date', 50),
   });
 
   const active = conversations.filter(c => c.status === 'active').length;
@@ -50,24 +36,12 @@ export default function Dashboard() {
   const aiRate = conversations.length > 0 ? Math.round((aiHandled / conversations.length) * 100) : 0;
   const openTickets = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
   const newLeads = leads.filter(l => l.status === 'new').length;
-  const inboundCalls = voiceCalls.filter(c => c.direction === 'inbound').length;
 
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = subDays(new Date(), 6 - i);
-    const startOfDay = d.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(startOfDay).setHours(23, 59, 59, 999);
-    
-    const convCount = conversations.filter(c => {
-      const cDate = new Date(c.created_date).getTime();
-      return cDate >= startOfDay && cDate <= endOfDay;
-    }).length;
-    
-    const callCount = voiceCalls.filter(c => {
-      const cDate = new Date(c.created_date).getTime();
-      return cDate >= startOfDay && cDate <= endOfDay;
-    }).length;
-    
-    return { day: format(d, 'EEE'), chats: convCount, calls: callCount };
+    const dayStr = format(d, 'MMM d');
+    const count = conversations.filter(c => c.created_date && format(new Date(c.created_date), 'MMM d') === dayStr).length;
+    return { day: format(d, 'EEE'), count };
   });
 
   const stats = [
@@ -76,31 +50,15 @@ export default function Dashboard() {
     { icon: AlertTriangle, label: 'Need Attention', value: flagged, sub: 'Flagged + human req.', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
     { icon: Ticket, label: 'Open Tickets', value: openTickets, sub: 'Awaiting resolution', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
     { icon: Users, label: 'New Leads', value: newLeads, sub: 'Uncontacted', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-    { icon: Phone, label: 'Inbound Calls', value: inboundCalls, sub: 'Voice today', color: '#14b8a6', bg: 'rgba(20,184,184,0.1)' },
+    { icon: Zap, label: 'Total Convos', value: conversations.length, sub: 'All time', color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
   ];
 
   const recent = conversations.slice(0, 5);
-
-  // Show loading state while initializing
-  if (!isInitialized || !activeBrandId) {
-    return (
-      <div className="p-6 max-w-7xl mx-auto">
-        <div className="flex items-center justify-center py-12">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            <p className="text-sm text-muted-foreground">Loading dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // If the active brand is U2C Group, show the group-level hub
   if (activeBrand?.slug === 'u2c-group') {
     return <GroupDashboard />;
   }
-
-  const isLoading = convosLoading || ticketsLoading || leadsLoading || callsLoading;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -108,8 +66,6 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">{activeBrand?.name || 'ConvoFlow'} · Overview</p>
       </div>
-
-      <BrandSelectorGrid />
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         {stats.map(({ icon: Icon, label, value, sub, color, bg }) => (
@@ -126,15 +82,14 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <h2 className="font-semibold text-sm mb-4">Chat & Voice Volume (Last 7 Days)</h2>
+          <h2 className="font-semibold text-sm mb-4">Conversation Volume (Last 7 Days)</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={last7}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
               <XAxis dataKey="day" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-              <Bar dataKey="chats" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Chats" />
-              <Bar dataKey="calls" fill="#14b8a6" radius={[4, 4, 0, 0]} name="Calls" />
+              <Bar dataKey="count" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Conversations" />
             </BarChart>
           </ResponsiveContainer>
         </div>

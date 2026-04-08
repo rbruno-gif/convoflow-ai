@@ -1,30 +1,19 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import React from 'react';
+import { useState } from 'react';
 import {
   LayoutDashboard, MessageSquare, BarChart3, Bot, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
   ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio, Inbox, BarChart2, Code2, Hash,
-  Clock, Layers, Shield, User, Megaphone, Activity, Phone
+  Clock, Layers, Shield, User, Megaphone, Activity
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import BrandSwitcher from '@/components/brands/BrandSwitcher';
 
 const navItems = [
-  { path: '/group', icon: Building2, label: 'U2C Group', admin: true },
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/inbox', icon: Inbox, label: 'Inbox' },
-  { path: '/queue', icon: Layers, label: 'Queue' },
-  { path: '/sla', icon: Shield, label: 'SLA' },
-  { path: '/canned-responses', icon: MessageSquare, label: 'Canned Responses' },
-  { path: '/business-hours', icon: Clock, label: 'Business Hours' },
-  { path: '/departments', icon: Layers, label: 'Departments' },
-  { path: '/agents', icon: Users, label: 'Agents' },
-  { path: '/customers', icon: User, label: 'Customers' },
-  { path: '/audit-log', icon: Shield, label: 'Audit Log', admin: true },
   { path: '/live-support', icon: Radio, label: 'Live Support' },
-  { path: '/voice', icon: Phone, label: 'Voice Calls' },
   { path: '/team-chat', icon: Hash, label: 'Team Chat' },
   { path: '/brand-analytics', icon: BarChart2, label: 'Analytics' },
   { path: '/reporting', icon: BarChart3, label: 'Reports' },
@@ -35,10 +24,16 @@ const navItems = [
   { path: '/tickets', icon: Ticket, label: 'Tickets' },
   { path: '/leads', icon: Users, label: 'Leads' },
   { path: '/flagged', icon: AlertTriangle, label: 'Flagged' },
+  { path: '/agents', icon: UserCheck, label: 'Agents' },
+  { path: '/queue', icon: Layers, label: 'Queue' },
+  { path: '/departments', icon: Layers, label: 'Departments' },
+  { path: '/business-hours', icon: Clock, label: 'Business Hours' },
   { path: '/auto-replies', icon: Zap, label: 'Auto-Replies' },
   { path: '/agent-capacity', icon: Activity, label: 'Capacity' },
+  { path: '/customer-profiles', icon: User, label: 'Customers' },
   { path: '/sla-rules', icon: Shield, label: 'SLA Rules' },
   { path: '/campaigns', icon: Megaphone, label: 'Campaigns' },
+  { path: '/audit-log', icon: Shield, label: 'Audit Log' },
   { path: '/brands', icon: Building2, label: 'Brands' },
   { path: '/integrations', icon: Plug, label: 'Integrations' },
   { path: '/settings', icon: Settings, label: 'Settings' },
@@ -47,11 +42,6 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-  const [user, setUser] = useState(null);
-
-  React.useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -83,12 +73,10 @@ export default function Layout() {
         )}
 
         {/* Nav */}
-         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5 px-2">
-          {navItems
-            .filter(item => !item.admin || user?.role === 'admin')
-            .map(({ path, icon: Icon, label }) => {
-              const active = location.pathname === path;
-              return (
+        <nav className="flex-1 py-3 overflow-y-auto space-y-0.5 px-2">
+          {navItems.map(({ path, icon: Icon, label }) => {
+            const active = location.pathname === path;
+            return (
               <Link key={path} to={path}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all',

@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Bot, Plus, Trash2, Edit2, CheckCircle, Shield, Wrench, Eye, Zap, ToggleLeft, ToggleRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
 
 const ALL_TOOLS = [
   { key: 'knowledge_lookup', label: 'Knowledge Base Lookup', desc: 'Search FAQs and knowledge base' },
@@ -32,7 +31,6 @@ const DEFAULT_FORM = {
 
 export default function AgentConfigurator({ brandId }) {
   const qc = useQueryClient();
-  const { toast } = useToast();
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(DEFAULT_FORM);
   const [newGuardrail, setNewGuardrail] = useState('');
@@ -66,35 +64,23 @@ export default function AgentConfigurator({ brandId }) {
   };
 
   const save = async () => {
-    try {
-      const payload = { ...form, brand_id: brandId };
-      if (editing === 'new') await base44.entities.AgenticAgent.create(payload);
-      else await base44.entities.AgenticAgent.update(editing, payload);
-      qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
-      setSaved(true);
-      setTimeout(() => { setSaved(false); setEditing(null); }, 1200);
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to save agent', variant: 'destructive' });
-    }
+    const payload = { ...form, brand_id: brandId };
+    if (editing === 'new') await base44.entities.AgenticAgent.create(payload);
+    else await base44.entities.AgenticAgent.update(editing, payload);
+    qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
+    setSaved(true);
+    setTimeout(() => { setSaved(false); setEditing(null); }, 1200);
   };
 
   const deleteAgent = async (id) => {
-    try {
-      await base44.entities.AgenticAgent.delete(id);
-      qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to delete agent', variant: 'destructive' });
-    }
+    await base44.entities.AgenticAgent.delete(id);
+    qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
   };
 
   const toggleMode = async (agent) => {
-    try {
-      const newMode = agent.mode === 'live' ? 'shadow' : 'live';
-      await base44.entities.AgenticAgent.update(agent.id, { mode: newMode, brand_id: brandId });
-      qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to toggle agent mode', variant: 'destructive' });
-    }
+    const newMode = agent.mode === 'live' ? 'shadow' : 'live';
+    await base44.entities.AgenticAgent.update(agent.id, { mode: newMode });
+    qc.invalidateQueries({ queryKey: ['agentic-agents', brandId] });
   };
 
   const toggleTool = (key) => {

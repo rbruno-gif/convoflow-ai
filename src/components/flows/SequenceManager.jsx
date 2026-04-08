@@ -2,14 +2,12 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Layout, Plus, Trash2, X, CheckCircle, GripVertical, Clock } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
 
 export default function SequenceManager({ brandId }) {
   const [selected, setSelected] = useState(null);
   const [form, setForm] = useState(null);
   const [saved, setSaved] = useState(false);
   const qc = useQueryClient();
-  const { toast } = useToast();
 
   const { data: sequences = [] } = useQuery({
     queryKey: ['sequences', brandId],
@@ -29,15 +27,11 @@ export default function SequenceManager({ brandId }) {
   };
 
   const save = async () => {
-    try {
-      const payload = { ...form, brand_id: brandId };
-      if (selected) await base44.entities.Sequence.update(selected.id, payload);
-      else await base44.entities.Sequence.create(payload);
-      qc.invalidateQueries({ queryKey: ['sequences', brandId] });
-      setSaved(true); setTimeout(() => { setSaved(false); setForm(null); setSelected(null); }, 1500);
-    } catch (err) {
-      toast({ title: 'Error', description: err.message || 'Failed to save sequence', variant: 'destructive' });
-    }
+    const payload = { ...form, brand_id: brandId };
+    if (selected) await base44.entities.Sequence.update(selected.id, payload);
+    else await base44.entities.Sequence.create(payload);
+    qc.invalidateQueries({ queryKey: ['sequences', brandId] });
+    setSaved(true); setTimeout(() => { setSaved(false); setForm(null); setSelected(null); }, 1500);
   };
 
   const editSeq = (seq) => { setSelected(seq); setForm({ ...seq }); };

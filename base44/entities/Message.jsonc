@@ -3,66 +3,60 @@
   "type": "object",
   "properties": {
     "brand_id": {
-      "type": "string"
+      "type": "string",
+      "description": "Brand this message belongs to"
     },
     "conversation_id": {
-      "type": "string",
-      "description": "Reference to Conversation"
+      "type": "string"
     },
     "sender_type": {
       "type": "string",
       "enum": [
         "customer",
+        "ai",
         "agent",
-        "system",
-        "ai"
+        "supervisor"
       ],
       "description": "Who sent the message"
     },
-    "sender_id": {
-      "type": "string",
-      "description": "Agent/customer ID"
-    },
     "sender_name": {
-      "type": "string"
-    },
-    "sender_avatar": {
       "type": "string"
     },
     "content": {
       "type": "string"
     },
-    "attachments": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string"
-          },
-          "filename": {
-            "type": "string"
-          },
-          "mime_type": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "is_internal_note": {
-      "type": "boolean",
-      "default": false,
-      "description": "Internal note invisible to customer"
-    },
-    "read_at": {
+    "timestamp": {
       "type": "string",
       "format": "date-time"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "order",
+        "faq",
+        "handoff",
+        "whisper"
+      ],
+      "default": "text"
+    },
+    "is_whisper": {
+      "type": "boolean",
+      "default": false,
+      "description": "Private message from supervisor to agent only"
+    },
+    "whisper_to_agent_email": {
+      "type": "string",
+      "description": "Email of agent receiving the whisper message"
     }
   },
   "required": [
-    "brand_id",
     "conversation_id",
-    "sender_type",
-    "content"
+    "content",
+    "sender_type"
   ]
 }

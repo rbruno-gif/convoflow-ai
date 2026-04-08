@@ -8,30 +8,15 @@ import { BrandProvider } from '@/context/BrandContext';
 import Brands from '@/pages/Brands';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
-import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Pages
 import Home from '@/pages/Home';
 import Dashboard from '@/pages/Dashboard';
-import GroupDashboard from '@/pages/GroupDashboard';
-import DepartmentManagement from '@/pages/DepartmentManagement';
-import CustomerProfilesPage from '@/pages/CustomerProfilesPage';
-import AuditLogPage from '@/pages/AuditLogPage';
-import AgentManagement from '@/pages/AgentManagement';
 import Conversations from '@/pages/Conversations';
-import Inbox from '@/pages/Inbox';
-import QueueDashboard from '@/pages/QueueDashboard';
-import SLADashboard from '@/pages/SLADashboard';
-import CannedResponses from '@/pages/CannedResponses';
-import BusinessHoursSettings from '@/pages/BusinessHoursSettings';
-import KnowledgeBase from '@/pages/KnowledgeBase';
-import KnowledgeScraper from '@/pages/KnowledgeScraper';
-import WidgetBuilder from '@/pages/WidgetBuilder';
-import AIAgent from '@/pages/AIAgent';
-import Workflows from '@/pages/Workflows';
 import Analytics from '@/pages/Analytics';
 import BrandInbox from '@/pages/BrandInbox';
 import BrandAnalytics from '@/pages/BrandAnalytics';
+import WidgetBuilder from '@/pages/WidgetBuilder';
 import ReportingDashboard from '@/pages/ReportingDashboard';
 import TeamChat from '@/pages/TeamChat';
 import Departments from '@/pages/Departments';
@@ -40,7 +25,10 @@ import AutoReplies from '@/pages/AutoReplies';
 import AgentCapacityPage from '@/pages/AgentCapacityPage';
 import CustomerProfiles from '@/pages/CustomerProfiles';
 import SLARules from '@/pages/SLARules';
+import AuditLogPage from '@/pages/AuditLogPage';
+import ProactiveCampaigns from '@/pages/ProactiveCampaigns';
 import QueueManagement from '@/pages/QueueManagement';
+import AIAgent from '@/pages/AIAgent';
 import Visitors from '@/pages/Visitors';
 import Flows from '@/pages/Flows';
 import Tickets from '@/pages/Tickets';
@@ -50,9 +38,8 @@ import Agents from '@/pages/Agents';
 import Integrations from '@/pages/Integrations';
 import Settings from '@/pages/Settings';
 import CommitLogs from '@/pages/CommitLogs';
+import KnowledgeScraper from '@/pages/KnowledgeScraper';
 import LiveSupport from '@/pages/LiveSupport';
-import Voice from '@/pages/Voice';
-import Campaigns from '@/pages/Campaigns';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DataDeletion from '@/pages/DataDeletion';
@@ -86,43 +73,36 @@ const AuthenticatedApp = () => {
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/data-deletion" element={<DataDeletion />} />
       <Route element={<Layout />}>
-        <Route path="/group" element={<GroupDashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/departments" element={<DepartmentManagement />} />
-        <Route path="/agents" element={<AgentManagement />} />
-        <Route path="/customers" element={<CustomerProfilesPage />} />
-        <Route path="/audit-log" element={<AuditLogPage />} />
         <Route path="/conversations" element={<Conversations />} />
-        <Route path="/inbox" element={<Inbox />} />
-        <Route path="/queue" element={<QueueDashboard />} />
-        <Route path="/sla" element={<SLADashboard />} />
-        <Route path="/canned-responses" element={<CannedResponses />} />
-        <Route path="/business-hours" element={<BusinessHoursSettings />} />
-        <Route path="/knowledge-base" element={<KnowledgeBase />} />
-        <Route path="/knowledge-scraper" element={<KnowledgeScraper />} />
-        <Route path="/widget-builder" element={<WidgetBuilder />} />
-        <Route path="/ai-agent" element={<AIAgent />} />
-        <Route path="/workflows" element={<Workflows />} />
+        <Route path="/inbox" element={<BrandInbox />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/brand-analytics" element={<BrandAnalytics />} />
+        <Route path="/widget-builder" element={<WidgetBuilder />} />
         <Route path="/reporting" element={<ReportingDashboard />} />
         <Route path="/team-chat" element={<TeamChat />} />
+        <Route path="/departments" element={<Departments />} />
+        <Route path="/business-hours" element={<BusinessHoursPage />} />
         <Route path="/auto-replies" element={<AutoReplies />} />
         <Route path="/agent-capacity" element={<AgentCapacityPage />} />
         <Route path="/customer-profiles" element={<CustomerProfiles />} />
         <Route path="/sla-rules" element={<SLARules />} />
+        <Route path="/audit-log" element={<AuditLogPage />} />
+        <Route path="/campaigns" element={<ProactiveCampaigns />} />
+        <Route path="/queue" element={<QueueManagement />} />
+        <Route path="/ai-agent" element={<AIAgent />} />
         <Route path="/visitors" element={<Visitors />} />
         <Route path="/flows" element={<Flows />} />
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/leads" element={<Leads />} />
         <Route path="/flagged" element={<Flagged />} />
+        <Route path="/agents" element={<Agents />} />
         <Route path="/integrations" element={<Integrations />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/commit-logs" element={<CommitLogs />} />
         <Route path="/brands" element={<Brands />} />
+        <Route path="/knowledge-scraper" element={<KnowledgeScraper />} />
         <Route path="/live-support" element={<LiveSupport />} />
-        <Route path="/voice" element={<Voice />} />
-        <Route path="/campaigns" element={<Campaigns />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
@@ -131,18 +111,16 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <BrandProvider>
-            <Router>
-              <AuthenticatedApp />
-            </Router>
-          </BrandProvider>
-          <Toaster />
-        </QueryClientProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+    <AuthProvider>
+      <QueryClientProvider client={queryClientInstance}>
+        <BrandProvider>
+        <Router>
+          <AuthenticatedApp />
+        </Router>
+        </BrandProvider>
+        <Toaster />
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 

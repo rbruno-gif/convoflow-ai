@@ -6,8 +6,7 @@
       "type": "string"
     },
     "department_id": {
-      "type": "string",
-      "description": "null = brand default settings"
+      "type": "string"
     },
     "max_queue_size": {
       "type": "number",
@@ -15,19 +14,7 @@
     },
     "max_wait_minutes": {
       "type": "number",
-      "default": 15
-    },
-    "queue_position_messaging_enabled": {
-      "type": "boolean",
-      "default": true
-    },
-    "position_update_interval_minutes": {
-      "type": "number",
-      "default": 2
-    },
-    "position_message_template": {
-      "type": "string",
-      "description": "Template with {position} {estimated_wait} {brand_name} {department_name}"
+      "default": 10
     },
     "assignment_method": {
       "type": "string",
@@ -40,13 +27,25 @@
       ],
       "default": "least_busy"
     },
-    "sticky_agent_fallback": {
+    "assignment_fallback": {
       "type": "string",
       "enum": [
         "least_busy",
+        "manual",
         "round_robin"
       ],
       "default": "least_busy"
+    },
+    "send_position_updates": {
+      "type": "boolean",
+      "default": true
+    },
+    "position_message_template": {
+      "type": "string"
+    },
+    "update_interval_minutes": {
+      "type": "number",
+      "default": 2
     },
     "agent_accept_timeout_seconds": {
       "type": "number",
@@ -57,16 +56,31 @@
       "items": {
         "type": "string",
         "enum": [
-          "continue_waiting",
-          "leave_message",
+          "ai_takeover",
+          "callback_request",
+          "voicemail_ticket",
+          "redirect_department",
           "schedule_callback"
         ]
-      },
-      "description": "Ordered list of options offered when max wait exceeded"
+      }
     },
-    "enable_priority_lanes": {
+    "overflow_department_id": {
+      "type": "string"
+    },
+    "grace_period_minutes": {
+      "type": "number",
+      "default": 5
+    },
+    "csat_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority_lanes_enabled": {
       "type": "boolean",
       "default": false
+    },
+    "wait_threshold_message": {
+      "type": "string"
     }
   },
   "required": [

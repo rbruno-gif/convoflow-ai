@@ -1,88 +1,135 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import {
-  Building2, Lock, Code2, Bell, Puzzle,
-  ChevronRight
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import BrandingSettings from '@/components/settings/BrandingSettings';
-import SecurityCompliance from '@/components/settings/SecurityCompliance';
-import APIWebhooks from '@/components/settings/APIWebhooks';
-import WidgetSettings from '@/components/settings/WidgetSettings';
-import IntegrationsMarketplace from '@/components/settings/IntegrationsMarketplace';
-
-const SETTINGS_TABS = [
-  { key: 'branding', label: 'Brand & White Label', icon: Building2 },
-  { key: 'widget', label: 'Chat Widget', icon: Bell },
-  { key: 'security', label: 'Security & Compliance', icon: Lock },
-  { key: 'api', label: 'API & Webhooks', icon: Code2 },
-  { key: 'integrations', label: 'Integrations', icon: Puzzle },
-];
+import { Settings as SettingsIcon, Save, Upload, CheckCircle } from 'lucide-react';
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('branding');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const { activeBrandId } = useBrand();
+  const { activeBrandId, activeBrand } = useBrand();
+  const [form, setForm] = useState({
+    primary_color: '#3b82f6',
+    widget_position: 'bottom-right',
+    greeting_message: '',
+    chatbot_name: 'ShopBot',
+    show_branding: true,
+    privacy_policy_url: '',
+    terms_of_service_url: '',
+    data_deletion_url: '',
+  });
+  const [settingsId, setSettingsId] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const qc = useQueryClient();
 
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'branding':
-        return <BrandingSettings brandId={activeBrandId} onChangesMade={() => setHasUnsavedChanges(true)} />;
-      case 'widget':
-        return <WidgetSettings brandId={activeBrandId} onChangesMade={() => setHasUnsavedChanges(true)} />;
-      case 'security':
-        return <SecurityCompliance brandId={activeBrandId} onChangesMade={() => setHasUnsavedChanges(true)} />;
-      case 'api':
-        return <APIWebhooks brandId={activeBrandId} onChangesMade={() => setHasUnsavedChanges(true)} />;
-      case 'integrations':
-        return <IntegrationsMarketplace brandId={activeBrandId} />;
-      default:
-        return null;
+  const { data: settings = [] } = useQuery({
+    queryKey: ['widget-settings', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.WidgetSettings.filter({ brand_id: activeBrandId })
+      : base44.entities.WidgetSettings.list(),
+  });
+
+  useEffect(() => {
+    setSettingsId(null);
+    setForm({ primary_color: '#3b82f6', widget_position: 'bottom-right', greeting_message: '', chatbot_name: 'ShopBot', show_branding: true, privacy_policy_url: '', terms_of_service_url: '', data_deletion_url: '' });
+    if (settings.length > 0) {
+      const s = settings[0];
+      setSettingsId(s.id);
+      setForm(prev => ({ ...prev, ...s }));
     }
+  }, [settings]);
+
+  const save = async () => {
+    const payload = activeBrandId ? { ...form, brand_id: activeBrandId } : form;
+    if (settingsId) await base44.entities.WidgetSettings.update(settingsId, payload);
+    else { const c = await base44.entities.WidgetSettings.create(payload); setSettingsId(c.id); }
+    qc.invalidateQueries({ queryKey: ['widget-settings', activeBrandId] });
+    setSaved(true); setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleIconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, app_icon_url: file_url }));
+    setUploading(false);
   };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-64 bg-gray-50 border-r overflow-y-auto p-6">
-        <h3 className="font-bold mb-6">Settings</h3>
-        <div className="space-y-1">
-          {SETTINGS_TABS.map(({ key, label, icon: TabIcon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={cn(
-                'w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all',
-                activeTab === key
-                  ? 'bg-white text-foreground shadow-sm border'
-                  : 'text-muted-foreground hover:bg-white/50'
-              )}
-            >
-              <TabIcon className="w-4 h-4" />
-              <span>{label}</span>
-              {activeTab === key && <ChevronRight className="ml-auto w-4 h-4" />}
-            </button>
-          ))}
+    <div className="p-6 max-w-2xl">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.1)' }}>
+          <SettingsIcon className="w-5 h-5 text-violet-600" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+          <p className="text-xs text-gray-400">{activeBrand?.name || 'All brands'} · Widget and app configuration</p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Unsaved Banner */}
-        {hasUnsavedChanges && (
-          <div className="bg-amber-50 border-b border-amber-200 px-6 py-3 flex items-center justify-between">
-            <p className="text-sm text-amber-800">You have unsaved changes</p>
-            <div className="flex gap-2">
-              <button className="text-sm text-amber-700 hover:text-amber-900 font-medium">Discard</button>
-              <button className="text-sm bg-amber-600 text-white px-3 py-1 rounded-lg hover:bg-amber-700">Save</button>
+      <div className="space-y-5">
+        {/* Widget */}
+        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 space-y-4">
+          <h2 className="font-semibold text-sm text-gray-800">Widget Settings</h2>
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">Chatbot Name</label>
+            <input value={form.chatbot_name} onChange={e => setForm(f => ({ ...f, chatbot_name: e.target.value }))}
+              className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">Greeting Message</label>
+            <textarea value={form.greeting_message} onChange={e => setForm(f => ({ ...f, greeting_message: e.target.value }))}
+              rows={2} className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none" />
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Primary Color</label>
+              <div className="flex items-center gap-2">
+                <input type="color" value={form.primary_color} onChange={e => setForm(f => ({ ...f, primary_color: e.target.value }))}
+                  className="w-10 h-10 rounded-lg border border-gray-200 cursor-pointer p-1" />
+                <span className="text-xs text-gray-500">{form.primary_color}</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">Widget Position</label>
+              <select value={form.widget_position} onChange={e => setForm(f => ({ ...f, widget_position: e.target.value }))}
+                className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none">
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+              </select>
             </div>
           </div>
-        )}
-        
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {renderContent()}
+          <div>
+            <label className="text-xs font-medium text-gray-500 mb-1.5 block">App Icon</label>
+            <label className="flex items-center gap-2 cursor-pointer w-fit px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-xs text-gray-600">
+              <Upload className="w-3.5 h-3.5" />
+              {uploading ? 'Uploading...' : form.app_icon_url ? 'Change Icon' : 'Upload Icon'}
+              <input type="file" accept="image/*" className="hidden" onChange={handleIconUpload} />
+            </label>
+            {form.app_icon_url && <img src={form.app_icon_url} alt="App icon" className="w-12 h-12 rounded-xl mt-2 border border-gray-100" />}
+          </div>
         </div>
+
+        {/* Legal URLs */}
+        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 space-y-4">
+          <h2 className="font-semibold text-sm text-gray-800">Legal URLs</h2>
+          {[
+            { label: 'Privacy Policy URL', field: 'privacy_policy_url' },
+            { label: 'Terms of Service URL', field: 'terms_of_service_url' },
+            { label: 'Data Deletion URL', field: 'data_deletion_url' },
+          ].map(({ label, field }) => (
+            <div key={field}>
+              <label className="text-xs font-medium text-gray-500 mb-1.5 block">{label}</label>
+              <input value={form[field] || ''} onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
+                placeholder="https://..." className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+            </div>
+          ))}
+        </div>
+
+        <button onClick={save} className="w-full py-2.5 rounded-xl text-white text-sm font-semibold flex items-center justify-center gap-2"
+          style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+          {saved ? <><CheckCircle className="w-4 h-4" /> Saved!</> : <><Save className="w-4 h-4" /> Save Settings</>}
+        </button>
       </div>
     </div>
   );

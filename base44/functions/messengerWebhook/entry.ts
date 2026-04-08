@@ -1,128 +1,165 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-const VERIFY_TOKEN = Deno.env.get('FACEBOOK_VERIFY_TOKEN');
-const PAGE_ACCESS_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID');
+const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN');
+const TWILIO_MESSENGER_SENDER = 'messenger:338980205971809';
+
+async function sendTwilioMessage(to, body) {
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
+  const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
+
+  const formData = new URLSearchParams();
+  formData.append('From', TWILIO_MESSENGER_SENDER);
+  formData.append('To', to);
+  formData.append('Body', body);
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${credentials}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData.toString(),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    console.error('Twilio send error:', data);
+  }
+  return data;
+}
 
 Deno.serve(async (req) => {
   try {
-    // Handle webhook verification (GET request from Facebook)
-    if (req.method === 'GET') {
-      const url = new URL(req.url);
-      const mode = url.searchParams.get('hub.mode');
-      const token = url.searchParams.get('hub.verify_token');
-      const challenge = url.searchParams.get('hub.challenge');
+    // Parse form-encoded body from Twilio
+    const text = await req.text();
+    const params = new URLSearchParams(text);
 
-      console.log('Verification attempt:', { mode, token, challenge, expectedToken: VERIFY_TOKEN });
+    const from = params.get('From'); // e.g. messenger:1234567890
+    const body = params.get('Body');
+    const profileName = params.get('ProfileName') || 'Customer';
 
-      if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-        return new Response(challenge, { status: 200 });
-      } else {
-        return new Response('Forbidden', { status: 403 });
-      }
+    console.log('Incoming Twilio Messenger webhook:', { from, body, profileName });
+
+    if (!from || !body) {
+      return new Response('OK', { status: 200 });
     }
 
-    // Handle incoming messages (POST request from Facebook)
-    if (req.method === 'POST') {
-      const base44 = createClientFromRequest(req);
-      const body = await req.json();
+    const base44 = createClientFromRequest(req);
 
-      // Verify X-Hub-Signature for security
-      const signature = req.headers.get('x-hub-signature-256');
-      const isValid = await verifyWebhookSignature(body, signature);
-      if (!isValid) {
-        return new Response('Invalid signature', { status: 403 });
-      }
+    // Get or create conversation
+    const existing = await base44.asServiceRole.entities.Conversation.filter({
+      customer_fb_id: from,
+    });
 
-      if (body.object === 'page') {
-        for (const entry of body.entry) {
-          if (entry.messaging) {
-            for (const messaging of entry.messaging) {
-              const senderId = messaging.sender.id;
-              const recipientId = messaging.recipient.id;
-              const message = messaging.message;
-
-              if (message && message.text) {
-                // Get or create conversation
-                const conversations = await base44.asServiceRole.entities.Conversation.filter({
-                  customer_fb_id: senderId,
-                });
-
-                let conversation = conversations[0];
-                if (!conversation) {
-                  // Fetch customer name from Facebook
-                  const customerInfo = await getCustomerInfo(senderId);
-                  conversation = await base44.asServiceRole.entities.Conversation.create({
-                    customer_name: customerInfo.name || 'Customer',
-                    customer_fb_id: senderId,
-                    customer_avatar: customerInfo.avatar || '',
-                    status: 'active',
-                    mode: 'ai',
-                    last_message: message.text,
-                    last_message_time: new Date().toISOString(),
-                  });
-                }
-
-                // Store the incoming message
-                await base44.asServiceRole.entities.Message.create({
-                  conversation_id: conversation.id,
-                  sender_type: 'customer',
-                  sender_name: conversation.customer_name,
-                  content: message.text,
-                  timestamp: new Date(messaging.timestamp).toISOString(),
-                  message_type: 'text',
-                });
-
-                // Update conversation
-                await base44.asServiceRole.entities.Conversation.update(conversation.id, {
-                  last_message: message.text,
-                  last_message_time: new Date(messaging.timestamp).toISOString(),
-                  unread_count: (conversation.unread_count || 0) + 1,
-                });
-              }
-            }
-          }
-        }
-      }
-
-      return new Response('ok', { status: 200 });
+    let conversation;
+    if (existing.length > 0) {
+      conversation = existing[0];
+      await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+        last_message: body.slice(0, 200),
+        last_message_time: new Date().toISOString(),
+        unread_count: (conversation.unread_count || 0) + 1,
+        status: 'active',
+      });
+    } else {
+      conversation = await base44.asServiceRole.entities.Conversation.create({
+        customer_name: profileName,
+        customer_fb_id: from,
+        status: 'active',
+        mode: 'ai',
+        last_message: body.slice(0, 200),
+        last_message_time: new Date().toISOString(),
+        unread_count: 1,
+        tags: ['facebook', 'twilio'],
+      });
     }
 
-    return new Response('Method not allowed', { status: 405 });
+    // Save incoming customer message
+    await base44.asServiceRole.entities.Message.create({
+      conversation_id: conversation.id,
+      sender_type: 'customer',
+      sender_name: profileName,
+      content: body,
+      timestamp: new Date().toISOString(),
+      is_read: false,
+      message_type: 'text',
+    });
+
+    // Only AI-mode conversations get auto-replies
+    if (conversation.mode !== 'human') {
+      // Fetch AI context
+      const [settingsList, faqs, knowledgeDocs] = await Promise.all([
+        base44.asServiceRole.entities.AgentSettings.list(),
+        base44.asServiceRole.entities.FAQ.filter({ is_active: true }),
+        base44.asServiceRole.entities.KnowledgeDoc.filter({ is_active: true }),
+      ]);
+
+      const settings = settingsList[0];
+      const instructions = settings?.ai_instructions || 'You are a helpful customer support assistant. Be concise and friendly.';
+      const persona = settings?.ai_persona_name || 'AI Assistant';
+
+      const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+      const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
+
+      // Fetch recent conversation history
+      const recentMessages = await base44.asServiceRole.entities.Message.filter(
+        { conversation_id: conversation.id },
+        'timestamp',
+        10
+      );
+      const history = recentMessages
+        .map(m => `${m.sender_type === 'customer' ? 'Customer' : persona}: ${m.content}`)
+        .join('\n');
+
+      const prompt = `${instructions}
+
+KNOWLEDGE BASE:
+${kbContext}
+
+FAQs:
+${faqContext}
+
+CONVERSATION HISTORY:
+${history}
+
+Customer: ${body}
+
+Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer's message.`;
+
+      const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt,
+        model: 'gpt_5_mini',
+      });
+
+      const aiReply = typeof aiResponse === 'string' ? aiResponse : aiResponse?.text || "I'm here to help! Let me connect you with a team member.";
+
+      // Save AI reply as message
+      await base44.asServiceRole.entities.Message.create({
+        conversation_id: conversation.id,
+        sender_type: 'ai',
+        sender_name: persona,
+        content: aiReply,
+        timestamp: new Date().toISOString(),
+        is_read: true,
+        message_type: 'text',
+      });
+
+      // Update conversation with AI reply
+      await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+        last_message: aiReply.slice(0, 200),
+        last_message_time: new Date().toISOString(),
+        ai_resolution_attempted: true,
+      });
+
+      // Send reply via Twilio back to the messenger user
+      await sendTwilioMessage(from, aiReply);
+
+      console.log('AI reply sent to', from);
+    }
+
+    return new Response('OK', { status: 200 });
   } catch (error) {
-    console.error('Webhook error:', error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    console.error('messengerWebhook error:', error);
+    return new Response('OK', { status: 200 }); // Always return 200 to Twilio
   }
 });
-
-async function verifyWebhookSignature(body, signature) {
-  if (!signature) return true; // Skip verification for testing
-  
-  try {
-    const key = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(Deno.env.get('FACEBOOK_APP_SECRET')),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    
-    const signatureBytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(JSON.stringify(body)));
-    const hash = `sha256=${Array.from(new Uint8Array(signatureBytes)).map(b => b.toString(16).padStart(2, '0')).join('')}`;
-    
-    return hash === signature;
-  } catch (e) {
-    console.error('Signature verification error:', e);
-    return true; // Allow webhook through for testing
-  }
-}
-
-async function getCustomerInfo(senderId) {
-  const token = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
-  const response = await fetch(`https://graph.facebook.com/${senderId}?fields=first_name,last_name,profile_pic&access_token=${token}`);
-  const data = await response.json();
-
-  return {
-    name: `${data.first_name} ${data.last_name}`,
-    avatar: data.profile_pic,
-  };
-}

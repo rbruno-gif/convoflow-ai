@@ -29,17 +29,22 @@ Deno.serve(async (req) => {
     
     // Step 2: Extract webhook_token from query params and look up brand_id
     const webhookToken = url.searchParams.get('token');
-    let brandId = null;
+    let brandId = url.searchParams.get('brand_id'); // fallback to brand_id param if provided
     
-    if (webhookToken) {
+    console.log(`[Webhook] Received with token: ${webhookToken}, brand_id param: ${brandId}`);
+    
+    if (webhookToken && !brandId) {
       try {
         const webhooks = await base44.asServiceRole.entities.Webhook.filter({ webhook_token: webhookToken });
+        console.log(`[Webhook] Webhook lookup returned ${webhooks?.length || 0} results`);
         if (webhooks && webhooks.length > 0) {
           brandId = webhooks[0].brand_id;
           console.log(`[Webhook] Found brand_id: ${brandId} for token: ${webhookToken}`);
+        } else {
+          console.warn(`[Webhook] No webhook found with token: ${webhookToken}`);
         }
       } catch (e) {
-        console.warn(`[Webhook] Could not look up webhook token: ${e.message}`);
+        console.error(`[Webhook] Error looking up webhook: ${e.message}`);
       }
     }
     

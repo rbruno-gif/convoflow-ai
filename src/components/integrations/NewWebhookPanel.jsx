@@ -20,8 +20,18 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
   const handleCreate = async () => {
     setError('');
     
+    if (!brandId) {
+      setError('Brand is required. Please select a brand from the brand switcher.');
+      return;
+    }
+
     if (!pageName.trim() || !pageId.trim()) {
       setError('Page name and page ID are required');
+      return;
+    }
+
+    if (!departmentId) {
+      setError('Department is required');
       return;
     }
 

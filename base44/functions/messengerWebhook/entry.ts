@@ -1,30 +1,23 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-const TWILIO_ACCOUNT_SID = Deno.env.get('TWILIO_ACCOUNT_SID');
-const TWILIO_AUTH_TOKEN = Deno.env.get('TWILIO_AUTH_TOKEN');
-const TWILIO_MESSENGER_SENDER = 'messenger:338980205971809';
+const FB_PAGE_ACCESS_TOKEN = Deno.env.get('FB_PAGE_ACCESS_TOKEN');
 
-async function sendTwilioMessage(to, body) {
-  const url = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
-  const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
-
-  const formData = new URLSearchParams();
-  formData.append('From', TWILIO_MESSENGER_SENDER);
-  formData.append('To', to);
-  formData.append('Body', body);
-
-  const res = await fetch(url, {
+async function sendFacebookMessage(recipientId, text) {
+  const res = await fetch('https://graph.facebook.com/v18.0/me/messages', {
     method: 'POST',
     headers: {
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Bearer ${FB_PAGE_ACCESS_TOKEN}`,
+      'Content-Type': 'application/json',
     },
-    body: formData.toString(),
+    body: JSON.stringify({
+      recipient: { id: recipientId },
+      message: { text },
+    }),
   });
 
   const data = await res.json();
   if (!res.ok) {
-    console.error('Twilio send error:', data);
+    console.error('Facebook send error:', data);
   }
   return data;
 }
@@ -154,10 +147,10 @@ Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer
         ai_resolution_attempted: true,
       });
 
-      // Send reply via Twilio back to the messenger user
-      await sendTwilioMessage(from, aiReply);
+      // Send reply via Facebook Graph API
+      await sendFacebookMessage(from, aiReply);
 
-      console.log('AI reply sent to', from);
+      console.log('AI reply sent via Facebook to', from);
     }
 
     return new Response('OK', { status: 200 });

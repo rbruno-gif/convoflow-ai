@@ -21,6 +21,11 @@ Deno.serve(async (req) => {
       const res = await fetch(url, {
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; U2CBot/1.0)' }
       });
+      
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
       const html = await res.text();
       // Strip HTML tags, scripts, styles
       pageText = html

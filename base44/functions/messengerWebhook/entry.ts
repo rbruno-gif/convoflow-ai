@@ -25,8 +25,13 @@ Deno.serve(async (req) => {
     }
 
     const base44 = createClientFromRequest(req);
+    const url = new URL(req.url);
     
-    // Step 1: Parse incoming payload from Facebook (or Zapier)
+    // Step 1: Try to get brand_id from query params first (Zapier format)
+    let brandId = url.searchParams.get('brand_id');
+    console.log(`[Webhook] brand_id from query params: ${brandId}`);
+    
+    // Step 2: Parse incoming payload
     const bodyText = await req.text();
     const payload = JSON.parse(bodyText);
     
@@ -43,7 +48,6 @@ Deno.serve(async (req) => {
       if (messaging) {
         from = messaging.sender.id;
         messageBody = messaging.message?.text;
-        // Note: Facebook doesn't send profile_name in the webhook, we'll fetch it later if needed
       }
     } 
     // Handle Zapier/custom format
@@ -55,9 +59,8 @@ Deno.serve(async (req) => {
     
     console.log(`[Webhook] Incoming message - Page: ${facebookPageId}, From: ${from}, Body: ${messageBody}`);
     
-    // Step 2: Look up brand_id using Facebook page ID
-    let brandId = null;
-    if (facebookPageId) {
+    // Step 3: If no query param brand_id, look it up using Facebook page ID
+    if (!brandId && facebookPageId) {
       try {
         const webhooks = await base44.asServiceRole.entities.MessengerWebhook.filter({ 
           facebook_page_id: facebookPageId 
@@ -73,7 +76,7 @@ Deno.serve(async (req) => {
     }
     
     if (!brandId) {
-      console.warn(`[Webhook] No brand_id found for page ${facebookPageId}, returning fallback`);
+      console.warn(`[Webhook] No brand_id found, returning fallback`);
       return new Response(
         JSON.stringify({ response: 'Thanks for your message. We will be with you shortly.' }),
         {
@@ -86,7 +89,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { from: _, body, profile_name } = { from, body: messageBody, profile_name: profileName };
+    const body = messageBody;
 
     if (!from || !body) {
       return new Response(JSON.stringify({ response: 'Thanks for your message.' }), {
@@ -146,6 +149,15 @@ Deno.serve(async (req) => {
     console.log(`Facebook message saved - Conversation: ${conversation.id}, From: ${from}`);
 
     // Step 6: Get AI response from knowledge base + FAQs using LLM
+    // Fallback FAQs for U2C Mobile
+    const fallbackFAQs = [
+      { question: 'what plans do you offer', answer: 'U2C Mobile offers prepaid and postpaid plans starting from $25/month. Visit u2cmobile.com for details.' },
+      { question: 'how do I cancel', answer: 'To cancel call 1-844-222-4127 or dial 611 from your device.' },
+      { question: 'coverage', answer: 'Check coverage at u2cmobile.com/coverage' },
+      { question: 'billing', answer: 'For billing questions call 1-844-222-4127' },
+      { question: 'international roaming', answer: 'U2C Mobile offers roaming to Canada and Mexico included on select plans.' },
+    ];
+    
     let aiResponse = null;
     try {
       const [kbEntries, faqEntries] = await Promise.all([
@@ -161,27 +173,25 @@ Deno.serve(async (req) => {
 
       console.log(`Found ${kbEntries?.length || 0} KB docs and ${faqEntries?.length || 0} FAQs for brand ${brandId}`);
 
-      if ((kbEntries && kbEntries.length > 0) || (faqEntries && faqEntries.length > 0)) {
-        const kbContext = (kbEntries || [])
-          .map((entry) => `# ${entry.title}\n${entry.content}`)
-          .join('\n\n');
-        
-        const faqContext = (faqEntries || [])
-          .map((faq) => `Q: ${faq.question}\nA: ${faq.answer}`)
-          .join('\n\n');
+      // Use database FAQs if available, otherwise use fallback FAQs
+      const faqsToUse = (faqEntries && faqEntries.length > 0) ? faqEntries : fallbackFAQs;
+      
+      const kbContext = (kbEntries || [])
+        .map((entry) => `# ${entry.title}\n${entry.content}`)
+        .join('\n\n');
+      
+      const faqContext = faqsToUse
+        .map((faq) => `Q: ${faq.question}\nA: ${faq.answer}`)
+        .join('\n\n');
 
-        console.log(`Invoking LLM with KB + FAQ context...`);
-        const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          prompt: `You are a helpful U2C Mobile customer support assistant. Based on the knowledge base and FAQs below, answer the customer's question directly and concisely. Be friendly and helpful.\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT, HELPFUL ANSWER:`,
-          model: 'gpt_5_mini',
-        });
+      console.log(`Invoking LLM with KB + FAQ context (using ${faqsToUse.length} FAQs)...`);
+      const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+        prompt: `You are a helpful U2C Mobile customer support assistant. Based on the knowledge base and FAQs below, answer the customer's question directly and concisely. Be friendly and helpful.\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT, HELPFUL ANSWER:`,
+        model: 'gpt_5_mini',
+      });
 
-        console.log(`LLM response received`);
-        aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
-      } else {
-        console.log(`No knowledge base entries found for brand ${brandId}`);
-        aiResponse = 'Thanks for your message! An agent will get back to you shortly.';
-      }
+      console.log(`LLM response received`);
+      aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
     } catch (e) {
       console.error('KB lookup or LLM failed:', e.message || e);
       aiResponse = 'Thanks for your message! An agent will assist you shortly.';

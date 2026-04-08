@@ -40,6 +40,7 @@ import Settings from '@/pages/Settings';
 import CommitLogs from '@/pages/CommitLogs';
 import KnowledgeScraper from '@/pages/KnowledgeScraper';
 import LiveSupport from '@/pages/LiveSupport';
+import Webhooks from '@/pages/Webhooks';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DataDeletion from '@/pages/DataDeletion';
@@ -102,6 +103,7 @@ const AuthenticatedApp = () => {
         <Route path="/commit-logs" element={<CommitLogs />} />
         <Route path="/brands" element={<Brands />} />
         <Route path="/knowledge-scraper" element={<KnowledgeScraper />} />
+        <Route path="/webhooks" element={<Webhooks />} />
         <Route path="/live-support" element={<LiveSupport />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />

@@ -1,0 +1,41 @@
+{
+  "name": "Webhook",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this webhook belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Webhook name (e.g. Main Facebook Page)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "facebook",
+        "zapier"
+      ],
+      "description": "Integration type"
+    },
+    "webhook_url": {
+      "type": "string",
+      "description": "Generated webhook URL for external service"
+    },
+    "facebook_page_id": {
+      "type": "string",
+      "description": "Facebook page ID if type is facebook"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether webhook is enabled"
+    }
+  },
+  "required": [
+    "brand_id",
+    "name",
+    "type",
+    "webhook_url"
+  ]
+}

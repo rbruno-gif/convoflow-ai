@@ -12,6 +12,7 @@ Deno.serve(async (req) => {
     const from = parsed.from;
     const body = parsed.body;
     const profileName = parsed['profile name'] || 'Customer';
+    const brandId = parsed.brand_id || null;
 
     console.log('Incoming Twilio Messenger webhook:', { from, body, profileName });
 
@@ -39,6 +40,7 @@ Deno.serve(async (req) => {
       conversation = await base44.asServiceRole.entities.Conversation.create({
         customer_name: profileName,
         customer_fb_id: from,
+        brand_id: brandId,
         status: 'active',
         mode: 'ai',
         last_message: body.slice(0, 200),
@@ -51,6 +53,7 @@ Deno.serve(async (req) => {
     // Save incoming customer message
     await base44.asServiceRole.entities.Message.create({
       conversation_id: conversation.id,
+      brand_id: brandId,
       sender_type: 'customer',
       sender_name: profileName,
       content: body,
@@ -61,11 +64,15 @@ Deno.serve(async (req) => {
 
     // Only AI-mode conversations get auto-replies
     if (conversation.mode !== 'human') {
-      // Fetch AI context
+      // Fetch AI context (brand-scoped if brand_id provided)
+      const faqFilter = brandId ? { is_active: true, brand_id: brandId } : { is_active: true };
+      const kbFilter = brandId ? { is_active: true, brand_id: brandId } : { is_active: true };
+      const settingsFilter = brandId ? { brand_id: brandId } : {};
+
       const [settingsList, faqs, knowledgeDocs] = await Promise.all([
-        base44.asServiceRole.entities.AgentSettings.list(),
-        base44.asServiceRole.entities.FAQ.filter({ is_active: true }),
-        base44.asServiceRole.entities.KnowledgeDoc.filter({ is_active: true }),
+        brandId ? base44.asServiceRole.entities.AgentSettings.filter(settingsFilter) : base44.asServiceRole.entities.AgentSettings.list(),
+        base44.asServiceRole.entities.FAQ.filter(faqFilter),
+        base44.asServiceRole.entities.KnowledgeDoc.filter(kbFilter),
       ]);
 
       const settings = settingsList[0];
@@ -178,6 +185,7 @@ Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer
       // Save AI reply as message
       await base44.asServiceRole.entities.Message.create({
         conversation_id: conversation.id,
+        brand_id: brandId,
         sender_type: 'ai',
         sender_name: persona,
         content: aiReply,

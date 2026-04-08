@@ -2,6 +2,10 @@
   "name": "QuickReply",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this quick reply belongs to"
+    },
     "name": {
       "type": "string",
       "description": "Template name for internal use"

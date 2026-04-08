@@ -3,10 +3,11 @@ import { useState } from 'react';
 import {
   LayoutDashboard, MessageSquare, BarChart3, Bot, Eye, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
-  ChevronLeft, ChevronRight, GitCommit, LogOut
+  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
+import BrandSwitcher from '@/components/brands/BrandSwitcher';
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -20,6 +21,7 @@ const navItems = [
   { path: '/flagged', icon: AlertTriangle, label: 'Flagged' },
   { path: '/agents', icon: UserCheck, label: 'Agents' },
   { path: '/integrations', icon: Plug, label: 'Integrations' },
+  { path: '/brands', icon: Building2, label: 'Brands' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -48,6 +50,13 @@ export default function Layout() {
             </div>
           )}
         </div>
+
+        {/* Brand Switcher */}
+        {!collapsed && (
+          <div className="pt-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <BrandSwitcher />
+          </div>
+        )}
 
         {/* Nav */}
         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5 px-2">

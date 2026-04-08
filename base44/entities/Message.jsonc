@@ -2,6 +2,10 @@
   "name": "Message",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this message belongs to"
+    },
     "conversation_id": {
       "type": "string"
     },

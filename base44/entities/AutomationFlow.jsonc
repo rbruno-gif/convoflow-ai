@@ -2,6 +2,10 @@
   "name": "AutomationFlow",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this automation flow belongs to"
+    },
     "name": {
       "type": "string"
     },

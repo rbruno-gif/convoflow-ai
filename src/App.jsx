@@ -4,6 +4,8 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { BrandProvider } from '@/context/BrandContext';
+import Brands from '@/pages/Brands';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
 
@@ -68,6 +70,7 @@ const AuthenticatedApp = () => {
         <Route path="/integrations" element={<Integrations />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/commit-logs" element={<CommitLogs />} />
+        <Route path="/brands" element={<Brands />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
@@ -78,9 +81,11 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
+        <BrandProvider>
         <Router>
           <AuthenticatedApp />
         </Router>
+        </BrandProvider>
         <Toaster />
       </QueryClientProvider>
     </AuthProvider>

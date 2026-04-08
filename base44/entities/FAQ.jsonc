@@ -2,6 +2,10 @@
   "name": "FAQ",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this FAQ belongs to"
+    },
     "question": {
       "type": "string"
     },

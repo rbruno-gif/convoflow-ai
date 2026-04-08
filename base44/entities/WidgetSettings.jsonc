@@ -2,6 +2,10 @@
   "name": "WidgetSettings",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this widget settings belongs to"
+    },
     "primary_color": {
       "type": "string",
       "default": "#3b82f6"

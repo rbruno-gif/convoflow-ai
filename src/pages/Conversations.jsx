@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { MessageSquare } from 'lucide-react';
 import ConversationList from '@/components/inbox/ConversationList';
 import MessageThread from '@/components/inbox/MessageThread';
@@ -10,9 +11,13 @@ export default function Conversations() {
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('all');
 
+  const { activeBrandId } = useBrand();
+
   const { data: conversations = [], refetch } = useQuery({
-    queryKey: ['conversations'],
-    queryFn: () => base44.entities.Conversation.list('-last_message_time', 100),
+    queryKey: ['conversations', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_time', 100)
+      : base44.entities.Conversation.list('-last_message_time', 100),
     refetchInterval: 30000,
   });
 

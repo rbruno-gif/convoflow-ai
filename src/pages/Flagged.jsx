@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { AlertTriangle, UserCheck, CheckCircle, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +12,13 @@ export default function Flagged() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
+  const { activeBrandId } = useBrand();
+
   const { data: conversations = [] } = useQuery({
-    queryKey: ['conversations'],
-    queryFn: () => base44.entities.Conversation.list('-last_message_time', 100),
+    queryKey: ['conversations', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_time', 100)
+      : base44.entities.Conversation.list('-last_message_time', 100),
     refetchInterval: 10000,
   });
 

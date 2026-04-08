@@ -2,6 +2,10 @@
   "name": "KnowledgeDoc",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this knowledge doc belongs to"
+    },
     "title": {
       "type": "string"
     },

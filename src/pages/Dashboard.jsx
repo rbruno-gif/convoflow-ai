@@ -1,23 +1,32 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow, subDays, format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
+  const { activeBrandId } = useBrand();
+
   const { data: conversations = [] } = useQuery({
-    queryKey: ['conversations'],
-    queryFn: () => base44.entities.Conversation.list('-last_message_time', 100),
+    queryKey: ['conversations', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_time', 100)
+      : base44.entities.Conversation.list('-last_message_time', 100),
     refetchInterval: 30000,
   });
   const { data: tickets = [] } = useQuery({
-    queryKey: ['tickets'],
-    queryFn: () => base44.entities.Ticket.list('-created_date', 50),
+    queryKey: ['tickets', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Ticket.filter({ brand_id: activeBrandId }, '-created_date', 50)
+      : base44.entities.Ticket.list('-created_date', 50),
   });
   const { data: leads = [] } = useQuery({
-    queryKey: ['leads'],
-    queryFn: () => base44.entities.Lead.list('-created_date', 50),
+    queryKey: ['leads', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Lead.filter({ brand_id: activeBrandId }, '-created_date', 50)
+      : base44.entities.Lead.list('-created_date', 50),
   });
 
   const active = conversations.filter(c => c.status === 'active').length;

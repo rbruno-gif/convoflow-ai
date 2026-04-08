@@ -2,6 +2,10 @@
   "name": "Ticket",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this ticket belongs to"
+    },
     "conversation_id": {
       "type": "string"
     },

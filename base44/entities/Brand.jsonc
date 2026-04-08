@@ -1,0 +1,45 @@
+{
+  "name": "Brand",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Brand display name"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Unique brand identifier (e.g. u2cmobile, u2connectnow)"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Brand logo URL"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#7c3aed",
+      "description": "Brand primary color"
+    },
+    "ai_persona_name": {
+      "type": "string",
+      "default": "Victor",
+      "description": "AI persona name for this brand"
+    },
+    "ai_instructions": {
+      "type": "string",
+      "description": "Custom AI instructions for this brand"
+    },
+    "welcome_message": {
+      "type": "string",
+      "description": "Welcome message for this brand"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this brand is active"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

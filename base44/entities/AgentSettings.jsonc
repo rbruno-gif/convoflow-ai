@@ -2,6 +2,10 @@
   "name": "AgentSettings",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this settings belongs to"
+    },
     "campaign_id": {
       "type": "string",
       "description": "Campaign this settings belongs to"
@@ -35,6 +39,18 @@
     "is_ai_active": {
       "type": "boolean",
       "default": true
+    },
+    "assigned_brands": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Brand slugs this agent is assigned to"
+    },
+    "can_see_all_brands": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this agent can see all brands"
     }
   },
   "required": [

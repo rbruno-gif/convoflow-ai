@@ -8,7 +8,7 @@
     },
     "slug": {
       "type": "string",
-      "description": "Unique brand identifier (e.g. u2cmobile, u2connectnow)"
+      "description": "Unique brand identifier (e.g. u2cmobile)"
     },
     "logo_url": {
       "type": "string",
@@ -18,6 +18,18 @@
       "type": "string",
       "default": "#7c3aed",
       "description": "Brand primary color"
+    },
+    "website_url": {
+      "type": "string",
+      "description": "Brand website URL"
+    },
+    "support_email": {
+      "type": "string",
+      "description": "Brand support email"
+    },
+    "support_phone": {
+      "type": "string",
+      "description": "Brand support phone number"
     },
     "ai_persona_name": {
       "type": "string",
@@ -32,10 +44,22 @@
       "type": "string",
       "description": "Welcome message for this brand"
     },
+    "assigned_agents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Agent emails assigned to this brand"
+    },
     "is_active": {
       "type": "boolean",
       "default": true,
       "description": "Whether this brand is active"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Soft-deleted brands (never permanently deleted)"
     }
   },
   "required": [

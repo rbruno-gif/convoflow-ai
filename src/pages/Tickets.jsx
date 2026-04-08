@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { Ticket, Plus, Search, Filter, Clock, User, Tag, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,9 +37,13 @@ export default function Tickets() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
+  const { activeBrandId } = useBrand();
+
   const { data: tickets = [] } = useQuery({
-    queryKey: ['tickets'],
-    queryFn: () => base44.entities.Ticket.list('-created_date', 200),
+    queryKey: ['tickets', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Ticket.filter({ brand_id: activeBrandId }, '-created_date', 200)
+      : base44.entities.Ticket.list('-created_date', 200),
   });
 
   const filtered = tickets.filter(t => {

@@ -12,29 +12,60 @@ export function BrandProvider({ children }) {
     base44.auth.me().then(setUser).catch(() => {});
   }, []);
 
-  const { data: brands = [] } = useQuery({
+  const { data: allBrands = [] } = useQuery({
     queryKey: ['brands'],
-    queryFn: () => base44.entities.Brand.list('-created_date', 100),
+    queryFn: () => base44.entities.Brand.filter({ is_archived: false }, '-created_date', 100),
+    enabled: !!user,
   });
 
-  const activeBrands = brands.filter(b => b.is_active);
+  // Role-based brand visibility
+  const accessibleBrands = (() => {
+    if (!user) return [];
+    // Admin sees all brands
+    if (user.role === 'admin') return allBrands;
+    // Others see only brands they're assigned to
+    return allBrands.filter(b =>
+      b.assigned_agents?.includes(user.email)
+    );
+  })();
 
-  // Auto-select first brand if none selected
+  const activeBrands = accessibleBrands.filter(b => b.is_active);
+
+  // Auto-select: prefer stored brand, fallback to first accessible
   useEffect(() => {
-    if (!activeBrandId && activeBrands.length > 0) {
-      setActiveBrandId(activeBrands[0].id);
+    if (!activeBrandId && accessibleBrands.length > 0) {
+      const first = accessibleBrands[0];
+      setActiveBrandId(first.id);
+      localStorage.setItem('activeBrandId', first.id);
     }
-  }, [activeBrands, activeBrandId]);
+    // If stored brand is no longer accessible, reset
+    if (activeBrandId && accessibleBrands.length > 0) {
+      const stillAccessible = accessibleBrands.find(b => b.id === activeBrandId);
+      if (!stillAccessible) {
+        const first = accessibleBrands[0];
+        setActiveBrandId(first.id);
+        localStorage.setItem('activeBrandId', first.id);
+      }
+    }
+  }, [accessibleBrands, activeBrandId]);
 
   const switchBrand = (brandId) => {
     setActiveBrandId(brandId);
     localStorage.setItem('activeBrandId', brandId);
   };
 
-  const activeBrand = brands.find(b => b.id === activeBrandId) || brands[0] || null;
+  const activeBrand = accessibleBrands.find(b => b.id === activeBrandId) || accessibleBrands[0] || null;
 
   return (
-    <BrandContext.Provider value={{ activeBrand, activeBrandId, brands, activeBrands, switchBrand, user }}>
+    <BrandContext.Provider value={{
+      activeBrand,
+      activeBrandId,
+      brands: accessibleBrands,
+      allBrands,
+      activeBrands,
+      switchBrand,
+      user,
+    }}>
       {children}
     </BrandContext.Provider>
   );

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { MessageSquare, Bot, Star, AlertCircle, Users, Clock } from 'lucide-react';
 import { subDays, format } from 'date-fns';
@@ -7,9 +8,26 @@ import { subDays, format } from 'date-fns';
 const COLORS = ['#7c3aed', '#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#3b82f6'];
 
 export default function Analytics() {
-  const { data: conversations = [] } = useQuery({ queryKey: ['conversations'], queryFn: () => base44.entities.Conversation.list('-created_date', 200) });
-  const { data: tickets = [] } = useQuery({ queryKey: ['tickets'], queryFn: () => base44.entities.Ticket.list('-created_date', 200) });
-  const { data: leads = [] } = useQuery({ queryKey: ['leads'], queryFn: () => base44.entities.Lead.list('-created_date', 200) });
+  const { activeBrandId, activeBrand } = useBrand();
+
+  const { data: conversations = [] } = useQuery({
+    queryKey: ['conversations', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-created_date', 200)
+      : base44.entities.Conversation.list('-created_date', 200),
+  });
+  const { data: tickets = [] } = useQuery({
+    queryKey: ['tickets', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Ticket.filter({ brand_id: activeBrandId }, '-created_date', 200)
+      : base44.entities.Ticket.list('-created_date', 200),
+  });
+  const { data: leads = [] } = useQuery({
+    queryKey: ['leads', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Lead.filter({ brand_id: activeBrandId }, '-created_date', 200)
+      : base44.entities.Lead.list('-created_date', 200),
+  });
 
   const total = conversations.length;
   const aiHandled = conversations.filter(c => c.mode === 'ai').length;
@@ -58,7 +76,7 @@ export default function Analytics() {
     <div className="p-6 max-w-7xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-sm text-gray-400 mt-1">Performance overview across all channels</p>
+        <p className="text-sm text-gray-400 mt-1">{activeBrand?.name || 'All brands'} · Performance overview</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">

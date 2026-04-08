@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { Users, Search, Plus, Download, Phone, Mail, Globe, MapPin, ExternalLink } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,10 +32,13 @@ export default function Leads() {
   const [showNew, setShowNew] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { activeBrandId } = useBrand();
 
   const { data: leads = [] } = useQuery({
-    queryKey: ['leads'],
-    queryFn: () => base44.entities.Lead.list('-created_date', 200),
+    queryKey: ['leads', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Lead.filter({ brand_id: activeBrandId }, '-created_date', 200)
+      : base44.entities.Lead.list('-created_date', 200),
   });
 
   const filtered = leads.filter(l => {

@@ -36,6 +36,7 @@ const navItems = [
   { path: '/campaigns', icon: Megaphone, label: 'Campaigns' },
   { path: '/audit-log', icon: Shield, label: 'Audit Log' },
   { path: '/brands', icon: Building2, label: 'Brands' },
+  { path: '/webhooks', icon: Plug, label: 'Webhooks' },
   { path: '/integrations', icon: Plug, label: 'Integrations' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];

@@ -49,27 +49,38 @@ export default function FacebookPagesManager({ brandId }) {
       toast({ title: 'Please fill in required fields', variant: 'destructive' });
       return;
     }
-    if (editing) {
-      await base44.entities.FacebookPage.update(editing, form);
-      toast({ title: 'Page updated' });
-    } else {
-      const payload = brandId ? { ...form, webhook_url: WEBHOOK_BASE, brand_id: brandId } : { ...form, webhook_url: WEBHOOK_BASE };
-      await base44.entities.FacebookPage.create(payload);
-      toast({ title: 'Facebook page added!' });
+    try {
+      if (editing) {
+        await base44.entities.FacebookPage.update(editing, { ...form, brand_id: brandId });
+        toast({ title: 'Page updated' });
+      } else {
+        await base44.entities.FacebookPage.create({ ...form, webhook_url: WEBHOOK_BASE, brand_id: brandId });
+        toast({ title: 'Facebook page added!' });
+      }
+      qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
+      cancel();
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to save page', variant: 'destructive' });
     }
-    qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
-    cancel();
   };
 
   const deletePage = async (id) => {
-    await base44.entities.FacebookPage.delete(id);
-    qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
-    toast({ title: 'Page removed' });
+    try {
+      await base44.entities.FacebookPage.delete(id);
+      qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
+      toast({ title: 'Page removed' });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to delete page', variant: 'destructive' });
+    }
   };
 
   const toggleActive = async (page) => {
-    await base44.entities.FacebookPage.update(page.id, { is_active: !page.is_active });
-    qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
+    try {
+      await base44.entities.FacebookPage.update(page.id, { is_active: !page.is_active, brand_id: brandId });
+      qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to toggle page', variant: 'destructive' });
+    }
   };
 
   const copyToClipboard = (text) => {

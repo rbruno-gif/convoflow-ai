@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle, X } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function NewBrandModal({ onClose, onSuccess }) {
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [form, setForm] = useState({
     name: '',
     slug: '',
@@ -18,7 +20,7 @@ export default function NewBrandModal({ onClose, onSuccess }) {
   const mutation = useMutation({
     mutationFn: async (data) => {
       const brand = await base44.entities.Brand.create(data);
-      
+
       // Create default settings
       await base44.entities.BrandSettings.create({
         brand_id: brand.id,
@@ -42,24 +44,33 @@ export default function NewBrandModal({ onClose, onSuccess }) {
       });
 
       // Log audit
+      const me = await base44.auth.me();
       await base44.entities.AuditLog.create({
         action_type: 'BRAND_CREATED',
-        actor_email: (await base44.auth.me()).email,
-        actor_name: (await base44.auth.me()).full_name,
+        actor_email: me.email,
+        actor_name: me.full_name,
         target_type: 'Brand',
         target_id: brand.id,
         target_name: data.name,
-        brand_id: null,
+        brand_id: brand.id,
       });
 
       return brand;
     },
     onSuccess: () => {
       setSaved(true);
+      toast({ title: 'Brand created successfully' });
       setTimeout(() => {
         qc.invalidateQueries({ queryKey: ['brands'] });
         onSuccess();
       }, 1000);
+    },
+    onError: (err) => {
+      toast({
+        title: 'Error creating brand',
+        description: err.message || 'Failed to create brand',
+        variant: 'destructive',
+      });
     },
   });
 

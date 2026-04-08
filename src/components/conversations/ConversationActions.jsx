@@ -18,57 +18,82 @@ export default function ConversationActions({ conversation, onSuggestFAQ }) {
 
   const flag = async () => {
     setLoading(true);
-    await base44.entities.Conversation.update(conversation.id, { status: 'flagged' });
-    qc.invalidateQueries({ queryKey: ['conversations'] });
-    qc.invalidateQueries({ queryKey: ['flagged'] });
-    toast({ title: 'Conversation flagged', open: true });
-    setLoading(false);
+    try {
+      await base44.entities.Conversation.update(conversation.id, { status: 'flagged' });
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.invalidateQueries({ queryKey: ['flagged'] });
+      toast({ title: 'Conversation flagged', open: true });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to flag conversation', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const resolve = async () => {
     setLoading(true);
-    await base44.entities.Conversation.update(conversation.id, {
-      status: 'resolved',
-      resolution_status: 'resolved',
-      mode: 'ai',
-    });
-    qc.invalidateQueries({ queryKey: ['conversations'] });
-    toast({ title: 'Marked as resolved', open: true });
-    setLoading(false);
+    try {
+      await base44.entities.Conversation.update(conversation.id, {
+        status: 'resolved',
+        resolution_status: 'resolved',
+        mode: 'ai',
+      });
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      toast({ title: 'Marked as resolved', open: true });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to resolve conversation', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handoffToAgent = async () => {
     setLoading(true);
-    await base44.entities.Conversation.update(conversation.id, {
-      status: 'human_requested',
-      mode: 'human',
-      assigned_agent: user?.email,
-      ai_resolution_attempted: true,
-    });
-    qc.invalidateQueries({ queryKey: ['conversations'] });
-    qc.invalidateQueries({ queryKey: ['agent-inbox'] });
-    toast({ title: 'Handed off to human agent', open: true });
-    setLoading(false);
+    try {
+      await base44.entities.Conversation.update(conversation.id, {
+        status: 'human_requested',
+        mode: 'human',
+        assigned_agent: user?.email,
+        ai_resolution_attempted: true,
+      });
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.invalidateQueries({ queryKey: ['agent-inbox'] });
+      toast({ title: 'Handed off to human agent', open: true });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to handoff conversation', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const summarizeNow = async () => {
     setLoading(true);
-    await base44.functions.invoke('generateConversationSummary', {
-      conversation_id: conversation.id,
-    });
-    qc.invalidateQueries({ queryKey: ['conversations'] });
-    toast({ title: 'Summary generated', open: true });
-    setLoading(false);
+    try {
+      await base44.functions.invoke('generateConversationSummary', {
+        conversation_id: conversation.id,
+      });
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      toast({ title: 'Summary generated', open: true });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to generate summary', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const analyzeIntentNow = async () => {
     setLoading(true);
-    await base44.functions.invoke('analyzeConversationIntent', {
-      conversation_id: conversation.id,
-    });
-    qc.invalidateQueries({ queryKey: ['conversations'] });
-    toast({ title: 'Intent analyzed', open: true });
-    setLoading(false);
+    try {
+      await base44.functions.invoke('analyzeConversationIntent', {
+        conversation_id: conversation.id,
+      });
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      toast({ title: 'Intent analyzed', open: true });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to analyze intent', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

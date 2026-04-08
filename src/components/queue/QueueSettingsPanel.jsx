@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Settings, CheckCircle, Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const OVERFLOW_OPTIONS = [
   { value: 'ai_takeover', label: '🤖 AI Chatbot Takeover', desc: 'AI handles the conversation using the knowledge base' },
@@ -33,6 +34,7 @@ export default function QueueSettingsPanel({ brandId }) {
   const [settingsId, setSettingsId] = useState(null);
   const [saved, setSaved] = useState(false);
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments', brandId],
@@ -51,11 +53,15 @@ export default function QueueSettingsPanel({ brandId }) {
   }, [selectedDeptId, allSettings]);
 
   const save = async () => {
-    const payload = { ...form, brand_id: brandId, department_id: selectedDeptId || null };
-    if (settingsId) await base44.entities.QueueSettings.update(settingsId, payload);
-    else { const c = await base44.entities.QueueSettings.create(payload); setSettingsId(c.id); }
-    qc.invalidateQueries({ queryKey: ['queue-settings', brandId] });
-    setSaved(true); setTimeout(() => setSaved(false), 2000);
+    try {
+      const payload = { ...form, brand_id: brandId, department_id: selectedDeptId || null };
+      if (settingsId) await base44.entities.QueueSettings.update(settingsId, payload);
+      else { const c = await base44.entities.QueueSettings.create(payload); setSettingsId(c.id); }
+      qc.invalidateQueries({ queryKey: ['queue-settings', brandId] });
+      setSaved(true); setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to save queue settings', variant: 'destructive' });
+    }
   };
 
   const toggleOverflow = (val) => {

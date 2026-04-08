@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Plus, Zap, Play, Pause, Archive, Edit2, Copy, Users, BarChart2, Clock, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/use-toast';
 
 const TRIGGER_LABELS = {
   keyword: '💬 Keyword', subscribe: '👋 Subscribe', button_click: '🖱️ Button Click',
@@ -28,6 +29,7 @@ export default function FlowList({ brandId, onEdit }) {
   const [showTemplates, setShowTemplates] = useState(false);
   const [search, setSearch] = useState('');
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: flows = [] } = useQuery({
     queryKey: ['flows', brandId],
@@ -37,32 +39,44 @@ export default function FlowList({ brandId, onEdit }) {
   const filtered = flows.filter(f => !search || f.name.toLowerCase().includes(search.toLowerCase()));
 
   const createFlow = async (template = null) => {
-    const payload = {
-      brand_id: brandId,
-      name: template ? template.name : 'New Flow',
-      status: 'draft',
-      trigger_type: template?.trigger || 'keyword',
-      nodes: template ? getTemplateNodes(template.id) : [
-        { id: 'start', type: 'trigger', x: 100, y: 100, data: { label: 'Trigger', trigger_type: 'keyword', keyword: '' } },
-        { id: 'msg1', type: 'message', x: 100, y: 220, data: { label: 'Message', content: 'Hello {first_name}! Welcome.' } },
-      ],
-      edges: template ? [] : [{ id: 'e1', source: 'start', target: 'msg1' }],
-    };
-    const created = await base44.entities.Flow.create(payload);
-    qc.invalidateQueries({ queryKey: ['flows', brandId] });
-    onEdit(created);
-    setShowTemplates(false);
+    try {
+      const payload = {
+        brand_id: brandId,
+        name: template ? template.name : 'New Flow',
+        status: 'draft',
+        trigger_type: template?.trigger || 'keyword',
+        nodes: template ? getTemplateNodes(template.id) : [
+          { id: 'start', type: 'trigger', x: 100, y: 100, data: { label: 'Trigger', trigger_type: 'keyword', keyword: '' } },
+          { id: 'msg1', type: 'message', x: 100, y: 220, data: { label: 'Message', content: 'Hello {first_name}! Welcome.' } },
+        ],
+        edges: template ? [] : [{ id: 'e1', source: 'start', target: 'msg1' }],
+      };
+      const created = await base44.entities.Flow.create(payload);
+      qc.invalidateQueries({ queryKey: ['flows', brandId] });
+      onEdit(created);
+      setShowTemplates(false);
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to create flow', variant: 'destructive' });
+    }
   };
 
   const toggleStatus = async (flow) => {
-    const next = flow.status === 'active' ? 'paused' : 'active';
-    await base44.entities.Flow.update(flow.id, { status: next });
-    qc.invalidateQueries({ queryKey: ['flows', brandId] });
+    try {
+      const next = flow.status === 'active' ? 'paused' : 'active';
+      await base44.entities.Flow.update(flow.id, { status: next, brand_id: brandId });
+      qc.invalidateQueries({ queryKey: ['flows', brandId] });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to update flow status', variant: 'destructive' });
+    }
   };
 
   const duplicate = async (flow) => {
-    await base44.entities.Flow.create({ ...flow, id: undefined, name: `${flow.name} (Copy)`, status: 'draft', total_entered: 0, total_completed: 0 });
-    qc.invalidateQueries({ queryKey: ['flows', brandId] });
+    try {
+      await base44.entities.Flow.create({ ...flow, id: undefined, name: `${flow.name} (Copy)`, status: 'draft', total_entered: 0, total_completed: 0, brand_id: brandId });
+      qc.invalidateQueries({ queryKey: ['flows', brandId] });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to duplicate flow', variant: 'destructive' });
+    }
   };
 
   return (

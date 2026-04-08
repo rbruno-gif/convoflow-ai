@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
+import { useQueryClient } from '@tanstack/react-query';
 import { Send, MoreVertical, Archive, CheckCircle, RotateCcw } from 'lucide-react';
+import TransferPanel from '@/components/inbox/TransferPanel';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
@@ -67,8 +69,22 @@ export default function ConversationThread({ conversation, messages, onRefresh }
     onRefresh();
   };
 
+  const [showTransferPanel, setShowTransferPanel] = useState(false);
+  const qc = useQueryClient();
+
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full overflow-hidden relative">
+      {showTransferPanel && (
+        <TransferPanel
+          conversation={conversation}
+          onClose={() => setShowTransferPanel(false)}
+          onTransfer={() => {
+            setShowTransferPanel(false);
+            onRefresh();
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="border-b p-4 flex items-center justify-between">
         <div>
@@ -114,10 +130,16 @@ export default function ConversationThread({ conversation, messages, onRefresh }
 
             {showMenu && (
               <div className="absolute right-0 mt-1 w-48 bg-card border rounded-lg shadow-lg z-10">
-                <button className="w-full text-left px-4 py-2 text-sm hover:bg-muted">
+                <button 
+                  onClick={() => setShowTransferPanel(true)}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-muted"
+                >
                   Transfer to Agent
                 </button>
-                <button className="w-full text-left px-4 py-2 text-sm hover:bg-muted">
+                <button 
+                  onClick={() => setShowTransferPanel(true)}
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-muted"
+                >
                   Transfer to Department
                 </button>
                 <button className="w-full text-left px-4 py-2 text-sm hover:bg-muted flex items-center gap-2">

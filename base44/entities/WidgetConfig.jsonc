@@ -1,0 +1,147 @@
+{
+  "name": "WidgetConfig",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this widget belongs to"
+    },
+    "bot_name": {
+      "type": "string",
+      "default": "Support Bot"
+    },
+    "bot_avatar_url": {
+      "type": "string"
+    },
+    "greeting_message": {
+      "type": "string",
+      "default": "Hi! How can we help you today?"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#7c3aed"
+    },
+    "header_color": {
+      "type": "string",
+      "default": "#7c3aed"
+    },
+    "background_color": {
+      "type": "string",
+      "default": "#ffffff"
+    },
+    "text_color": {
+      "type": "string",
+      "default": "#000000"
+    },
+    "position": {
+      "type": "string",
+      "enum": [
+        "bottom_left",
+        "bottom_right"
+      ],
+      "default": "bottom_right"
+    },
+    "offset_x_px": {
+      "type": "number",
+      "default": 20
+    },
+    "offset_y_px": {
+      "type": "number",
+      "default": 20
+    },
+    "pre_chat_form_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "pre_chat_fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field_name": {
+            "type": "string"
+          },
+          "field_type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "email",
+              "phone",
+              "dropdown"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "gdpr_consent_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "gdpr_consent_text": {
+      "type": "string"
+    },
+    "gdpr_privacy_url": {
+      "type": "string"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "time_on_page",
+        "exit_intent",
+        "scroll_depth",
+        "url_match",
+        "manual"
+      ],
+      "default": "manual"
+    },
+    "trigger_delay_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "trigger_scroll_percent": {
+      "type": "number",
+      "default": 50
+    },
+    "trigger_url_pattern": {
+      "type": "string"
+    },
+    "proactive_message_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "proactive_message_text": {
+      "type": "string"
+    },
+    "proactive_message_delay_seconds": {
+      "type": "number",
+      "default": 5
+    },
+    "offline_message": {
+      "type": "string",
+      "default": "We're currently offline. Please leave a message and we'll get back to you soon."
+    },
+    "sound_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false
+    },
+    "js_snippet": {
+      "type": "string",
+      "description": "Auto-generated embed code"
+    },
+    "ai_confidence_threshold": {
+      "type": "number",
+      "default": 70,
+      "description": "Percentage confidence for auto-reply"
+    }
+  },
+  "required": [
+    "brand_id"
+  ]
+}

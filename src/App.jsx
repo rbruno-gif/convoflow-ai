@@ -23,10 +23,14 @@ import QueueDashboard from '@/pages/QueueDashboard';
 import SLADashboard from '@/pages/SLADashboard';
 import CannedResponses from '@/pages/CannedResponses';
 import BusinessHoursSettings from '@/pages/BusinessHoursSettings';
+import KnowledgeBase from '@/pages/KnowledgeBase';
+import KnowledgeScraper from '@/pages/KnowledgeScraper';
+import WidgetBuilder from '@/pages/WidgetBuilder';
+import AIAgent from '@/pages/AIAgent';
+import Workflows from '@/pages/Workflows';
 import Analytics from '@/pages/Analytics';
 import BrandInbox from '@/pages/BrandInbox';
 import BrandAnalytics from '@/pages/BrandAnalytics';
-import WidgetBuilder from '@/pages/WidgetBuilder';
 import ReportingDashboard from '@/pages/ReportingDashboard';
 import TeamChat from '@/pages/TeamChat';
 import Departments from '@/pages/Departments';
@@ -37,7 +41,6 @@ import CustomerProfiles from '@/pages/CustomerProfiles';
 import SLARules from '@/pages/SLARules';
 import ProactiveCampaigns from '@/pages/ProactiveCampaigns';
 import QueueManagement from '@/pages/QueueManagement';
-import AIAgent from '@/pages/AIAgent';
 import Visitors from '@/pages/Visitors';
 import Flows from '@/pages/Flows';
 import Tickets from '@/pages/Tickets';
@@ -47,7 +50,6 @@ import Agents from '@/pages/Agents';
 import Integrations from '@/pages/Integrations';
 import Settings from '@/pages/Settings';
 import CommitLogs from '@/pages/CommitLogs';
-import KnowledgeScraper from '@/pages/KnowledgeScraper';
 import LiveSupport from '@/pages/LiveSupport';
 import Voice from '@/pages/Voice';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
@@ -95,20 +97,20 @@ const AuthenticatedApp = () => {
         <Route path="/sla" element={<SLADashboard />} />
         <Route path="/canned-responses" element={<CannedResponses />} />
         <Route path="/business-hours" element={<BusinessHoursSettings />} />
-        <Route path="/inbox" element={<BrandInbox />} />
+        <Route path="/knowledge-base" element={<KnowledgeBase />} />
+        <Route path="/scraper" element={<KnowledgeScraper />} />
+        <Route path="/widget-builder" element={<WidgetBuilder />} />
+        <Route path="/ai-agent" element={<AIAgent />} />
+        <Route path="/workflows" element={<Workflows />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/brand-analytics" element={<BrandAnalytics />} />
-        <Route path="/widget-builder" element={<WidgetBuilder />} />
         <Route path="/reporting" element={<ReportingDashboard />} />
         <Route path="/team-chat" element={<TeamChat />} />
-        <Route path="/business-hours" element={<BusinessHoursPage />} />
         <Route path="/auto-replies" element={<AutoReplies />} />
         <Route path="/agent-capacity" element={<AgentCapacityPage />} />
         <Route path="/customer-profiles" element={<CustomerProfiles />} />
         <Route path="/sla-rules" element={<SLARules />} />
         <Route path="/campaigns" element={<ProactiveCampaigns />} />
-        <Route path="/queue" element={<QueueManagement />} />
-        <Route path="/ai-agent" element={<AIAgent />} />
         <Route path="/visitors" element={<Visitors />} />
         <Route path="/flows" element={<Flows />} />
         <Route path="/tickets" element={<Tickets />} />
@@ -118,7 +120,6 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/commit-logs" element={<CommitLogs />} />
         <Route path="/brands" element={<Brands />} />
-        <Route path="/knowledge-scraper" element={<KnowledgeScraper />} />
         <Route path="/live-support" element={<LiveSupport />} />
         <Route path="/voice" element={<Voice />} />
       </Route>

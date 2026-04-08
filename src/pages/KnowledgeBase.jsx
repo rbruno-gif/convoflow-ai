@@ -1,241 +1,187 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { BookOpen, Plus, Search, Globe, FileText, Trash2, Edit2, Upload, Loader2, Tag } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useBrand } from '@/context/BrandContext';
+import { Plus, Edit2, Trash2, Download, CheckCircle2, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast';
-
-const sourceConfig = {
-  manual: { icon: FileText, color: 'bg-blue-100 text-blue-600', label: 'Manual' },
-  website: { icon: Globe, color: 'bg-green-100 text-green-600', label: 'Website' },
-  pdf: { icon: Upload, color: 'bg-orange-100 text-orange-600', label: 'PDF' },
-  doc: { icon: FileText, color: 'bg-purple-100 text-purple-600', label: 'Document' },
-};
-
-const emptyDoc = { title: '', content: '', source_type: 'manual', source_url: '', category: '', is_active: true };
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import KBEntryForm from '@/components/kb/KBEntryForm';
 
 export default function KnowledgeBase() {
   const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterSource, setFilterSource] = useState('all');
+  const [editingEntry, setEditingEntry] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [showImport, setShowImport] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState(emptyDoc);
-  const [uploading, setUploading] = useState(false);
+  const { activeBrandId } = useBrand();
   const qc = useQueryClient();
-  const { toast } = useToast();
 
-  const { data: docs = [] } = useQuery({
-    queryKey: ['knowledge-docs'],
-    queryFn: () => base44.entities.KnowledgeDoc.list('-created_date', 200),
+  const { data: entries = [] } = useQuery({
+    queryKey: ['knowledge-base', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.KnowledgeBase.filter({ brand_id: activeBrandId }, '-updated_date', 200)
+      : [],
   });
 
-  const filtered = docs.filter(d =>
-    !search || d.title?.toLowerCase().includes(search.toLowerCase()) || d.content?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = entries.filter(e => {
+    const matchSearch = !search || 
+      e.question?.toLowerCase().includes(search.toLowerCase()) ||
+      e.answer?.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === 'all' || e.status === filterStatus;
+    const matchSource = filterSource === 'all' || e.source === filterSource;
+    return matchSearch && matchStatus && matchSource;
+  });
 
-  const save = async () => {
-    if (!form.title || !form.content) return;
-    if (editing) {
-      await base44.entities.KnowledgeDoc.update(editing, form);
-      toast({ title: 'Document updated' });
-    } else {
-      await base44.entities.KnowledgeDoc.create(form);
-      toast({ title: 'Document added to knowledge base' });
+  const handleDelete = async (id) => {
+    if (confirm('Delete this KB entry?')) {
+      await base44.entities.KnowledgeBase.delete(id);
+      qc.invalidateQueries({ queryKey: ['knowledge-base', activeBrandId] });
     }
-    qc.invalidateQueries({ queryKey: ['knowledge-docs'] });
-    setShowForm(false); setEditing(null); setForm(emptyDoc);
   };
 
-  const del = async (id) => {
-    await base44.entities.KnowledgeDoc.delete(id);
-    qc.invalidateQueries({ queryKey: ['knowledge-docs'] });
-    toast({ title: 'Document removed' });
-  };
-
-  const toggleActive = async (doc) => {
-    await base44.entities.KnowledgeDoc.update(doc.id, { is_active: !doc.is_active });
-    qc.invalidateQueries({ queryKey: ['knowledge-docs'] });
-  };
-
-  const importFromWebsite = async (websiteUrl) => {
-    if (!websiteUrl.trim()) return;
-    setUploading(true);
-    const result = await base44.integrations.Core.InvokeLLM({
-      prompt: `Visit the following website and extract ALL information from it — every detail, policy, product description, FAQ, shipping info, return policy, pricing, contact info, terms, and any other content on the page.
-URL: ${websiteUrl}
-
-Be thorough and comprehensive. Extract EVERYTHING. Compile it all into a single detailed knowledge base document that an AI support agent can use to answer customer questions accurately on behalf of this company.`,
-      add_context_from_internet: true,
-      response_json_schema: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          content: { type: 'string' },
-          category: { type: 'string' },
-        },
-      },
-    });
-    if (result?.content) {
-      setForm({
-        title: result.title || websiteUrl,
-        content: result.content,
-        source_type: 'website',
-        source_url: websiteUrl,
-        category: result.category || '',
-        is_active: true,
+  const handleApproveAll = async () => {
+    const drafts = entries.filter(e => e.status === 'draft');
+    for (const entry of drafts) {
+      await base44.entities.KnowledgeBase.update(entry.id, {
+        status: 'approved',
+        approved_at: new Date().toISOString(),
       });
-      setShowForm(true);
-      setShowImport(false);
-      toast({ title: 'Website content extracted — review and save' });
-    } else {
-      toast({ title: 'Could not extract content', variant: 'destructive' });
     }
-    setUploading(false);
+    qc.invalidateQueries({ queryKey: ['knowledge-base', activeBrandId] });
   };
 
-  const handlePDFUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    const result = await base44.integrations.Core.ExtractDataFromUploadedFile({
-      file_url,
-      json_schema: { type: 'object', properties: { title: { type: 'string' }, content: { type: 'string' }, category: { type: 'string' } } },
-    });
-    if (result.status === 'success' && result.output) {
-      const data = Array.isArray(result.output) ? result.output[0] : result.output;
-      setForm({ title: data.title || file.name, content: data.content || '', source_type: 'pdf', category: data.category || '', is_active: true });
-      setShowForm(true);
-    }
-    setUploading(false);
-    toast({ title: 'PDF content extracted — review and save' });
+  const statusColors = {
+    draft: 'bg-amber-100 text-amber-700',
+    approved: 'bg-green-100 text-green-700',
+    archived: 'bg-gray-100 text-gray-600',
   };
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
+    <div className="p-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Knowledge Base</h1>
-          <p className="text-sm text-muted-foreground">{docs.length} documents · AI training source</p>
+          <p className="text-muted-foreground">{entries.length} total entries</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={() => { setShowImport(s => !s); setShowForm(false); }} className="gap-2">
-            <Globe className="w-4 h-4" /> Import from Website
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleApproveAll}
+            className="gap-2"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Approve All Drafts
           </Button>
-          <label className="cursor-pointer">
-            <Button variant="outline" className="gap-2" disabled={uploading} asChild>
-              <span>
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                Upload PDF
-              </span>
-            </Button>
-            <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={handlePDFUpload} />
-          </label>
-          <Button onClick={() => { setEditing(null); setForm(emptyDoc); setShowForm(s => !s); setShowImport(false); }} className="gap-2">
-            <Plus className="w-4 h-4" /> Add Document
+          <Button
+            onClick={() => { setEditingEntry(null); setShowForm(true); }}
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Entry
           </Button>
         </div>
       </div>
 
-      {showImport && (
-        <div className="mb-6 p-5 rounded-xl border bg-card shadow-sm">
-          <h3 className="font-semibold text-sm mb-3">Import from Website</h3>
-          <p className="text-xs text-muted-foreground mb-3">Scrapes ALL content from the page and saves it as a knowledge base document.</p>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                className="pl-9"
-                placeholder="https://yourstore.com/about"
-                onKeyDown={e => { if (e.key === 'Enter') importFromWebsite(e.target.value); }}
-                id="kb-import-url"
-              />
-            </div>
-            <Button
-              disabled={uploading}
-              onClick={() => importFromWebsite(document.getElementById('kb-import-url').value)}
-              className="gap-2 shrink-0"
-            >
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
-              {uploading ? 'Scraping...' : 'Scrape Website'}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {showForm && (
-        <Card className="mb-6 border-0 shadow-md">
-          <CardContent className="p-5 space-y-3">
-            <h3 className="font-semibold text-sm">{editing ? 'Edit Document' : 'New Document'}</h3>
-            <Input placeholder="Title" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
-            <Textarea placeholder="Content — paste your support article, policy, product info, etc." value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} rows={5} className="resize-none" />
-            <div className="flex gap-3">
-              <Input placeholder="Category (optional)" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className="flex-1" />
-              {form.source_type === 'website' && (
-                <Input placeholder="Source URL" value={form.source_url} onChange={e => setForm(f => ({ ...f, source_url: e.target.value }))} className="flex-1" />
-              )}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setShowForm(false); setEditing(null); }}>Cancel</Button>
-              <Button size="sm" onClick={save}>Save Document</Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Search knowledge base..." value={search} onChange={e => setSearch(e.target.value)} />
+      {/* Filters */}
+      <div className="flex gap-3 mb-6">
+        <Input
+          placeholder="Search questions or answers..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="flex-1"
+        />
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterSource} onValueChange={setFilterSource}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Sources</SelectItem>
+            <SelectItem value="manual">Manual</SelectItem>
+            <SelectItem value="scraped">Scraped</SelectItem>
+            <SelectItem value="imported">Imported</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
+      {/* Table */}
       {filtered.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
-          <p>No documents yet. Add articles, policies, and FAQs to train your AI.</p>
+        <div className="text-center py-12 text-muted-foreground">
+          <p>No KB entries found</p>
         </div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(doc => {
-            const cfg = sourceConfig[doc.source_type] || sourceConfig.manual;
-            const Icon = cfg.icon;
-            return (
-              <Card key={doc.id} className={`border-0 shadow-sm transition-opacity ${doc.is_active ? '' : 'opacity-50'}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cfg.color}`}>
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <p className="font-semibold text-sm">{doc.title}</p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${cfg.color}`}>{cfg.label}</span>
-                        {doc.category && <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">{doc.category}</span>}
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{doc.content}</p>
-                      {doc.source_url && (
-                        <a href={doc.source_url} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline mt-1 inline-block">{doc.source_url}</a>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Switch checked={doc.is_active} onCheckedChange={() => toggleActive(doc)} className="scale-75" />
-                      <Button variant="ghost" size="icon" className="w-7 h-7" onClick={() => { setEditing(doc.id); setForm({ ...doc }); setShowForm(true); }}>
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="w-7 h-7 text-destructive hover:text-destructive" onClick={() => del(doc.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
+          {filtered.map(entry => (
+            <div key={entry.id} className="bg-card border rounded-lg p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-semibold text-sm">{entry.question}</h3>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[entry.status]}`}>
+                      {entry.status}
+                    </span>
+                    <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                      {entry.source}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                    {entry.answer}
+                  </p>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>Used {entry.usage_count} times</span>
+                    {entry.source_url && (
+                      <a href={entry.source_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                        {entry.source_url}
+                      </a>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => { setEditingEntry(entry); setShowForm(true); }}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(entry.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+      )}
+
+      {/* Form Modal */}
+      {showForm && (
+        <KBEntryForm
+          brandId={activeBrandId}
+          entry={editingEntry}
+          onClose={() => { setShowForm(false); setEditingEntry(null); }}
+          onSave={() => {
+            qc.invalidateQueries({ queryKey: ['knowledge-base', activeBrandId] });
+            setShowForm(false);
+          }}
+        />
       )}
     </div>
   );

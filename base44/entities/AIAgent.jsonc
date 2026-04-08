@@ -1,0 +1,91 @@
+{
+  "name": "AIAgent",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this AI agent belongs to"
+    },
+    "name": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "customer_facing",
+        "internal_assistant"
+      ],
+      "default": "customer_facing"
+    },
+    "personality_tone": {
+      "type": "string",
+      "enum": [
+        "professional",
+        "friendly",
+        "formal"
+      ],
+      "default": "professional"
+    },
+    "confidence_threshold": {
+      "type": "number",
+      "default": 70,
+      "minimum": 0,
+      "maximum": 100
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "shadow",
+        "live"
+      ],
+      "default": "shadow"
+    },
+    "enabled_tools": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "kb_lookup",
+          "customer_profile_lookup",
+          "ticket_creator",
+          "ticket_updater",
+          "auto_escalation",
+          "faq_gap_reporter",
+          "sentiment_monitor",
+          "internal_agent_assistant"
+        ]
+      }
+    },
+    "guardrails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Things AI is forbidden from doing"
+    },
+    "approval_gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Actions requiring human approval"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "shadow_mode_review_count": {
+      "type": "number",
+      "default": 0
+    },
+    "shadow_mode_correct_rate": {
+      "type": "number",
+      "default": 0,
+      "description": "Percentage of shadow mode actions marked correct"
+    }
+  },
+  "required": [
+    "brand_id",
+    "name"
+  ]
+}

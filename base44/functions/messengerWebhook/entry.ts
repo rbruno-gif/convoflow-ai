@@ -127,21 +127,21 @@ Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer
 
       console.log('AI reply generated for', from);
 
-      return new Response(JSON.stringify({ reply: aiReply, status: 'ok' }), {
+      return new Response(aiReply, {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
       });
     }
 
-    return new Response(JSON.stringify({ reply: null, status: 'ok' }), {
+    return new Response('', {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
     });
   } catch (error) {
     console.error('messengerWebhook error:', error);
-    return new Response(JSON.stringify({ reply: null, status: 'ok' }), {
+    return new Response('', {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
     });
   }
 });

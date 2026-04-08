@@ -35,7 +35,7 @@ export default function BrandSwitcher() {
     };
   }, [open]);
 
-  if (!activeBrand || brands.length === 0) return null;
+  if (!activeBrand) return null;
 
   return (
     <div ref={ref} className="relative px-3 pb-3">

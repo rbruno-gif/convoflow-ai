@@ -9,6 +9,7 @@ import {
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import BrandSwitcher from '@/components/brands/BrandSwitcher';
+import BrandSelector from '@/components/layout/BrandSelector';
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -129,8 +130,14 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto min-w-0">
-        <Outlet />
+      <main className="flex-1 overflow-y-auto min-w-0 flex flex-col">
+        {/* Top brand bar */}
+        <div className="shrink-0 px-6 py-3 border-b border-gray-200 bg-white flex items-center gap-3 sticky top-0 z-10">
+          <BrandSelector />
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

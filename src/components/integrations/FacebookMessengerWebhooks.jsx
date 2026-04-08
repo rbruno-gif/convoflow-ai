@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
 import { Plus, Copy, Eye, EyeOff, Trash2, RotateCcw, AlertCircle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,6 +15,7 @@ export default function FacebookMessengerWebhooks() {
   const [expandedWebhook, setExpandedWebhook] = useState(null);
   const [revealedTokens, setRevealedTokens] = useState({});
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: webhooks = [] } = useQuery({
     queryKey: ['messenger-webhooks', activeBrandId],
@@ -32,32 +34,45 @@ export default function FacebookMessengerWebhooks() {
   });
 
   const handleToggleActive = async (webhook) => {
-    await base44.entities.MessengerWebhook.update(webhook.id, {
-      is_active: !webhook.is_active,
-    });
-    qc.invalidateQueries({ queryKey: ['messenger-webhooks', activeBrandId] });
+    try {
+      await base44.entities.MessengerWebhook.update(webhook.id, {
+        is_active: !webhook.is_active,
+        brand_id: activeBrandId,
+      });
+      qc.invalidateQueries({ queryKey: ['messenger-webhooks', activeBrandId] });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to toggle webhook', variant: 'destructive' });
+    }
   };
 
   const handleDelete = async (webhookId) => {
     if (!confirm('Delete this webhook? Messages from this Facebook page will no longer be received.')) return;
-    await base44.entities.MessengerWebhook.delete(webhookId);
-    qc.invalidateQueries({ queryKey: ['messenger-webhooks', activeBrandId] });
+    try {
+      await base44.entities.MessengerWebhook.delete(webhookId);
+      qc.invalidateQueries({ queryKey: ['messenger-webhooks', activeBrandId] });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to delete webhook', variant: 'destructive' });
+    }
   };
 
   const handleRegenerateToken = async (webhook) => {
     if (!confirm('Regenerate token? You will need to update your Zapier workflow with the new URL.')) return;
-    
-    const newToken = crypto.randomUUID();
-    const appDomain = window.location.origin;
-    const newUrl = `${appDomain}/api/functions/messengerWebhookHandler?brand=${activeBrand.slug}&token=${newToken}`;
-    
-    await base44.entities.MessengerWebhook.update(webhook.id, {
-      webhook_token: newToken,
-      webhook_url: newUrl,
-    });
-    
-    qc.invalidateQueries({ queryKey: ['messenger-webhooks', activeBrandId] });
-    setRevealedTokens(prev => ({ ...prev, [webhook.id]: false }));
+    try {
+      const newToken = crypto.randomUUID();
+      const appDomain = window.location.origin;
+      const newUrl = `${appDomain}/api/functions/messengerWebhookHandler?brand=${activeBrand.slug}&token=${newToken}`;
+
+      await base44.entities.MessengerWebhook.update(webhook.id, {
+        webhook_token: newToken,
+        webhook_url: newUrl,
+        brand_id: activeBrandId,
+      });
+
+      qc.invalidateQueries({ queryKey: ['messenger-webhooks', activeBrandId] });
+      setRevealedTokens(prev => ({ ...prev, [webhook.id]: false }));
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to regenerate token', variant: 'destructive' });
+    }
   };
 
   const getDepartmentName = (deptId) => {

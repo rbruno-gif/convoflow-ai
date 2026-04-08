@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Layers, CheckCircle, Info } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const METHODS = [
   { value: 'round_robin', label: 'Round Robin', icon: '🔄', desc: 'Conversations assigned evenly across all available agents in rotation. At-capacity or offline agents are skipped.' },
@@ -46,6 +47,7 @@ export default function AssignmentFlowPanel({ brandId }) {
   const [settingsId, setSettingsId] = useState(null);
   const [saved, setSaved] = useState(false);
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments', brandId],
@@ -64,15 +66,19 @@ export default function AssignmentFlowPanel({ brandId }) {
   }, [selectedDeptId, allSettings]);
 
   const save = async () => {
-    const payload = { ...form, brand_id: brandId, department_id: selectedDeptId || null };
-    if (settingsId) await base44.entities.QueueSettings.update(settingsId, payload);
-    else {
-      const existing = allSettings.find(s => (s.department_id || '') === selectedDeptId);
-      if (existing) await base44.entities.QueueSettings.update(existing.id, payload);
-      else await base44.entities.QueueSettings.create(payload);
+    try {
+      const payload = { ...form, brand_id: brandId, department_id: selectedDeptId || null };
+      if (settingsId) await base44.entities.QueueSettings.update(settingsId, payload);
+      else {
+        const existing = allSettings.find(s => (s.department_id || '') === selectedDeptId);
+        if (existing) await base44.entities.QueueSettings.update(existing.id, payload);
+        else await base44.entities.QueueSettings.create(payload);
+      }
+      qc.invalidateQueries({ queryKey: ['queue-settings', brandId] });
+      setSaved(true); setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to save assignment settings', variant: 'destructive' });
     }
-    qc.invalidateQueries({ queryKey: ['queue-settings', brandId] });
-    setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
   const selected = form.assignment_method;

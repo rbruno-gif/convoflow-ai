@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { X, Plus, Trash2, ArrowDown, MessageSquare, List, Clock } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +27,8 @@ const stepTypes = [
 
 const emptyStep = { type: 'message', message: '', delay_seconds: 0, options: [] };
 
-export default function FlowBuilderModal({ flow, onClose, onSave }) {
+export default function FlowBuilderModal({ flow, onClose, onSave, brandId }) {
+  const { toast } = useToast();
   const [name, setName] = useState(flow?.name || '');
   const [description, setDescription] = useState(flow?.description || '');
   const [trigger, setTrigger] = useState(flow?.trigger || 'new_visitor');
@@ -48,13 +50,17 @@ export default function FlowBuilderModal({ flow, onClose, onSave }) {
 
   const save = async () => {
     if (!name) return;
-    const data = { name, description, trigger, trigger_value: triggerValue, steps, is_active: true };
-    if (flow?.id) {
-      await base44.entities.AutomationFlow.update(flow.id, data);
-    } else {
-      await base44.entities.AutomationFlow.create(data);
+    try {
+      const data = { name, description, trigger, trigger_value: triggerValue, steps, is_active: true, brand_id: brandId };
+      if (flow?.id) {
+        await base44.entities.AutomationFlow.update(flow.id, data);
+      } else {
+        await base44.entities.AutomationFlow.create(data);
+      }
+      onSave();
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to save flow', variant: 'destructive' });
     }
-    onSave();
   };
 
   return (

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { PhoneCall, Clock, CheckCircle, AlertCircle, Plus, X, Phone, User, Calendar } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
 
 const STATUS_COLORS = { pending: '#f59e0b', scheduled: '#3b82f6', completed: '#10b981', missed: '#ef4444' };
 const STATUS_ICONS = { pending: Clock, scheduled: Calendar, completed: CheckCircle, missed: AlertCircle };
@@ -12,6 +13,7 @@ export default function CallbackManager({ brandId }) {
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: callbacks = [] } = useQuery({
     queryKey: ['callbacks', brandId],
@@ -30,16 +32,26 @@ export default function CallbackManager({ brandId }) {
   const filtered = callbacks.filter(c => filter === 'all' || c.status === filter);
 
   const updateStatus = async (id, status) => {
-    await base44.entities.CallbackRequest.update(id, { status });
-    qc.invalidateQueries({ queryKey: ['callbacks', brandId] });
+    try {
+      await base44.entities.CallbackRequest.update(id, { status, brand_id: brandId });
+      qc.invalidateQueries({ queryKey: ['callbacks', brandId] });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to update callback status', variant: 'destructive' });
+    }
   };
 
   const save = async () => {
     setSaving(true);
-    const payload = { ...form, brand_id: brandId };
-    await base44.entities.CallbackRequest.create(payload);
-    qc.invalidateQueries({ queryKey: ['callbacks', brandId] });
-    setForm(null); setSaving(false);
+    try {
+      const payload = { ...form, brand_id: brandId };
+      await base44.entities.CallbackRequest.create(payload);
+      qc.invalidateQueries({ queryKey: ['callbacks', brandId] });
+      setForm(null);
+    } catch (err) {
+      toast({ title: 'Error', description: err.message || 'Failed to create callback', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const pending = callbacks.filter(c => c.status === 'pending').length;

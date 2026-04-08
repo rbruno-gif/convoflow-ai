@@ -122,18 +122,31 @@ Deno.serve(async (req) => {
           console.log(`Invoking LLM with KB + FAQ context...`);
           const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
             prompt: `You are a helpful U2C Mobile customer support assistant. Based on the knowledge base and FAQs below, answer the customer's question directly and concisely. Be friendly and helpful.\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT, HELPFUL ANSWER:`,
-            model: 'gpt_5_mini',
+            model: 'gpt_4o_mini',
           });
 
           console.log(`LLM response received`);
           aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
         } else {
-          console.log(`No knowledge base entries found for brand ${brandId}`);
-          aiResponse = 'Thanks for your message! An agent will get back to you shortly.';
+          console.log(`No knowledge base entries found for brand ${brandId}, using general LLM`);
+          const fallbackResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: `You are a helpful U2C Mobile customer support assistant. Answer this customer question helpfully and concisely. If unsure say to call 1-844-222-4127.\n\nCustomer question: ${body}`,
+            model: 'gpt_4o_mini',
+          });
+          aiResponse = typeof fallbackResult === 'string' ? fallbackResult : fallbackResult?.text || 'Thanks for reaching out! For immediate help, please call us at 1-844-222-4127.';
         }
       } catch (e) {
         console.error('KB lookup or LLM failed:', e.message || e);
-        aiResponse = 'Thanks for your message! An agent will assist you shortly.';
+        try {
+          const fallbackResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: `You are a helpful U2C Mobile customer support assistant. Answer this customer question helpfully and concisely. If unsure say to call 1-844-222-4127.\n\nCustomer question: ${body}`,
+            model: 'gpt_4o_mini',
+          });
+          aiResponse = typeof fallbackResult === 'string' ? fallbackResult : fallbackResult?.text || null;
+        } catch (e2) {
+          console.error('Fallback LLM also failed:', e2.message || e2);
+          aiResponse = 'Thanks for reaching out! For immediate help, please call us at 1-844-222-4127.';
+        }
       }
 
       // Save AI response if generated

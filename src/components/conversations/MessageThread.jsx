@@ -154,7 +154,7 @@ CONVERSATION:
 ${recentHistory}
 
 Now respond as ShopBot for U2C Mobile (U2C Blue, U2C Pink, U2C Red brands). Be proactive, helpful, and move the conversation forward. Every response should solve an issue, qualify the customer, recommend an option, or collect details. Do not act like a generic chatbot—act like a smart support rep helping customers make progress quickly.`,
-      model: "gpt_5_mini",
+      model: "gpt_4o_mini",
     });
 
     const aiReply = typeof response === 'string' ? response : response?.text || 'Let me connect you to a human agent for this.';

@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     if (!customer) {
       customer = await base44.asServiceRole.entities.CustomerProfile.create({
         brand_id: brandId,
-        name: profile_name || 'Facebook User',
+        name: profileName || 'Facebook User',
         fb_id: from,
         preferred_channel: 'facebook',
       });
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
       conversation = await base44.asServiceRole.entities.Conversation.create({
         brand_id: brandId,
         customer_fb_id: from,
-        customer_name: profile_name || 'Facebook User',
+        customer_name: profileName || 'Facebook User',
         status: 'active',
         mode: 'ai',
       });
@@ -171,20 +171,30 @@ Deno.serve(async (req) => {
       console.log(`Invoking LLM with KB + FAQ context (using ${faqsToUse.length} FAQs)...`);
       const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: `You are a helpful U2C Mobile customer support assistant. Based on the knowledge base and FAQs below, answer the customer's question directly and concisely. Be friendly and helpful.\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT, HELPFUL ANSWER:`,
-        model: 'gpt_5_mini',
+        model: 'gpt_4o_mini',
       });
 
       console.log(`LLM response received`);
       aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
     } catch (e) {
       console.error('KB lookup or LLM failed:', e.message || e);
-      aiResponse = 'Thanks for your message! An agent will assist you shortly.';
+      // Fallback: still try LLM with general U2C prompt
+      try {
+        const fallbackResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: `You are a helpful U2C Mobile customer support assistant. Answer this customer question helpfully and concisely. If unsure say to call 1-844-222-4127.\n\nCustomer question: ${body}`,
+          model: 'gpt_4o_mini',
+        });
+        aiResponse = typeof fallbackResult === 'string' ? fallbackResult : fallbackResult?.text || null;
+      } catch (e2) {
+        console.error('Fallback LLM also failed:', e2.message || e2);
+        aiResponse = 'Thanks for reaching out! For immediate help, please call us at 1-844-222-4127.';
+      }
     }
 
     // Step 7: Determine final reply
     let replyText = aiResponse;
     if (!replyText) {
-      replyText = 'Thanks for your message! An agent will be with you shortly.';
+      replyText = 'Thanks for reaching out! For immediate help, please call us at 1-844-222-4127.';
     }
 
     // Step 8: Save AI reply as message

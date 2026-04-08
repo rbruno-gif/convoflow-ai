@@ -75,7 +75,7 @@ export default function ChannelView({ channel, user, allUsers, brandId }) {
       ].join('\n\n');
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `You are an internal AI assistant for support agents. Answer this agent's question using the knowledge base:\n\n${context}\n\nQuestion: ${question}\n\nBe concise and direct.`,
-        model: 'gpt_5_mini',
+        model: 'gpt_4o_mini',
       });
       await base44.entities.TeamMessage.create({
         channel_id: channel.id,

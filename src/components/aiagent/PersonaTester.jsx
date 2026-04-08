@@ -78,7 +78,7 @@ export default function PersonaTester({ brandId }) {
 
     const result = await base44.integrations.Core.InvokeLLM({
       prompt: `${instructions}\n\nKNOWLEDGE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCONVERSATION:\n${history}\n\nRespond as ${persona}.`,
-      model: 'gpt_5_mini',
+      model: 'gpt_4o_mini',
     });
     const aiReply = typeof result === 'string' ? result : result?.text || "I'm here to help!";
 

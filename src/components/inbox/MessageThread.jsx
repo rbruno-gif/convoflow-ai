@@ -89,7 +89,7 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
 
     const response = await base44.integrations.Core.InvokeLLM({
       prompt,
-      model: 'gpt_5_mini',
+      model: 'gpt_4o_mini',
     });
 
     const aiReply = typeof response === 'string' ? response : response?.text || 'Thanks for reaching out! An agent will assist you shortly.';

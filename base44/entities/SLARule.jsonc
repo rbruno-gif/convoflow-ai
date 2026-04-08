@@ -1,0 +1,44 @@
+{
+  "name": "SLARule",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "first_response_minutes": {
+      "type": "number",
+      "default": 120
+    },
+    "resolution_hours": {
+      "type": "number",
+      "default": 24
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "escalate_to_email": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "brand_id",
+    "name"
+  ]
+}

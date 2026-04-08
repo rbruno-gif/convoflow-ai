@@ -1,0 +1,55 @@
+{
+  "name": "Department",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this department belongs to"
+    },
+    "name": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string",
+      "default": "#7c3aed"
+    },
+    "description": {
+      "type": "string"
+    },
+    "assigned_agents": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Agent emails"
+    },
+    "routing_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "routing_channels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "sla_first_response_minutes": {
+      "type": "number",
+      "default": 120
+    },
+    "sla_resolution_hours": {
+      "type": "number",
+      "default": 24
+    }
+  },
+  "required": [
+    "name",
+    "brand_id"
+  ]
+}

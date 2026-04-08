@@ -3,7 +3,8 @@ import { useState } from 'react';
 import {
   LayoutDashboard, MessageSquare, BarChart3, Bot, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
-  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio, Inbox, BarChart2, Code2, Hash
+  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio, Inbox, BarChart2, Code2, Hash,
+  Clock, Layers, Shield, User, Megaphone, Activity
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,14 @@ const navItems = [
   { path: '/leads', icon: Users, label: 'Leads' },
   { path: '/flagged', icon: AlertTriangle, label: 'Flagged' },
   { path: '/agents', icon: UserCheck, label: 'Agents' },
+  { path: '/departments', icon: Layers, label: 'Departments' },
+  { path: '/business-hours', icon: Clock, label: 'Business Hours' },
+  { path: '/auto-replies', icon: Zap, label: 'Auto-Replies' },
+  { path: '/agent-capacity', icon: Activity, label: 'Capacity' },
+  { path: '/customer-profiles', icon: User, label: 'Customers' },
+  { path: '/sla-rules', icon: Shield, label: 'SLA Rules' },
+  { path: '/campaigns', icon: Megaphone, label: 'Campaigns' },
+  { path: '/audit-log', icon: Shield, label: 'Audit Log' },
   { path: '/brands', icon: Building2, label: 'Brands' },
   { path: '/integrations', icon: Plug, label: 'Integrations' },
   { path: '/settings', icon: Settings, label: 'Settings' },

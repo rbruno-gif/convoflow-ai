@@ -1,0 +1,41 @@
+{
+  "name": "BusinessHours",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "timezone": {
+      "type": "string",
+      "default": "America/New_York"
+    },
+    "schedule": {
+      "type": "object",
+      "description": "day -> { open, close, closed } e.g. monday: { open: '09:00', close: '18:00', closed: false }"
+    },
+    "holidays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "outside_hours_message": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "brand_id"
+  ]
+}

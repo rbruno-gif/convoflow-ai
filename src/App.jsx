@@ -19,6 +19,14 @@ import BrandAnalytics from '@/pages/BrandAnalytics';
 import WidgetBuilder from '@/pages/WidgetBuilder';
 import ReportingDashboard from '@/pages/ReportingDashboard';
 import TeamChat from '@/pages/TeamChat';
+import Departments from '@/pages/Departments';
+import BusinessHoursPage from '@/pages/BusinessHoursPage';
+import AutoReplies from '@/pages/AutoReplies';
+import AgentCapacityPage from '@/pages/AgentCapacityPage';
+import CustomerProfiles from '@/pages/CustomerProfiles';
+import SLARules from '@/pages/SLARules';
+import AuditLogPage from '@/pages/AuditLogPage';
+import ProactiveCampaigns from '@/pages/ProactiveCampaigns';
 import AIAgent from '@/pages/AIAgent';
 import Visitors from '@/pages/Visitors';
 import Flows from '@/pages/Flows';
@@ -72,6 +80,14 @@ const AuthenticatedApp = () => {
         <Route path="/widget-builder" element={<WidgetBuilder />} />
         <Route path="/reporting" element={<ReportingDashboard />} />
         <Route path="/team-chat" element={<TeamChat />} />
+        <Route path="/departments" element={<Departments />} />
+        <Route path="/business-hours" element={<BusinessHoursPage />} />
+        <Route path="/auto-replies" element={<AutoReplies />} />
+        <Route path="/agent-capacity" element={<AgentCapacityPage />} />
+        <Route path="/customer-profiles" element={<CustomerProfiles />} />
+        <Route path="/sla-rules" element={<SLARules />} />
+        <Route path="/audit-log" element={<AuditLogPage />} />
+        <Route path="/campaigns" element={<ProactiveCampaigns />} />
         <Route path="/ai-agent" element={<AIAgent />} />
         <Route path="/visitors" element={<Visitors />} />
         <Route path="/flows" element={<Flows />} />

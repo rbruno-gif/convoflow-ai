@@ -1,0 +1,59 @@
+{
+  "name": "CustomerProfile",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "fb_id": {
+      "type": "string"
+    },
+    "preferred_channel": {
+      "type": "string"
+    },
+    "total_conversations": {
+      "type": "number",
+      "default": 0
+    },
+    "open_tickets": {
+      "type": "number",
+      "default": 0
+    },
+    "last_contact_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_opted_out": {
+      "type": "boolean",
+      "default": false
+    },
+    "conversation_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "brand_id",
+    "name"
+  ]
+}

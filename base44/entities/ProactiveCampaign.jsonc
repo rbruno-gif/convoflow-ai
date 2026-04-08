@@ -1,0 +1,62 @@
+{
+  "name": "ProactiveCampaign",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "chat",
+        "email",
+        "whatsapp"
+      ],
+      "default": "email"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "sent",
+        "cancelled"
+      ],
+      "default": "draft"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "audience_filters": {
+      "type": "object"
+    },
+    "sent_count": {
+      "type": "number",
+      "default": 0
+    },
+    "delivered_count": {
+      "type": "number",
+      "default": 0
+    },
+    "reply_count": {
+      "type": "number",
+      "default": 0
+    },
+    "opt_out_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "brand_id",
+    "name",
+    "message"
+  ]
+}

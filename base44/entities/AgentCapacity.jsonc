@@ -1,0 +1,33 @@
+{
+  "name": "AgentCapacity",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "agent_email": {
+      "type": "string"
+    },
+    "max_conversations": {
+      "type": "number",
+      "default": 5
+    },
+    "current_conversations": {
+      "type": "number",
+      "default": 0
+    },
+    "availability": {
+      "type": "string",
+      "enum": [
+        "available",
+        "busy",
+        "away"
+      ],
+      "default": "available"
+    }
+  },
+  "required": [
+    "brand_id",
+    "agent_email"
+  ]
+}

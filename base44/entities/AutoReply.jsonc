@@ -1,0 +1,40 @@
+{
+  "name": "AutoReply",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "outside_hours",
+        "first_message",
+        "keyword",
+        "channel",
+        "no_agent"
+      ],
+      "default": "outside_hours"
+    },
+    "trigger_value": {
+      "type": "string",
+      "description": "keyword or channel value"
+    },
+    "message": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "brand_id",
+    "name",
+    "trigger",
+    "message"
+  ]
+}

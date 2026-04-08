@@ -1,0 +1,40 @@
+{
+  "name": "CannedResponse",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "shortcut": {
+      "type": "string",
+      "description": "e.g. /refund"
+    },
+    "title": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "is_shared": {
+      "type": "boolean",
+      "default": false,
+      "description": "true = team-wide, false = personal"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Agent email for personal responses"
+    },
+    "category": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "brand_id",
+    "shortcut",
+    "title",
+    "content"
+  ]
+}

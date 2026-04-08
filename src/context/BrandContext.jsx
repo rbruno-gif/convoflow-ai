@@ -7,29 +7,70 @@ const BrandContext = createContext(null);
 export function BrandProvider({ children }) {
   const [activeBrand, setActiveBrand] = useState(() => {
     try {
-      const stored = localStorage.getItem('u2c_active_brand');
-      return stored ? JSON.parse(stored) : null;
+      const storedId = localStorage.getItem('u2c_active_brand_id');
+      if (storedId) return { id: storedId }; // Placeholder, will be filled by useEffect
+      return null;
     } catch {
       return null;
     }
   });
   const [user, setUser] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [initError, setInitError] = useState(null);
 
   useEffect(() => {
-    const loadUser = async () => {
+    const initBrand = async () => {
       try {
         const u = await base44.auth.me();
         setUser(u);
+        
+        // Check localStorage for previously selected brand
+        const storedId = localStorage.getItem('u2c_active_brand_id');
+        
+        // Fetch all available brands for this user
+        const allBrands = await base44.entities.Brand.list('-created_date', 100);
+        
+        // Filter based on user role (admin sees all, others see assigned)
+        let accessibleBrands = allBrands;
+        if (u?.role !== 'admin') {
+          accessibleBrands = allBrands.filter(b => 
+            b.assigned_agents?.includes(u?.email) || b.slug === 'u2c-group'
+          );
+        }
+        
+        // Try to use stored brand if valid
+        let selectedBrand = null;
+        if (storedId && accessibleBrands.some(b => b.id === storedId)) {
+          selectedBrand = accessibleBrands.find(b => b.id === storedId);
+        } else if (accessibleBrands.length > 0) {
+          // Default to first accessible brand
+          selectedBrand = accessibleBrands[0];
+        }
+        
+        if (selectedBrand) {
+          setActiveBrand({
+            id: selectedBrand.id,
+            name: selectedBrand.name,
+            slug: selectedBrand.slug,
+            primary_color: selectedBrand.primary_color,
+          });
+          localStorage.setItem('u2c_active_brand_id', selectedBrand.id);
+        }
+        
+        setIsInitialized(true);
       } catch (err) {
-        console.warn('Failed to load user:', err);
+        console.error('Failed to initialize brand:', err);
+        setInitError(err.message);
+        setIsInitialized(true);
       }
     };
-    loadUser();
+    
+    initBrand();
   }, []);
 
+  // Fetch all brands once on mount (used for switcher)
   const { data: allBrands = [] } = useQuery({
-    queryKey: ['brands'],
+    queryKey: ['brands-all'],
     queryFn: () => base44.entities.Brand.filter({ is_archived: false }, '-created_date', 100),
     enabled: !!user,
   });
@@ -39,45 +80,12 @@ export function BrandProvider({ children }) {
     if (!user) return [];
     if (user.role === 'admin') return allBrands;
     return allBrands.filter(b =>
-      b.assigned_agents?.includes(user.email) || b.can_see_all_brands
+      b.assigned_agents?.includes(user.email) || b.slug === 'u2c-group'
     );
   })();
 
-  // Auto-select: prefer stored brand, fallback to first accessible
-  useEffect(() => {
-    if (!user || accessibleBrands.length === 0) return;
-
-    let selectedBrand = null;
-
-    // Try to use stored brand if still accessible
-    if (activeBrand && activeBrand.id) {
-      const stillAccessible = accessibleBrands.find(b => b.id === activeBrand.id);
-      if (stillAccessible) {
-        selectedBrand = stillAccessible;
-      }
-    }
-
-    // Fallback to first accessible brand
-    if (!selectedBrand) {
-      selectedBrand = accessibleBrands[0];
-    }
-
-    if (selectedBrand && (!activeBrand || activeBrand.id !== selectedBrand.id)) {
-      const brandData = {
-        id: selectedBrand.id,
-        name: selectedBrand.name,
-        slug: selectedBrand.slug,
-        primary_color: selectedBrand.primary_color,
-      };
-      setActiveBrand(brandData);
-      localStorage.setItem('u2c_active_brand', JSON.stringify(brandData));
-    }
-
-    setIsInitialized(true);
-  }, [accessibleBrands, user]);
-
   const switchBrand = (brandId) => {
-    const brand = accessibleBrands.find(b => b.id === brandId);
+    const brand = [...accessibleBrands, ...allBrands].find(b => b.id === brandId);
     if (brand) {
       const brandData = {
         id: brand.id,
@@ -86,7 +94,9 @@ export function BrandProvider({ children }) {
         primary_color: brand.primary_color,
       };
       setActiveBrand(brandData);
-      localStorage.setItem('u2c_active_brand', JSON.stringify(brandData));
+      localStorage.setItem('u2c_active_brand_id', brand.id);
+      // Reload page to reset all queries with new brand context
+      window.location.reload();
     }
   };
 
@@ -99,6 +109,7 @@ export function BrandProvider({ children }) {
       isInitialized,
       switchBrand,
       user,
+      initError,
     }}>
       {children}
     </BrandContext.Provider>

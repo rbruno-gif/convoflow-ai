@@ -29,7 +29,10 @@ export default function ConversationThread({ conversation, messages, onRefresh }
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!messageContent.trim() || !activeBrandId) return;
+    if (!messageContent.trim() || !activeBrandId) {
+      setSendError('Brand not selected');
+      return;
+    }
     setSending(true);
     setSendError(null);
 
@@ -60,10 +63,11 @@ export default function ConversationThread({ conversation, messages, onRefresh }
       onRefresh();
     } catch (error) {
       console.error('Failed to send message:', error);
-      setSendError(error.message || 'Failed to send message. Please try again.');
+      const errorMsg = error.message || 'Failed to send message. Check that brand_id is set.';
+      setSendError(errorMsg);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to send message',
+        description: errorMsg,
         variant: 'destructive',
       });
     } finally {

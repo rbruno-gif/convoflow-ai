@@ -67,7 +67,7 @@ export default function NewWebhookPanel({ onClose, onSuccess }) {
 
       const departmentName = departments.find(d => d.id === departmentId)?.name || '';
 
-      const webhook = await base44.entities.MessengerWebhook.create({
+      await base44.entities.MessengerWebhook.create({
         brand_id: activeBrandId,
         webhook_token: webhookToken,
         webhook_url: fullWebhookUrl,
@@ -84,7 +84,9 @@ export default function NewWebhookPanel({ onClose, onSuccess }) {
 
       setWebhookUrl(fullWebhookUrl);
       setStep('success');
+      if (onSuccess) onSuccess();
     } catch (err) {
+      console.error('Webhook creation failed:', err);
       setError(err.message || 'Failed to create webhook');
     } finally {
       setLoading(false);

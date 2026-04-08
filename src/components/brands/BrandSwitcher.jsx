@@ -25,7 +25,9 @@ export default function BrandSwitcher() {
         <BrandAvatar brand={activeBrand} size={28} />
         <div className="flex-1 min-w-0 text-left">
           <p className="text-xs font-semibold text-white truncate">{activeBrand.name}</p>
-          <p className="text-[10px] text-gray-400 truncate">{activeBrand.slug}</p>
+          <p className="text-[10px] text-gray-400 truncate">
+            {activeBrand.slug === 'u2c-group' ? '⚡ Super Admin' : activeBrand.slug}
+          </p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
           <span
@@ -47,32 +49,42 @@ export default function BrandSwitcher() {
           transition: 'opacity 0.15s ease, transform 0.15s ease',
         }}
       >
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 px-3 pt-3 pb-1">Switch Brand</p>
         <div className="max-h-60 overflow-y-auto pb-2">
-          {brands.map(brand => (
-            <button
-              key={brand.id}
-              onClick={() => { switchBrand(brand.id); setOpen(false); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 transition-colors"
-            >
-              <BrandAvatar brand={brand} size={24} />
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-xs font-medium text-white truncate">{brand.name}</p>
-                <p className="text-[10px] text-gray-500 truncate">{brand.slug}</p>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ background: brand.is_active ? '#22c55e' : '#6b7280' }}
-                  title={brand.is_active ? 'Active' : 'Inactive'}
-                />
-                {activeBrand.id === brand.id && <Check className="w-3.5 h-3.5 text-violet-400" />}
-              </div>
-            </button>
+          {/* U2C Group first */}
+          {brands.filter(b => b.slug === 'u2c-group').map(brand => (
+            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} isGroup />
+          ))}
+          {brands.some(b => b.slug === 'u2c-group') && brands.some(b => b.slug !== 'u2c-group') && (
+            <div className="mx-3 my-1 border-t border-white/10" />
+          )}
+          {brands.filter(b => b.slug !== 'u2c-group').map(brand => (
+            <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} />
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+function BrandOption({ brand, active, onSelect, isGroup }) {
+  return (
+    <button
+      onClick={onSelect}
+      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 transition-colors"
+    >
+      <BrandAvatar brand={brand} size={24} />
+      <div className="flex-1 min-w-0 text-left">
+        <p className="text-xs font-medium text-white truncate">{brand.name}</p>
+        <p className="text-[10px] text-gray-500 truncate">
+          {isGroup ? '⚡ Super Admin' : brand.slug}
+        </p>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full"
+          style={{ background: brand.is_active ? '#22c55e' : '#6b7280' }} />
+        {active && <Check className="w-3.5 h-3.5 text-violet-400" />}
+      </div>
+    </button>
   );
 }
 

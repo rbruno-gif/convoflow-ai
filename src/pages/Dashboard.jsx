@@ -1,13 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
+import GroupDashboard from '@/pages/GroupDashboard';
 import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow, subDays, format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
-  const { activeBrandId } = useBrand();
+  const { activeBrandId, activeBrand } = useBrand();
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['conversations', activeBrandId],
@@ -54,11 +55,16 @@ export default function Dashboard() {
 
   const recent = conversations.slice(0, 5);
 
+  // If the active brand is U2C Group, show the group-level hub
+  if (activeBrand?.slug === 'u2c-group') {
+    return <GroupDashboard />;
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">U2C Mobile · ConvoFlow AI Overview</p>
+        <p className="text-sm text-muted-foreground mt-1">{activeBrand?.name || 'ConvoFlow'} · Overview</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">

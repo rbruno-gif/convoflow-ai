@@ -35,6 +35,10 @@ Deno.serve(async (req) => {
     const bodyText = await req.text();
     const payload = JSON.parse(bodyText);
     
+    // If not in query params, try to read from request body
+    brandId = brandId || payload.brand_id;
+    console.log(`[Webhook] brand_id after body check: ${brandId}`);
+    
     // Extract Facebook page ID from payload (Facebook sends this)
     let facebookPageId = null;
     let from = null;
@@ -75,19 +79,9 @@ Deno.serve(async (req) => {
       }
     }
     
-    if (!brandId) {
-      console.warn(`[Webhook] No brand_id found, returning fallback`);
-      return new Response(
-        JSON.stringify({ response: 'Thanks for your message. We will be with you shortly.' }),
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
+    // Use hardcoded default for testing if still no brand_id
+    brandId = brandId || '69d5d0811141577dd21cc040';
+    console.log(`[Webhook] Using brand_id: ${brandId}`);
 
     const body = messageBody;
 

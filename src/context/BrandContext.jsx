@@ -33,21 +33,22 @@ export function BrandProvider({ children }) {
 
   // Auto-select: prefer stored brand, fallback to first accessible
   useEffect(() => {
-    if (!activeBrandId && accessibleBrands.length > 0) {
-      const first = accessibleBrands[0];
-      setActiveBrandId(first.id);
-      localStorage.setItem('activeBrandId', first.id);
-    }
-    // If stored brand is no longer accessible, reset
-    if (activeBrandId && accessibleBrands.length > 0) {
-      const stillAccessible = accessibleBrands.find(b => b.id === activeBrandId);
-      if (!stillAccessible) {
-        const first = accessibleBrands[0];
-        setActiveBrandId(first.id);
-        localStorage.setItem('activeBrandId', first.id);
+    if (accessibleBrands.length > 0) {
+      let brandToUse = activeBrandId;
+      
+      if (!brandToUse) {
+        brandToUse = accessibleBrands[0].id;
+      } else {
+        const stillAccessible = accessibleBrands.find(b => b.id === brandToUse);
+        if (!stillAccessible) {
+          brandToUse = accessibleBrands[0].id;
+        }
       }
+      
+      setActiveBrandId(brandToUse);
+      localStorage.setItem('activeBrandId', brandToUse);
     }
-  }, [accessibleBrands, activeBrandId]);
+  }, [accessibleBrands]);
 
   const switchBrand = (brandId) => {
     setActiveBrandId(brandId);

@@ -16,12 +16,12 @@ export default function BrandSelector() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  if (!activeBrand) {
-    return <div className="text-xs text-gray-400">Loading brand...</div>;
-  }
-
   return (
     <div ref={ref} className="relative">
+      {!activeBrand ? (
+        <div className="text-xs text-gray-500 px-3 py-2">Loading brand...</div>
+      ) : (
+        <>
       <button
         onClick={() => setOpen(o => !o)}
         className="flex items-center gap-2.5 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors group"
@@ -70,6 +70,8 @@ export default function BrandSelector() {
             ))}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

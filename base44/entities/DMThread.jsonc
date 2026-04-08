@@ -1,0 +1,31 @@
+{
+  "name": "DMThread",
+  "type": "object",
+  "properties": {
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Exactly 2 agent emails"
+    },
+    "brand_id": {
+      "type": "string",
+      "description": "Brand context (null for cross-brand DMs)"
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "last_message_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "unread_by": {
+      "type": "object",
+      "description": "email -> unread count"
+    }
+  },
+  "required": [
+    "participants"
+  ]
+}

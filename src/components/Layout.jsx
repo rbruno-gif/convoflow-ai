@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, MessageSquare, BarChart3, Bot, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
-  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio, Inbox, BarChart2, Code2
+  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio, Inbox, BarChart2, Code2, Hash
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/inbox', icon: Inbox, label: 'Inbox' },
   { path: '/live-support', icon: Radio, label: 'Live Support' },
+  { path: '/team-chat', icon: Hash, label: 'Team Chat' },
   { path: '/brand-analytics', icon: BarChart2, label: 'Analytics' },
   { path: '/reporting', icon: BarChart3, label: 'Reports' },
   { path: '/ai-agent', icon: Bot, label: 'AI Agent' },

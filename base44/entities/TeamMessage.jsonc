@@ -1,0 +1,82 @@
+{
+  "name": "TeamMessage",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand scope"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "Channel this message belongs to (null for DMs)"
+    },
+    "dm_thread_id": {
+      "type": "string",
+      "description": "DM thread ID (null for channel messages)"
+    },
+    "sender_email": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "ai_response",
+        "announcement",
+        "file",
+        "conversation_link"
+      ],
+      "default": "text"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "conversation_ref_id": {
+      "type": "string",
+      "description": "Linked customer conversation ID"
+    },
+    "mentions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Mentioned agent emails"
+    },
+    "reactions": {
+      "type": "object",
+      "description": "emoji -> [emails]"
+    },
+    "is_announcement": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_ai_response": {
+      "type": "boolean",
+      "default": false
+    },
+    "visible_to": {
+      "type": "string",
+      "description": "If set, only this email sees the message (AI responses)"
+    },
+    "read_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Agent emails who have read this message"
+    }
+  },
+  "required": [
+    "content",
+    "sender_email"
+  ]
+}

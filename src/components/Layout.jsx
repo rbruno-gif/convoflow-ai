@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, MessageSquare, BarChart3, Bot, Eye, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
-  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2
+  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -22,6 +22,7 @@ const navItems = [
   { path: '/agents', icon: UserCheck, label: 'Agents' },
   { path: '/integrations', icon: Plug, label: 'Integrations' },
   { path: '/brands', icon: Building2, label: 'Brands' },
+  { path: '/knowledge-scraper', icon: Globe, label: 'KB Scraper' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 

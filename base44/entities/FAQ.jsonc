@@ -20,13 +20,21 @@
         "payment",
         "products",
         "orders",
-        "general"
+        "general",
+        "plans",
+        "billing",
+        "activation",
+        "technical_support"
       ],
       "default": "general"
     },
     "campaign_id": {
       "type": "string",
       "description": "Campaign this FAQ belongs to"
+    },
+    "source_url": {
+      "type": "string",
+      "description": "URL this FAQ was scraped from"
     },
     "keywords": {
       "type": "array",

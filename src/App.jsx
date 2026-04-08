@@ -24,6 +24,7 @@ import Agents from '@/pages/Agents';
 import Integrations from '@/pages/Integrations';
 import Settings from '@/pages/Settings';
 import CommitLogs from '@/pages/CommitLogs';
+import KnowledgeScraper from '@/pages/KnowledgeScraper';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DataDeletion from '@/pages/DataDeletion';
@@ -71,6 +72,7 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/commit-logs" element={<CommitLogs />} />
         <Route path="/brands" element={<Brands />} />
+        <Route path="/knowledge-scraper" element={<KnowledgeScraper />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

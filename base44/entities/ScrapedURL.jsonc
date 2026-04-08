@@ -1,0 +1,47 @@
+{
+  "name": "ScrapedURL",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this URL belongs to"
+    },
+    "url": {
+      "type": "string",
+      "description": "The URL to scrape"
+    },
+    "label": {
+      "type": "string",
+      "description": "Friendly label for this URL"
+    },
+    "last_scraped_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this URL was last scraped"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "scraping",
+        "done",
+        "error"
+      ],
+      "default": "pending",
+      "description": "Current scrape status"
+    },
+    "faqs_extracted": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of FAQs extracted from this URL"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error message if scraping failed"
+    }
+  },
+  "required": [
+    "brand_id",
+    "url"
+  ]
+}

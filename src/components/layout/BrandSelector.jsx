@@ -4,7 +4,7 @@ import { useBrand } from '@/context/BrandContext';
 import { BrandAvatar } from '@/components/brands/BrandSwitcher';
 
 export default function BrandSelector() {
-  const { activeBrand, brands, switchBrand } = useBrand();
+  const { activeBrand, brands, switchBrand, isLoading } = useBrand();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -16,8 +16,8 @@ export default function BrandSelector() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  if (!activeBrand || brands.length === 0) {
-    return <div className="text-xs text-gray-500 px-3 py-2">Loading...</div>;
+  if (isLoading || !activeBrand || brands.length === 0) {
+    return <div className="text-xs text-gray-500 px-3 py-2">Loading brands...</div>;
   }
 
   return (

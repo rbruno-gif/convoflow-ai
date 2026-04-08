@@ -7,9 +7,17 @@ const BrandContext = createContext(null);
 export function BrandProvider({ children }) {
   const [activeBrandId, setActiveBrandId] = useState(() => localStorage.getItem('activeBrandId') || null);
 
-  const { data: allBrands = [] } = useQuery({
+  const { data: allBrands = [], isLoading } = useQuery({
     queryKey: ['brands'],
-    queryFn: () => base44.entities.Brand.filter({ is_archived: false }, '-created_date', 100),
+    queryFn: async () => {
+      try {
+        return await base44.entities.Brand.filter({ is_archived: false }, '-created_date', 100);
+      } catch (err) {
+        console.error('Failed to fetch brands:', err);
+        return [];
+      }
+    },
+    staleTime: Infinity,
   });
 
   // All brands are accessible (SDK will enforce permissions)
@@ -44,6 +52,7 @@ export function BrandProvider({ children }) {
       activeBrandId,
       brands: accessibleBrands,
       switchBrand,
+      isLoading,
     }}>
       {children}
     </BrandContext.Provider>

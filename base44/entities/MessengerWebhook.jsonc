@@ -1,0 +1,59 @@
+{
+  "name": "MessengerWebhook",
+  "type": "object",
+  "properties": {
+    "webhook_token": {
+      "type": "string",
+      "description": "Unique token for this webhook URL"
+    },
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this webhook belongs to"
+    },
+    "facebook_page_id": {
+      "type": "string",
+      "description": "Facebook page ID connected to this webhook"
+    },
+    "facebook_page_name": {
+      "type": "string",
+      "description": "Display name of the Facebook page"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Department to route messages to"
+    },
+    "allowed_sender_ids": {
+      "type": "string",
+      "description": "Comma-separated list of allowed sender IDs (optional filter)"
+    },
+    "auto_reply_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to auto-reply when AI cannot answer"
+    },
+    "auto_reply_message": {
+      "type": "string",
+      "description": "Fallback message text when no KB match"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this webhook connection is active"
+    },
+    "last_triggered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time this webhook was triggered"
+    },
+    "total_messages_received": {
+      "type": "number",
+      "default": 0,
+      "description": "Total messages received through this webhook"
+    }
+  },
+  "required": [
+    "webhook_token",
+    "brand_id",
+    "facebook_page_id"
+  ]
+}

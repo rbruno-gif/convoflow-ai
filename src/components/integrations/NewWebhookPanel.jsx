@@ -36,6 +36,8 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
         .map(s => s.trim())
         .filter(s => s.length > 0);
 
+      const departmentName = departments.find(d => d.id === departmentId)?.name || '';
+
       const webhook = await base44.entities.MessengerWebhook.create({
         brand_id: brandId,
         webhook_token: webhookToken,
@@ -43,6 +45,7 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
         facebook_page_id: pageId,
         facebook_page_name: pageName,
         department_id: departmentId,
+        department_name: departmentName,
         allowed_sender_ids: allowedSenderList,
         auto_reply_enabled: autoReplyEnabled,
         auto_reply_message: autoReplyMessage,

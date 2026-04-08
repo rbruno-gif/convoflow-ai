@@ -1,0 +1,74 @@
+{
+  "name": "MessengerWebhook",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this webhook belongs to"
+    },
+    "webhook_token": {
+      "type": "string",
+      "description": "Unique secret token for validating requests"
+    },
+    "webhook_url": {
+      "type": "string",
+      "description": "Full webhook URL for Zapier callback"
+    },
+    "facebook_page_name": {
+      "type": "string",
+      "description": "Display name of Facebook page"
+    },
+    "facebook_page_id": {
+      "type": "string",
+      "description": "Facebook page ID"
+    },
+    "department_id": {
+      "type": "string",
+      "description": "Department to route messages to"
+    },
+    "department_name": {
+      "type": "string",
+      "description": "Display name of the department"
+    },
+    "allowed_sender_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional filter for specific sender IDs, empty = accept all"
+    },
+    "auto_reply_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable auto-reply when AI cannot answer"
+    },
+    "auto_reply_message": {
+      "type": "string",
+      "default": "Thanks for your message! An agent will be with you shortly.",
+      "description": "Auto-reply message text"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this webhook is active"
+    },
+    "last_triggered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of last received message"
+    },
+    "total_messages_received": {
+      "type": "number",
+      "default": 0,
+      "description": "Count of messages received"
+    }
+  },
+  "required": [
+    "brand_id",
+    "webhook_token",
+    "webhook_url",
+    "facebook_page_name",
+    "facebook_page_id",
+    "department_id"
+  ]
+}

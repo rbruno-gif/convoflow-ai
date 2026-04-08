@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /// <reference lib="deno.window" />
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 

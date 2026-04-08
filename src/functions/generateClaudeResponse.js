@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /// <reference lib="deno.window" />
 import Anthropic from 'npm:@anthropic-ai/sdk@0.24.3';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';

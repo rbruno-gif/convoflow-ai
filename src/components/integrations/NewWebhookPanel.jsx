@@ -1,26 +1,45 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { X, Copy, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-export default function NewWebhookPanel({ brandId, brandSlug, departments = [], onClose, onSuccess }) {
+export default function NewWebhookPanel({ onClose, onSuccess }) {
+  const { activeBrandId, activeBrand } = useBrand();
   const [step, setStep] = useState('form'); // form, success
   const [loading, setLoading] = useState(false);
   const [webhookUrl, setWebhookUrl] = useState('');
   const [pageName, setPageName] = useState('');
   const [pageId, setPageId] = useState('');
-  const [departmentId, setDepartmentId] = useState(departments[0]?.id || '');
+  const [departmentId, setDepartmentId] = useState('');
   const [allowedSenders, setAllowedSenders] = useState('');
-  const [autoReplyEnabled, setAutoReplyEnabled] = useState(false);
+  const [autoReplyEnabled, setAutoReplyEnabled] = useState(true);
   const [autoReplyMessage, setAutoReplyMessage] = useState('Thanks for your message! An agent will be with you shortly.');
   const [error, setError] = useState('');
+
+  // Fetch departments for the active brand
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Department.filter({ brand_id: activeBrandId }, 'name')
+      : [],
+    enabled: !!activeBrandId,
+  });
+
+  // Auto-set first department when departments load
+  useEffect(() => {
+    if (departments.length > 0 && !departmentId) {
+      setDepartmentId(departments[0].id);
+    }
+  }, [departments, departmentId]);
 
   const handleCreate = async () => {
     setError('');
     
-    if (!brandId) {
+    if (!activeBrandId) {
       setError('Brand is required. Please select a brand from the brand switcher.');
       return;
     }
@@ -38,8 +57,8 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
     setLoading(true);
     try {
       const webhookToken = crypto.randomUUID();
-      const appDomain = window.location.origin;
-      const fullWebhookUrl = `${appDomain}/api/functions/messengerWebhookHandler?brand=${brandSlug}&token=${webhookToken}`;
+      const productionDomain = 'https://caped-smart-chat-pulse.base44.app';
+      const fullWebhookUrl = `${productionDomain}/api/functions/messengerWebhook?brand=${activeBrand.slug}&token=${webhookToken}`;
 
       const allowedSenderList = allowedSenders
         .split(',')
@@ -49,7 +68,7 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
       const departmentName = departments.find(d => d.id === departmentId)?.name || '';
 
       const webhook = await base44.entities.MessengerWebhook.create({
-        brand_id: brandId,
+        brand_id: activeBrandId,
         webhook_token: webhookToken,
         webhook_url: fullWebhookUrl,
         facebook_page_id: pageId,
@@ -201,16 +220,22 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
 
         <div>
           <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Route Messages to Department</label>
-          <select
-            value={departmentId}
-            onChange={(e) => setDepartmentId(e.target.value)}
-            className="w-full px-3 py-2 text-sm bg-background rounded-lg border border-border"
-          >
-            <option value="">Select a department...</option>
-            {departments.map(dept => (
-              <option key={dept.id} value={dept.id}>{dept.name}</option>
-            ))}
-          </select>
+          {departments.length === 0 ? (
+            <div className="px-3 py-2 text-sm bg-muted rounded-lg border border-border text-muted-foreground">
+              No departments found — create departments first in Settings
+            </div>
+          ) : (
+            <select
+              value={departmentId}
+              onChange={(e) => setDepartmentId(e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-background rounded-lg border border-border"
+            >
+              <option value="">Select a department...</option>
+              {departments.map(dept => (
+                <option key={dept.id} value={dept.id}>{dept.name}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div>
@@ -242,7 +267,7 @@ export default function NewWebhookPanel({ brandId, brandSlug, departments = [], 
             <Textarea
               value={autoReplyMessage}
               onChange={(e) => setAutoReplyMessage(e.target.value)}
-              placeholder="Message to send when AI confidence is low..."
+              placeholder="Message to send when AI cannot answer..."
               className="h-20 text-sm"
             />
           </div>

@@ -1,0 +1,33 @@
+{
+  "name": "OptOutList",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "customer_id": {
+      "type": "string",
+      "description": "Reference to CustomerProfile"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "channel": {
+      "type": "string",
+      "enum": ["email", "sms", "whatsapp"],
+      "description": "Channel opted out of"
+    },
+    "opted_out_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "type": "string",
+      "enum": ["unsubscribe_email", "stop_sms", "unsubscribe_whatsapp"]
+    }
+  },
+  "required": ["brand_id", "customer_id", "channel"]
+}

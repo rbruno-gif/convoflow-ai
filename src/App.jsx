@@ -39,7 +39,6 @@ import AutoReplies from '@/pages/AutoReplies';
 import AgentCapacityPage from '@/pages/AgentCapacityPage';
 import CustomerProfiles from '@/pages/CustomerProfiles';
 import SLARules from '@/pages/SLARules';
-import ProactiveCampaigns from '@/pages/ProactiveCampaigns';
 import QueueManagement from '@/pages/QueueManagement';
 import Visitors from '@/pages/Visitors';
 import Flows from '@/pages/Flows';
@@ -52,6 +51,7 @@ import Settings from '@/pages/Settings';
 import CommitLogs from '@/pages/CommitLogs';
 import LiveSupport from '@/pages/LiveSupport';
 import Voice from '@/pages/Voice';
+import Campaigns from '@/pages/Campaigns';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DataDeletion from '@/pages/DataDeletion';
@@ -110,7 +110,6 @@ const AuthenticatedApp = () => {
         <Route path="/agent-capacity" element={<AgentCapacityPage />} />
         <Route path="/customer-profiles" element={<CustomerProfiles />} />
         <Route path="/sla-rules" element={<SLARules />} />
-        <Route path="/campaigns" element={<ProactiveCampaigns />} />
         <Route path="/visitors" element={<Visitors />} />
         <Route path="/flows" element={<Flows />} />
         <Route path="/tickets" element={<Tickets />} />
@@ -122,6 +121,7 @@ const AuthenticatedApp = () => {
         <Route path="/brands" element={<Brands />} />
         <Route path="/live-support" element={<LiveSupport />} />
         <Route path="/voice" element={<Voice />} />
+        <Route path="/campaigns" element={<Campaigns />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

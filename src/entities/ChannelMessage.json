@@ -1,0 +1,51 @@
+{
+  "name": "ChannelMessage",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "Reference to Channel"
+    },
+    "sender_id": {
+      "type": "string",
+      "description": "Agent email"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {"type": "string"},
+          "filename": {"type": "string"},
+          "mime_type": {"type": "string"}
+        }
+      }
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_announcement": {
+      "type": "boolean",
+      "default": false
+    },
+    "reactions": {
+      "type": "object",
+      "description": "Emoji => [agent emails] map"
+    },
+    "edited_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["brand_id", "channel_id", "sender_id", "content"]
+}

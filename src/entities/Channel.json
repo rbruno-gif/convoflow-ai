@@ -1,0 +1,31 @@
+{
+  "name": "Channel",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this channel belongs to"
+    },
+    "name": {
+      "type": "string",
+      "description": "Channel name (e.g., #general)"
+    },
+    "type": {
+      "type": "string",
+      "enum": ["public", "private", "cross_brand"],
+      "default": "public"
+    },
+    "description": {
+      "type": "string"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Auto-created default channels"
+    },
+    "created_by": {
+      "type": "string"
+    }
+  },
+  "required": ["brand_id", "name", "type"]
+}

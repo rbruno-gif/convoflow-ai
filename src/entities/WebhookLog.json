@@ -1,0 +1,43 @@
+{
+  "name": "WebhookLog",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "webhook_id": {
+      "type": "string",
+      "description": "Reference to Webhook config"
+    },
+    "event_type": {
+      "type": "string",
+      "description": "e.g. new_conversation, ticket_created"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Full webhook payload sent"
+    },
+    "response_code": {
+      "type": "number",
+      "description": "HTTP status code from receiver"
+    },
+    "response_body": {
+      "type": "string",
+      "description": "Response body from receiver"
+    },
+    "delivery_status": {
+      "type": "string",
+      "enum": ["success", "failed"],
+      "default": "success"
+    },
+    "retry_count": {
+      "type": "number",
+      "default": 0
+    },
+    "next_retry_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["brand_id", "webhook_id", "event_type", "payload"]
+}

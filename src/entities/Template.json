@@ -1,0 +1,45 @@
+{
+  "name": "Template",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "template_type": {
+      "type": "string",
+      "enum": ["email", "sms"]
+    },
+    "name": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Email subject only"
+    },
+    "body": {
+      "type": "string",
+      "description": "Rich text body"
+    },
+    "merge_fields_used": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "List of merge field variables used"
+    },
+    "version_number": {
+      "type": "number",
+      "default": 1
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "last_modified_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["brand_id", "template_type", "name", "body"]
+}

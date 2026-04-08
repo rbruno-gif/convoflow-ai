@@ -111,9 +111,8 @@ Deno.serve(async (req) => {
 
     // Step 7: Find or create open conversation
     let conversations = await base44.asServiceRole.entities.Conversation.filter({
-      customer_id: customer.id,
+      customer_fb_id: from,
       brand_id: webhook.brand_id,
-      channel: 'facebook',
       status: 'active',
     });
 
@@ -121,10 +120,8 @@ Deno.serve(async (req) => {
     if (!conversation) {
       conversation = await base44.asServiceRole.entities.Conversation.create({
         brand_id: webhook.brand_id,
-        customer_id: customer.id,
+        customer_fb_id: from,
         customer_name: profile_name || 'Facebook User',
-        channel: 'facebook',
-        department_id: webhook.department_id || null,
         status: 'active',
         mode: 'ai',
       });
@@ -135,10 +132,10 @@ Deno.serve(async (req) => {
       conversation_id: conversation.id,
       brand_id: webhook.brand_id,
       sender_type: 'customer',
-      sender_id: from,
       sender_name: profile_name || 'Facebook User',
       content: body,
-      channel: 'facebook',
+      timestamp: new Date().toISOString(),
+      message_type: 'text',
     });
 
     // Step 9: Get AI response from knowledge base
@@ -176,8 +173,16 @@ Deno.serve(async (req) => {
       conversation_id: conversation.id,
       brand_id: webhook.brand_id,
       sender_type: 'ai',
+      sender_name: 'AI Assistant',
       content: replyText,
-      channel: 'facebook',
+      timestamp: new Date().toISOString(),
+      message_type: 'text',
+    });
+
+    // Update conversation with latest message
+    await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+      last_message: replyText,
+      last_message_time: new Date().toISOString(),
     });
 
     // Step 12: Update webhook stats and return response

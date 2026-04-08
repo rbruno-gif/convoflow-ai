@@ -18,21 +18,37 @@ Deno.serve(async (req) => {
     // Fetch the page content
     let pageText = '';
     try {
-     console.log(`[Scraper] Fetching URL: ${url}`);
+      console.log(`[Scraper] Starting fetch: ${url}`);
 
-     const res = await fetch(url, {
-       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; U2CBot/1.0)' },
-       signal: AbortSignal.timeout(15000) // 15s timeout
-     });
+      // Browser-like headers to avoid being blocked
+      const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
+      };
 
-     console.log(`[Scraper] HTTP ${res.status} from ${url}`);
+      const res = await fetch(url, {
+        headers,
+        signal: AbortSignal.timeout(20000), // 20s timeout
+        redirect: 'follow'
+      });
 
-     if (!res.ok) {
-       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-     }
+      console.log(`[Scraper] HTTP ${res.status} from ${url}`);
 
-     const html = await res.text();
-     console.log(`[Scraper] Downloaded ${html.length} bytes from ${url}`);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const html = await res.text();
+      console.log(`[Scraper] Downloaded ${html.length} bytes from ${url}`);
       // Strip HTML tags, scripts, styles
       pageText = html
         .replace(/<script[\s\S]*?<\/script>/gi, '')

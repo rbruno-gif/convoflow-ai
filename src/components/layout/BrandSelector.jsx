@@ -16,7 +16,9 @@ export default function BrandSelector() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  if (!activeBrand || brands.length === 0) return null;
+  if (!activeBrand) {
+    return <div className="text-xs text-gray-400">Loading brand...</div>;
+  }
 
   return (
     <div ref={ref} className="relative">

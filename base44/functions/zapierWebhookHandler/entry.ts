@@ -93,6 +93,56 @@ Deno.serve(async (req) => {
       });
 
       console.log(`Zapier message saved - Conversation: ${conversation.id}, From: ${from}`);
+
+      // Get AI response from knowledge base
+      let aiResponse = null;
+      try {
+        const kbEntries = await base44.asServiceRole.entities.KnowledgeDoc.filter({
+          brand_id: brandId,
+          is_active: true,
+        });
+
+        console.log(`Found ${kbEntries?.length || 0} KB entries for brand ${brandId}`);
+
+        if (kbEntries && kbEntries.length > 0) {
+          const kbContext = kbEntries
+            .map((entry) => `# ${entry.title}\n${entry.content}`)
+            .join('\n\n');
+
+          console.log(`Invoking LLM with KB context...`);
+          const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: `You are a helpful customer support assistant. Based on the knowledge base below, answer the customer's question directly and concisely. If the answer is not in the knowledge base, say "I don't have that information available."\n\nKNOWLEDGE BASE:\n${kbContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT ANSWER:`,
+            model: 'gpt_5_mini',
+          });
+
+          console.log(`LLM response:`, result);
+          aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
+        } else {
+          console.log(`No knowledge base entries found for brand ${brandId}`);
+        }
+      } catch (e) {
+        console.error('KB lookup or LLM failed:', e.message || e);
+      }
+
+      // Save AI response if generated
+      if (aiResponse) {
+        await base44.asServiceRole.entities.Message.create({
+          conversation_id: conversation.id,
+          brand_id: brandId,
+          sender_type: 'ai',
+          sender_name: 'AI Assistant',
+          content: aiResponse,
+          timestamp: new Date().toISOString(),
+          message_type: 'text',
+        });
+
+        await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+          last_message: aiResponse,
+          last_message_time: new Date().toISOString(),
+        });
+
+        console.log(`AI response saved for conversation ${conversation.id}`);
+      }
     } catch (err) {
       console.error('Error processing Zapier webhook:', err);
     }

@@ -102,7 +102,7 @@ Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer
 
       const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt,
-        model: 'gpt_5_mini',
+        model: 'gemini_3_flash',
       });
 
       const aiReply = typeof aiResponse === 'string' ? aiResponse : aiResponse?.text || "I'm here to help! Let me connect you with a team member.";

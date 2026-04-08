@@ -1,0 +1,72 @@
+{
+  "name": "VoiceWorkflow",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "e.g. 'Inbound AI Receptionist', 'Payment Reminder', 'Churn Prevention'"
+    },
+    "workflow_type": {
+      "type": "string",
+      "enum": [
+        "inbound_receptionist",
+        "smart_ivr",
+        "outbound_sales",
+        "payment_reminder",
+        "outage_alert",
+        "appointment_reminder",
+        "churn_prevention",
+        "upsell_calls",
+        "csat_follow_up",
+        "white_label"
+      ]
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "description": {
+      "type": "string"
+    },
+    "configuration": {
+      "type": "object",
+      "description": "Workflow-specific config (varies by type)"
+    },
+    "trigger_conditions": {
+      "type": "object",
+      "description": "When/how this workflow is triggered"
+    },
+    "ai_instructions": {
+      "type": "string",
+      "description": "Custom instructions for AI during this workflow"
+    },
+    "fallback_action": {
+      "type": "string",
+      "enum": [
+        "transfer_to_agent",
+        "schedule_callback",
+        "voicemail",
+        "hang_up"
+      ],
+      "default": "transfer_to_agent"
+    },
+    "performance_metrics": {
+      "type": "object",
+      "description": "Call count, success rate, avg duration, etc."
+    },
+    "created_by": {
+      "type": "string"
+    },
+    "last_modified_by": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "brand_id",
+    "workflow_type",
+    "name"
+  ]
+}

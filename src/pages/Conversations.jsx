@@ -7,6 +7,7 @@ import ConversationList from '@/components/inbox/ConversationList';
 import MessageThread from '@/components/inbox/MessageThread';
 import CustomerSidebar from '@/components/inbox/CustomerSidebar';
 import AIGuidancePanel from '@/components/inbox/AIGuidancePanel';
+import VoiceCallThread from '@/components/voice/VoiceCallThread';
 
 export default function Conversations() {
   const [selectedId, setSelectedId] = useState(null);
@@ -20,6 +21,14 @@ export default function Conversations() {
     queryFn: () => activeBrandId
       ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_time', 100)
       : base44.entities.Conversation.list('-last_message_time', 100),
+    refetchInterval: 30000,
+  });
+
+  const { data: voiceCalls = [] } = useQuery({
+    queryKey: ['voice-calls', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.VoiceCallLog.filter({ brand_id: activeBrandId }, '-created_date', 50)
+      : base44.entities.VoiceCallLog.list('-created_date', 50),
     refetchInterval: 30000,
   });
 
@@ -54,7 +63,13 @@ export default function Conversations() {
 
       <div className="flex-1 flex flex-col min-w-0" style={{ minHeight: 0 }}>
         {selected ? (
-          <MessageThread conversation={selected} onUpdate={refetch} externalReply={insertReply} />
+          <div className="overflow-y-auto p-6">
+            {selected.channel === 'voice' ? (
+              <VoiceCallThread callLog={voiceCalls.find(v => v.id === selected.voice_call_id)} />
+            ) : (
+              <MessageThread conversation={selected} onUpdate={refetch} externalReply={insertReply} />
+            )}
+          </div>
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-50">
             <div className="text-center">

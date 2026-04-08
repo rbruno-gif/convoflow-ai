@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { useBrand } from '@/context/BrandContext';
-import { Phone, Radio, Settings } from 'lucide-react';
+import { Phone, Settings, BarChart2, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AutocallsSettingsPanel from '@/components/voice/AutocallsSettingsPanel';
-import VoiceAnalytics from '@/components/voice/VoiceAnalytics';
+import VoiceSettingsPanel from '@/components/voice/VoiceSettingsPanel';
+import VoiceAnalyticsDashboard from '@/components/voice/VoiceAnalyticsDashboard';
+import VoiceWorkflowManager from '@/components/voice/VoiceWorkflowManager';
 
 const TABS = [
+  { key: 'workflows', label: 'Workflows', icon: Zap },
   { key: 'settings', label: 'Settings', icon: Settings },
-  { key: 'analytics', label: 'Analytics', icon: Radio },
+  { key: 'analytics', label: 'Analytics', icon: BarChart2 },
 ];
 
 export default function Voice() {
-  const [tab, setTab] = useState('settings');
+  const [tab, setTab] = useState('workflows');
   const { activeBrandId, activeBrand } = useBrand();
 
   return (
@@ -23,8 +25,8 @@ export default function Voice() {
             <Phone className="w-5 h-5 text-teal-600" />
           </div>
           <div>
-            <h1 className="font-bold text-gray-900">Voice Integration</h1>
-            <p className="text-xs text-gray-400">{activeBrand?.name || 'All brands'} · Autocalls.ai</p>
+            <h1 className="font-bold text-gray-900">Voice Module</h1>
+            <p className="text-xs text-gray-400">{activeBrand?.name || 'All brands'} · Autocalls.ai powered</p>
           </div>
         </div>
         <div className="flex gap-1">
@@ -47,8 +49,9 @@ export default function Voice() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {tab === 'settings' && <AutocallsSettingsPanel brandId={activeBrandId} />}
-        {tab === 'analytics' && <VoiceAnalytics brandId={activeBrandId} />}
+        {tab === 'workflows' && <VoiceWorkflowManager brandId={activeBrandId} />}
+        {tab === 'settings' && <VoiceSettingsPanel brandId={activeBrandId} />}
+        {tab === 'analytics' && <VoiceAnalyticsDashboard brandId={activeBrandId} />}
       </div>
     </div>
   );

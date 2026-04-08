@@ -1,0 +1,98 @@
+{
+  "name": "VoiceSettings",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "autocalls_api_key": {
+      "type": "string",
+      "description": "Encrypted Autocalls.ai API key"
+    },
+    "phone_numbers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string"
+          },
+          "department_id": {
+            "type": "string"
+          },
+          "is_primary": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "ai_agent_name": {
+      "type": "string",
+      "description": "e.g. 'Sarah'"
+    },
+    "ai_voice_style": {
+      "type": "string",
+      "enum": ["professional", "friendly", "formal"],
+      "default": "professional"
+    },
+    "ai_language": {
+      "type": "string",
+      "default": "en-US"
+    },
+    "ai_instructions": {
+      "type": "string",
+      "description": "Custom instructions for AI voice agent"
+    },
+    "max_concurrent_calls": {
+      "type": "number",
+      "default": 10
+    },
+    "inbound_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "outbound_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "calling_hours_start": {
+      "type": "string",
+      "description": "HH:MM in brand timezone"
+    },
+    "calling_hours_end": {
+      "type": "string"
+    },
+    "tcpa_compliance_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "US only: restrict calls 8am-9pm local"
+    },
+    "opt_out_list": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Phone numbers that replied STOP"
+    },
+    "voicemail_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "voicemail_greeting": {
+      "type": "string"
+    },
+    "webhook_url": {
+      "type": "string"
+    },
+    "webhook_secret": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "brand_id"
+  ]
+}

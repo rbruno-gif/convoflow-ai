@@ -1,0 +1,84 @@
+{
+  "name": "VoiceCallLog",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "workflow_id": {
+      "type": "string"
+    },
+    "customer_id": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "call_direction": {
+      "type": "string",
+      "enum": ["inbound", "outbound"]
+    },
+    "call_status": {
+      "type": "string",
+      "enum": ["pending", "ringing", "in_progress", "completed", "failed", "no_answer", "voicemail", "transferred"]
+    },
+    "duration_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "transcript": {
+      "type": "string"
+    },
+    "recording_url": {
+      "type": "string"
+    },
+    "intent_detected": {
+      "type": "string"
+    },
+    "intent_confidence": {
+      "type": "number"
+    },
+    "outcome": {
+      "type": "string",
+      "description": "resolved, transferred, scheduled_callback, voicemail, no_answer, etc."
+    },
+    "ai_resolution": {
+      "type": "boolean",
+      "default": false,
+      "description": "Was issue resolved without human?"
+    },
+    "transferred_to_agent": {
+      "type": "string",
+      "description": "Agent email if transferred"
+    },
+    "ticket_created": {
+      "type": "string",
+      "description": "Ticket ID if one was created"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Linked conversation in inbox"
+    },
+    "campaign_id": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "autocalls_id": {
+      "type": "string",
+      "description": "ID from Autocalls.ai"
+    },
+    "webhook_payload": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "brand_id",
+    "customer_phone",
+    "call_direction"
+  ]
+}

@@ -11,7 +11,8 @@ const filters = [
   { key: 'resolved', label: 'Resolved' },
 ];
 
-function ChannelIcon({ tags }) {
+function ChannelIcon({ channel, tags }) {
+  if (channel === 'voice') return <Phone className="w-3 h-3 text-teal-500" />;
   if (tags?.includes('facebook')) return <Facebook className="w-3 h-3 text-blue-500" />;
   if (tags?.includes('whatsapp')) return <Phone className="w-3 h-3 text-green-500" />;
   if (tags?.includes('email')) return <Mail className="w-3 h-3 text-orange-500" />;
@@ -111,7 +112,7 @@ export default function ConversationList({ conversations, selectedId, onSelect, 
                 </div>
                 <p className="text-[11px] text-gray-500 truncate mb-1.5">{c.last_message || 'No messages yet'}</p>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <ChannelIcon tags={c.tags} />
+                   <ChannelIcon channel={c.channel} tags={c.tags} />
                   {c.mode === 'ai' ? (
                     <span className="flex items-center gap-0.5 text-[10px] text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full font-medium">
                       <Bot className="w-2.5 h-2.5" /> AI

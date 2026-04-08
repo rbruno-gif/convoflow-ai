@@ -1,0 +1,81 @@
+{
+  "name": "VoiceAnalytics",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "total_inbound_calls": {
+      "type": "number",
+      "default": 0
+    },
+    "total_outbound_calls": {
+      "type": "number",
+      "default": 0
+    },
+    "inbound_answered": {
+      "type": "number",
+      "default": 0
+    },
+    "inbound_missed": {
+      "type": "number",
+      "default": 0
+    },
+    "outbound_answered": {
+      "type": "number",
+      "default": 0
+    },
+    "outbound_not_answered": {
+      "type": "number",
+      "default": 0
+    },
+    "avg_call_duration_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "ai_containment_rate": {
+      "type": "number",
+      "description": "Percentage resolved without human"
+    },
+    "call_to_ticket_conversion": {
+      "type": "number"
+    },
+    "ivr_routing_accuracy": {
+      "type": "number",
+      "description": "Percentage of correct intent detection"
+    },
+    "payment_reminder_success": {
+      "type": "number"
+    },
+    "churn_prevention_save_rate": {
+      "type": "number"
+    },
+    "upsell_conversion_rate": {
+      "type": "number"
+    },
+    "avg_csat_score": {
+      "type": "number"
+    },
+    "parallel_call_utilization": {
+      "type": "number",
+      "description": "Percentage of max concurrent calls used"
+    },
+    "top_intents": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "workflow_performance": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "brand_id",
+    "date"
+  ]
+}

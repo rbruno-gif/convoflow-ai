@@ -3,7 +3,7 @@ import { ChevronDown, Check } from 'lucide-react';
 import { useBrand } from '@/context/BrandContext';
 
 export default function BrandSwitcher() {
-  const { activeBrand, brands, switchBrand } = useBrand();
+  const { activeBrand, brands, switchBrand, isInitialized } = useBrand();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -35,7 +35,7 @@ export default function BrandSwitcher() {
     };
   }, [open]);
 
-  if (!activeBrand) return null;
+  if (!activeBrand && !isInitialized) return null;
 
   return (
     <div ref={ref} className="relative px-3 pb-3">

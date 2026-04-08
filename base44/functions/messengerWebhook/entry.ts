@@ -152,18 +152,21 @@ Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer
 
       console.log('AI reply sent via Facebook to', from);
 
-      return new Response(JSON.stringify({ reply: aiReply }), {
+      return new Response(JSON.stringify({ reply: aiReply, status: 'ok' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
     }
 
-    return new Response(JSON.stringify({ reply: null }), {
+    return new Response(JSON.stringify({ reply: null, status: 'ok' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
     console.error('messengerWebhook error:', error);
-    return new Response('OK', { status: 200 }); // Always return 200 to Twilio
+    return new Response(JSON.stringify({ reply: null, status: 'ok' }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 });

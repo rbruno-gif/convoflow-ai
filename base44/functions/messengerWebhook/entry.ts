@@ -33,11 +33,19 @@ Deno.serve(async (req) => {
   try {
     // Parse form-encoded body from Twilio
     const text = await req.text();
+    console.log('RAW Twilio body:', text);
+
     const params = new URLSearchParams(text);
 
-    const from = params.get('From'); // e.g. messenger:1234567890
-    const body = params.get('Body');
-    const profileName = params.get('ProfileName') || 'Customer';
+    // Log all parsed keys for debugging
+    const allKeys = {};
+    for (const [k, v] of params.entries()) { allKeys[k] = v; }
+    console.log('All parsed params:', allKeys);
+
+    // Twilio may send lowercase or mixed-case field names
+    const from = params.get('From') || params.get('from');
+    const body = params.get('Body') || params.get('body');
+    const profileName = params.get('ProfileName') || params.get('profileName') || params.get('profile_name') || 'Customer';
 
     console.log('Incoming Twilio Messenger webhook:', { from, body, profileName });
 

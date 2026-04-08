@@ -31,11 +31,22 @@ export default function Webhooks() {
       : [],
   });
 
-  const generateWebhookUrl = (brandId, type) => {
-    // Use Base44 function endpoints for webhooks
-    const functionName = type === 'facebook' ? 'facebookWebhookHandler' : 'zapierWebhookHandler';
+  const generateWebhookUrl = (type) => {
+    // Generate a unique token for this webhook
+    const token = crypto.randomUUID();
     const baseUrl = window.location.origin;
-    return `${baseUrl}/functions/${functionName}?brand_id=${brandId}`;
+    
+    if (type === 'facebook') {
+      return {
+        url: `${baseUrl}/functions/messengerWebhook?token=${token}`,
+        token,
+      };
+    }
+    // For other types, use the same format with token
+    return {
+      url: `${baseUrl}/functions/messengerWebhook?token=${token}`,
+      token,
+    };
   };
 
   const copyToClipboard = (text, id) => {
@@ -47,11 +58,13 @@ export default function Webhooks() {
   const save = async () => {
     if (!form.type || !form.name.trim()) return;
     setSaving(true);
+    const { url, token } = generateWebhookUrl(form.type);
     const payload = {
       brand_id: activeBrandId,
       name: form.name,
       type: form.type,
-      webhook_url: generateWebhookUrl(activeBrandId, form.type),
+      webhook_url: url,
+      webhook_token: token,
       facebook_page_id: form.facebook_page_id || null,
       is_active: true,
     };
@@ -204,7 +217,7 @@ export default function Webhooks() {
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs font-medium text-gray-600 mb-2">Webhook URL (copy to external service):</p>
                   <code className="text-xs bg-white border border-gray-200 rounded px-2 py-1.5 block font-mono break-all">
-                    {generateWebhookUrl(activeBrandId, form.type)}
+                    {generateWebhookUrl(form.type).url}
                   </code>
                 </div>
               )}

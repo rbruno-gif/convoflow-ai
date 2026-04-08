@@ -102,6 +102,8 @@ Deno.serve(async (req) => {
       message_type: 'text',
     });
 
+    console.log(`Facebook message saved - Conversation: ${conversation.id}, From: ${from}`);
+
     // Step 6: Get AI response from knowledge base using LLM
     let aiResponse = null;
     try {

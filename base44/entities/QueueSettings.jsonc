@@ -7,17 +7,27 @@
     },
     "department_id": {
       "type": "string",
-      "description": "Department-level queue config; null = brand default"
+      "description": "null = brand default settings"
     },
     "max_queue_size": {
       "type": "number",
-      "default": 20,
-      "description": "Max conversations in queue before overflow"
+      "default": 20
     },
     "max_wait_minutes": {
       "type": "number",
-      "default": 10,
-      "description": "Max minutes before offering callback/bot"
+      "default": 15
+    },
+    "queue_position_messaging_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "position_update_interval_minutes": {
+      "type": "number",
+      "default": 2
+    },
+    "position_message_template": {
+      "type": "string",
+      "description": "Template with {position} {estimated_wait} {brand_name} {department_name}"
     },
     "assignment_method": {
       "type": "string",
@@ -28,41 +38,35 @@
         "manual",
         "sticky_agent"
       ],
-      "default": "least_busy",
-      "description": "How to assign queued conversations to agents"
+      "default": "least_busy"
     },
-    "send_position_updates": {
-      "type": "boolean",
-      "default": true,
-      "description": "Send customer position updates in queue"
-    },
-    "position_update_interval_minutes": {
-      "type": "number",
-      "default": 2
+    "sticky_agent_fallback": {
+      "type": "string",
+      "enum": [
+        "least_busy",
+        "round_robin"
+      ],
+      "default": "least_busy"
     },
     "agent_accept_timeout_seconds": {
       "type": "number",
-      "default": 60,
-      "description": "Seconds agent has to accept assignment before re-queue"
+      "default": 60
     },
     "overflow_actions": {
       "type": "array",
       "items": {
         "type": "string",
         "enum": [
-          "ai_takeover",
-          "callback_request",
-          "voicemail_ticket",
-          "redirect_department",
+          "continue_waiting",
+          "leave_message",
           "schedule_callback"
         ]
       },
-      "description": "What to do when queue exceeds max"
+      "description": "Ordered list of options offered when max wait exceeded"
     },
-    "priority_lanes_enabled": {
+    "enable_priority_lanes": {
       "type": "boolean",
-      "default": false,
-      "description": "Enable VIP/Standard/Low priority lanes"
+      "default": false
     }
   },
   "required": [

@@ -8,23 +8,11 @@
     },
     "department_id": {
       "type": "string",
-      "description": "Department this conversation is routed to"
+      "description": "Department this conversation is assigned to"
     },
-    "customer_name": {
+    "customer_id": {
       "type": "string",
-      "description": "Customer name"
-    },
-    "customer_email": {
-      "type": "string",
-      "description": "Customer email"
-    },
-    "customer_phone": {
-      "type": "string",
-      "description": "Customer phone"
-    },
-    "customer_avatar": {
-      "type": "string",
-      "description": "Customer avatar URL"
+      "description": "Reference to CustomerProfile entity"
     },
     "channel": {
       "type": "string",
@@ -33,7 +21,6 @@
         "email",
         "whatsapp",
         "sms",
-        "facebook",
         "voice"
       ],
       "default": "chat",
@@ -42,43 +29,12 @@
     "status": {
       "type": "string",
       "enum": [
-        "active",
-        "waiting",
-        "flagged",
+        "open",
+        "pending",
         "resolved",
-        "human_requested"
+        "archived"
       ],
-      "default": "active"
-    },
-    "mode": {
-      "type": "string",
-      "enum": [
-        "ai",
-        "human"
-      ],
-      "default": "ai",
-      "description": "Whether AI or human is handling"
-    },
-    "assigned_agent": {
-      "type": "string",
-      "description": "Agent email assigned to this conversation"
-    },
-    "last_message": {
-      "type": "string"
-    },
-    "last_message_time": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "unread_count": {
-      "type": "number",
-      "default": 0
-    },
-    "tags": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
+      "default": "open"
     },
     "priority": {
       "type": "string",
@@ -90,83 +46,110 @@
       ],
       "default": "normal"
     },
-    "sentiment": {
+    "assigned_agent_id": {
+      "type": "string",
+      "description": "Agent ID (null = unassigned)"
+    },
+    "queue_position": {
+      "type": "number",
+      "description": "Position in queue (null if not in queue)"
+    },
+    "priority_lane": {
       "type": "string",
       "enum": [
-        "positive",
-        "neutral",
-        "negative"
+        "vip",
+        "standard",
+        "low"
       ],
-      "default": "neutral"
+      "default": "standard"
     },
-    "is_urgent": {
+    "wait_time_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "first_response_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sla_first_response_due_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sla_resolution_due_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sla_first_response_breached": {
       "type": "boolean",
       "default": false
     },
-    "intent": {
-      "type": "string",
-      "enum": [
-        "sales",
-        "support",
-        "billing",
-        "complaint",
-        "feedback",
-        "other"
-      ],
-      "default": "other"
+    "sla_resolution_breached": {
+      "type": "boolean",
+      "default": false
     },
-    "conversation_summary": {
-      "type": "string",
-      "description": "AI-generated summary"
-    },
-    "key_topics": {
+    "tags": {
       "type": "array",
       "items": {
         "type": "string"
       }
     },
-    "resolution_status": {
-      "type": "string",
-      "enum": [
-        "unresolved",
-        "resolved",
-        "escalated"
-      ],
-      "default": "unresolved"
+    "internal_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_email": {
+      "type": "string"
+    },
+    "customer_avatar": {
+      "type": "string"
+    },
+    "unread_count": {
+      "type": "number",
+      "default": 0
     },
     "transfer_history": {
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "from_agent": {
+          "from_agent_id": {
             "type": "string"
           },
-          "to_agent": {
+          "to_agent_id": {
             "type": "string"
           },
-          "timestamp": {
+          "to_department_id": {
+            "type": "string"
+          },
+          "handover_note": {
+            "type": "string"
+          },
+          "transferred_at": {
             "type": "string",
             "format": "date-time"
-          },
-          "reason": {
-            "type": "string"
           }
         }
       }
-    },
-    "wait_time_seconds": {
-      "type": "number",
-      "default": 0
-    },
-    "queue_position": {
-      "type": "number",
-      "description": "Position in queue if waiting"
     }
   },
   "required": [
     "brand_id",
     "department_id",
+    "customer_id",
+    "channel",
     "customer_name"
   ]
 }

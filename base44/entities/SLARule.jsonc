@@ -6,31 +6,30 @@
       "type": "string"
     },
     "department_id": {
+      "type": "string",
+      "description": "null = applies to all departments in brand"
+    },
+    "sla_name": {
       "type": "string"
     },
-    "name": {
-      "type": "string"
-    },
-    "first_response_minutes": {
-      "type": "number",
-      "default": 120
-    },
-    "resolution_hours": {
-      "type": "number",
-      "default": 24
-    },
-    "priority": {
+    "priority_level": {
       "type": "string",
       "enum": [
         "low",
         "normal",
         "high",
-        "urgent"
+        "urgent",
+        "all"
       ],
-      "default": "normal"
+      "description": "Conversation priority this SLA applies to"
     },
-    "escalate_to_email": {
-      "type": "string"
+    "first_response_minutes": {
+      "type": "number",
+      "description": "Minutes to first agent response"
+    },
+    "resolution_minutes": {
+      "type": "number",
+      "description": "Minutes to resolution"
     },
     "is_active": {
       "type": "boolean",
@@ -39,6 +38,8 @@
   },
   "required": [
     "brand_id",
-    "name"
+    "sla_name",
+    "first_response_minutes",
+    "resolution_minutes"
   ]
 }

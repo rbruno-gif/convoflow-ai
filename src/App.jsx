@@ -18,6 +18,11 @@ import CustomerProfilesPage from '@/pages/CustomerProfilesPage';
 import AuditLogPage from '@/pages/AuditLogPage';
 import AgentManagement from '@/pages/AgentManagement';
 import Conversations from '@/pages/Conversations';
+import Inbox from '@/pages/Inbox';
+import QueueDashboard from '@/pages/QueueDashboard';
+import SLADashboard from '@/pages/SLADashboard';
+import CannedResponses from '@/pages/CannedResponses';
+import BusinessHoursSettings from '@/pages/BusinessHoursSettings';
 import Analytics from '@/pages/Analytics';
 import BrandInbox from '@/pages/BrandInbox';
 import BrandAnalytics from '@/pages/BrandAnalytics';
@@ -85,6 +90,11 @@ const AuthenticatedApp = () => {
         <Route path="/customers" element={<CustomerProfilesPage />} />
         <Route path="/audit-log" element={<AuditLogPage />} />
         <Route path="/conversations" element={<Conversations />} />
+        <Route path="/inbox" element={<Inbox />} />
+        <Route path="/queue" element={<QueueDashboard />} />
+        <Route path="/sla" element={<SLADashboard />} />
+        <Route path="/canned-responses" element={<CannedResponses />} />
+        <Route path="/business-hours" element={<BusinessHoursSettings />} />
         <Route path="/inbox" element={<BrandInbox />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/brand-analytics" element={<BrandAnalytics />} />

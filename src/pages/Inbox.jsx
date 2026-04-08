@@ -1,0 +1,95 @@
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
+import { Bell, Send } from 'lucide-react';
+import ConversationList from '@/components/inbox/ConversationList';
+import ConversationThread from '@/components/inbox/ConversationThread';
+import CustomerContextPanel from '@/components/inbox/CustomerContextPanel';
+import NotificationPanel from '@/components/inbox/NotificationPanel';
+
+export default function Inbox() {
+  const [selectedConversationId, setSelectedConversationId] = useState(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const { activeBrandId } = useBrand();
+  const qc = useQueryClient();
+
+  // Fetch conversations for active brand
+  const { data: conversations = [], isLoading: loadingConversations } = useQuery({
+    queryKey: ['conversations', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_at', 100)
+      : [],
+    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
+  });
+
+  // Fetch messages for selected conversation
+  const { data: messages = [] } = useQuery({
+    queryKey: ['messages', selectedConversationId],
+    queryFn: () => selectedConversationId
+      ? base44.entities.Message.filter({ conversation_id: selectedConversationId }, 'created_date', 200)
+      : [],
+    refetchInterval: 2000,
+  });
+
+  // Fetch notifications
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['notifications', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.Notification.filter({ brand_id: activeBrandId, is_read: false }, '-created_date', 50)
+      : [],
+    refetchInterval: 2000,
+  });
+
+  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-background">
+      {/* Left Column: Conversation List */}
+      <div className="w-80 shrink-0 border-r flex flex-col overflow-hidden">
+        <ConversationList
+          conversations={conversations}
+          selectedId={selectedConversationId}
+          onSelect={setSelectedConversationId}
+          isLoading={loadingConversations}
+          notifications={notifications}
+          notificationCount={notifications.length}
+          onNotificationClick={() => setShowNotifications(!showNotifications)}
+        />
+      </div>
+
+      {/* Center Column: Conversation Thread */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {selectedConversation ? (
+          <ConversationThread
+            conversation={selectedConversation}
+            messages={messages}
+            onRefresh={() => qc.invalidateQueries({ queryKey: ['messages', selectedConversationId] })}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            <p>Select a conversation to begin</p>
+          </div>
+        )}
+      </div>
+
+      {/* Right Column: Context Panel */}
+      {selectedConversation && (
+        <div className="w-80 shrink-0 border-l overflow-y-auto">
+          <CustomerContextPanel
+            conversation={selectedConversation}
+            onConversationUpdate={() => qc.invalidateQueries({ queryKey: ['conversations', activeBrandId] })}
+          />
+        </div>
+      )}
+
+      {/* Notification Panel Overlay */}
+      {showNotifications && (
+        <NotificationPanel
+          notifications={notifications}
+          onClose={() => setShowNotifications(false)}
+        />
+      )}
+    </div>
+  );
+}

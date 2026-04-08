@@ -6,31 +6,31 @@
       "type": "string"
     },
     "conversation_id": {
-      "type": "string"
+      "type": "string",
+      "description": "Reference to Conversation"
     },
     "sender_type": {
       "type": "string",
       "enum": [
         "customer",
         "agent",
+        "system",
         "ai"
       ],
       "description": "Who sent the message"
     },
-    "sender_email": {
+    "sender_id": {
       "type": "string",
-      "description": "Agent or system email"
+      "description": "Agent/customer ID"
     },
     "sender_name": {
       "type": "string"
     },
-    "body": {
+    "sender_avatar": {
       "type": "string"
     },
-    "is_internal_note": {
-      "type": "boolean",
-      "default": false,
-      "description": "Internal note invisible to customer"
+    "content": {
+      "type": "string"
     },
     "attachments": {
       "type": "array",
@@ -49,19 +49,20 @@
         }
       }
     },
-    "ai_generated": {
+    "is_internal_note": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "Internal note invisible to customer"
     },
-    "sentiment_score": {
-      "type": "number",
-      "description": "Sentiment analysis score -1 to 1"
+    "read_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
     "brand_id",
     "conversation_id",
     "sender_type",
-    "body"
+    "content"
   ]
 }

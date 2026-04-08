@@ -7,8 +7,7 @@
     },
     "timezone": {
       "type": "string",
-      "default": "America/New_York",
-      "description": "Brand timezone for business hours"
+      "default": "America/New_York"
     },
     "monday": {
       "type": "object",
@@ -22,8 +21,7 @@
           "description": "HH:MM format"
         },
         "close_time": {
-          "type": "string",
-          "description": "HH:MM format"
+          "type": "string"
         }
       }
     },
@@ -132,13 +130,16 @@
           "is_open": {
             "type": "boolean",
             "default": false
+          },
+          "custom_message": {
+            "type": "string"
           }
         }
       }
     },
-    "outside_hours_message": {
-      "type": "string",
-      "description": "Auto-reply message when outside business hours"
+    "sla_pauses_outside_hours": {
+      "type": "boolean",
+      "default": true
     }
   },
   "required": [

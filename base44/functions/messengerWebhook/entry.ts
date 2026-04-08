@@ -27,29 +27,9 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const url = new URL(req.url);
     
-    // Step 2: Extract token from query params
-    const token = url.searchParams.get('token');
-    if (!token) {
-      return new Response(
-        JSON.stringify({ response: 'Thanks for your message. We will be with you shortly.' }),
-        {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        }
-      );
-    }
-
-    // Step 3: Look up webhook record by token
-    const webhooks = await base44.asServiceRole.entities.MessengerWebhook.filter({
-      webhook_token: token,
-      is_active: true,
-    });
-
-    const webhook = webhooks[0];
-    if (!webhook) {
+    // Step 2: Extract brand_id from query params
+    const brandId = url.searchParams.get('brand_id');
+    if (!brandId) {
       return new Response(
         JSON.stringify({ response: 'Thanks for your message. We will be with you shortly.' }),
         {
@@ -77,49 +57,33 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Step 5: Check allowed sender IDs filter
-    if (webhook.allowed_sender_ids && webhook.allowed_sender_ids.trim() !== '') {
-      const allowed = webhook.allowed_sender_ids
-        .split(',')
-        .map((s) => s.trim());
-      if (!allowed.includes(from)) {
-        return new Response(JSON.stringify({ response: '' }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
-        });
-      }
-    }
-
-    // Step 6: Find or create customer profile
+    // Step 3: Find or create customer profile
     let customers = await base44.asServiceRole.entities.CustomerProfile.filter({
-      brand_id: webhook.brand_id,
+      brand_id: brandId,
       fb_id: from,
     });
 
     let customer = customers[0];
     if (!customer) {
       customer = await base44.asServiceRole.entities.CustomerProfile.create({
-        brand_id: webhook.brand_id,
+        brand_id: brandId,
         name: profile_name || 'Facebook User',
         fb_id: from,
         preferred_channel: 'facebook',
       });
     }
 
-    // Step 7: Find or create open conversation
+    // Step 4: Find or create open conversation
     let conversations = await base44.asServiceRole.entities.Conversation.filter({
       customer_fb_id: from,
-      brand_id: webhook.brand_id,
+      brand_id: brandId,
       status: 'active',
     });
 
     let conversation = conversations[0];
     if (!conversation) {
       conversation = await base44.asServiceRole.entities.Conversation.create({
-        brand_id: webhook.brand_id,
+        brand_id: brandId,
         customer_fb_id: from,
         customer_name: profile_name || 'Facebook User',
         status: 'active',
@@ -127,10 +91,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Step 8: Save incoming message
+    // Step 5: Save incoming message
     await base44.asServiceRole.entities.Message.create({
       conversation_id: conversation.id,
-      brand_id: webhook.brand_id,
+      brand_id: brandId,
       sender_type: 'customer',
       sender_name: profile_name || 'Facebook User',
       content: body,
@@ -138,11 +102,11 @@ Deno.serve(async (req) => {
       message_type: 'text',
     });
 
-    // Step 9: Get AI response from knowledge base
+    // Step 6: Get AI response from knowledge base
     let aiResponse = null;
     try {
       const kbEntries = await base44.asServiceRole.entities.KnowledgeDoc.filter({
-        brand_id: webhook.brand_id,
+        brand_id: brandId,
         is_active: true,
       });
 
@@ -159,19 +123,16 @@ Deno.serve(async (req) => {
       console.error('KB lookup failed:', e);
     }
 
-    // Step 10: Determine final reply
+    // Step 7: Determine final reply
     let replyText = aiResponse;
     if (!replyText) {
-      replyText =
-        webhook.auto_reply_enabled && webhook.auto_reply_message
-          ? webhook.auto_reply_message
-          : 'Thanks for your message! An agent will be with you shortly.';
+      replyText = 'Thanks for your message! An agent will be with you shortly.';
     }
 
-    // Step 11: Save AI reply as message
+    // Step 8: Save AI reply as message
     await base44.asServiceRole.entities.Message.create({
       conversation_id: conversation.id,
-      brand_id: webhook.brand_id,
+      brand_id: brandId,
       sender_type: 'ai',
       sender_name: 'AI Assistant',
       content: replyText,
@@ -183,12 +144,6 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.Conversation.update(conversation.id, {
       last_message: replyText,
       last_message_time: new Date().toISOString(),
-    });
-
-    // Step 12: Update webhook stats and return response
-    await base44.asServiceRole.entities.MessengerWebhook.update(webhook.id, {
-      last_triggered_at: new Date().toISOString(),
-      total_messages_received: (webhook.total_messages_received || 0) + 1,
     });
 
     return new Response(JSON.stringify({ response: replyText }), {

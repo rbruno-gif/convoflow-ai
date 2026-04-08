@@ -20,8 +20,8 @@ export default function Agents() {
   const [assigningUser, setAssigningUser] = useState(null);
   const qc = useQueryClient();
 
-  const { allBrands } = useBrand();
-  const childBrands = allBrands.filter(b => b.slug !== 'u2c-group' && !b.is_archived);
+  const { brands } = useBrand();
+  const childBrands = brands.filter(b => b.slug !== 'u2c-group' && !b.is_archived);
 
   useEffect(() => {
     base44.auth.me().then(setCurrentUser).catch(() => {});

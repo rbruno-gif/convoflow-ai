@@ -151,9 +151,17 @@ Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer
       await sendFacebookMessage(from, aiReply);
 
       console.log('AI reply sent via Facebook to', from);
+
+      return new Response(JSON.stringify({ reply: aiReply }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response('OK', { status: 200 });
+    return new Response(JSON.stringify({ reply: null }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('messengerWebhook error:', error);
     return new Response('OK', { status: 200 }); // Always return 200 to Twilio

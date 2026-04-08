@@ -14,6 +14,7 @@ const navItems = [
   { path: '/inbox', icon: Inbox, label: 'Inbox' },
   { path: '/live-support', icon: Radio, label: 'Live Support' },
   { path: '/brand-analytics', icon: BarChart2, label: 'Analytics' },
+  { path: '/reporting', icon: BarChart3, label: 'Reports' },
   { path: '/ai-agent', icon: Bot, label: 'AI Agent' },
   { path: '/flows', icon: Zap, label: 'Workflows' },
   { path: '/widget-builder', icon: Code2, label: 'Widget Builder' },

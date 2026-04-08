@@ -17,6 +17,7 @@ import Analytics from '@/pages/Analytics';
 import BrandInbox from '@/pages/BrandInbox';
 import BrandAnalytics from '@/pages/BrandAnalytics';
 import WidgetBuilder from '@/pages/WidgetBuilder';
+import ReportingDashboard from '@/pages/ReportingDashboard';
 import AIAgent from '@/pages/AIAgent';
 import Visitors from '@/pages/Visitors';
 import Flows from '@/pages/Flows';
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/brand-analytics" element={<BrandAnalytics />} />
         <Route path="/widget-builder" element={<WidgetBuilder />} />
+        <Route path="/reporting" element={<ReportingDashboard />} />
         <Route path="/ai-agent" element={<AIAgent />} />
         <Route path="/visitors" element={<Visitors />} />
         <Route path="/flows" element={<Flows />} />

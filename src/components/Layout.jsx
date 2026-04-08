@@ -66,11 +66,9 @@ export default function Layout() {
         </div>
 
         {/* Brand Switcher */}
-        {!collapsed && (
-          <div className="pt-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <BrandSwitcher />
-          </div>
-        )}
+        <div className="pt-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <BrandSwitcher collapsed={collapsed} />
+        </div>
 
         {/* Nav */}
         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5 px-2">

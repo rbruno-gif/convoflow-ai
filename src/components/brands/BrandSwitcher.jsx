@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { useBrand } from '@/context/BrandContext';
 
-export default function BrandSwitcher() {
+export default function BrandSwitcher({ collapsed }) {
   const { activeBrand, brands, switchBrand } = useBrand();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -15,12 +15,52 @@ export default function BrandSwitcher() {
 
   if (!activeBrand || brands.length === 0) return null;
 
+  if (collapsed) {
+    return (
+      <div ref={ref} className="relative px-3 pb-3">
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center justify-center px-3 py-2.5 rounded-xl transition-all duration-200 hover:bg-white/10 group relative"
+          style={{ background: 'rgba(255,255,255,0.07)' }}
+          title={`Switch brand (${activeBrand.name})`}
+        >
+          <BrandAvatar brand={activeBrand} size={28} />
+        </button>
+        {/* Dropdown */}
+        <div
+          className="absolute left-3 right-3 top-full mt-1 rounded-xl border border-white/10 shadow-2xl z-50 overflow-hidden"
+          style={{
+            background: '#1a1f2e',
+            opacity: open ? 1 : 0,
+            transform: open ? 'translateY(0) scale(1)' : 'translateY(-8px) scale(0.97)',
+            pointerEvents: open ? 'auto' : 'none',
+            transition: 'opacity 0.15s ease, transform 0.15s ease',
+            minWidth: '220px',
+          }}
+        >
+          <div className="max-h-60 overflow-y-auto pb-2">
+            {brands.filter(b => b.slug === 'u2c-group').map(brand => (
+              <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} isGroup />
+            ))}
+            {brands.some(b => b.slug === 'u2c-group') && brands.some(b => b.slug !== 'u2c-group') && (
+              <div className="mx-3 my-1 border-t border-white/10" />
+            )}
+            {brands.filter(b => b.slug !== 'u2c-group').map(brand => (
+              <BrandOption key={brand.id} brand={brand} active={activeBrand.id === brand.id} onSelect={() => { switchBrand(brand.id); setOpen(false); }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={ref} className="relative px-3 pb-3">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 hover:bg-white/10 group"
         style={{ background: 'rgba(255,255,255,0.07)' }}
+        title="Switch brand"
       >
         <BrandAvatar brand={activeBrand} size={28} />
         <div className="flex-1 min-w-0 text-left">

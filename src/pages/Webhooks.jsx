@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import { Copy, Check, Plus, Trash2, ToggleRight, ToggleLeft, X, Webhook, Facebook } from 'lucide-react';
+import { Copy, Check, Plus, Trash2, ToggleRight, ToggleLeft, X, Webhook, Facebook, Edit2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const WEBHOOK_TYPES = [
@@ -31,8 +31,14 @@ export default function Webhooks() {
       : [],
   });
 
+  const { data: messengerWebhooks = [] } = useQuery({
+    queryKey: ['messenger-webhooks', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.MessengerWebhook?.filter?.({ brand_id: activeBrandId }) ?? []
+      : [],
+  });
+
   const generateWebhookUrl = (type) => {
-    // Generate a unique token for this webhook
     const token = crypto.randomUUID();
     const baseUrl = window.location.origin;
     
@@ -42,7 +48,6 @@ export default function Webhooks() {
         token,
       };
     }
-    // For other types, use the same format with token
     return {
       url: `${baseUrl}/functions/messengerWebhook?token=${token}`,
       token,
@@ -66,6 +71,7 @@ export default function Webhooks() {
       webhook_url: url,
       webhook_token: token,
       facebook_page_id: form.facebook_page_id || null,
+      agent_reply_zapier_url: form.agent_reply_zapier_url || '',
       is_active: true,
     };
     
@@ -75,6 +81,18 @@ export default function Webhooks() {
       await base44.entities.Webhook?.create?.(payload);
     }
     qc.invalidateQueries({ queryKey: ['webhooks', activeBrandId] });
+    setForm(null);
+    setSaving(false);
+  };
+
+  const saveMessengerConfig = async () => {
+    if (!form.messenger_id) return;
+    setSaving(true);
+    const payload = {
+      agent_reply_zapier_url: form.agent_reply_zapier_url || '',
+    };
+    await base44.entities.MessengerWebhook?.update?.(form.messenger_id, payload);
+    qc.invalidateQueries({ queryKey: ['messenger-webhooks', activeBrandId] });
     setForm(null);
     setSaving(false);
   };
@@ -98,7 +116,7 @@ export default function Webhooks() {
           </h1>
           <p className="text-sm text-gray-400 mt-0.5">{activeBrand?.name || 'All brands'} · Integrate with external services</p>
         </div>
-        <Button size="sm" onClick={() => setForm({ name: '', type: '', facebook_page_id: '' })}>
+        <Button size="sm" onClick={() => setForm({ name: '', type: '', facebook_page_id: '', agent_reply_zapier_url: '' })}>
           <Plus className="w-3.5 h-3.5 mr-1" /> New Webhook
         </Button>
       </div>
@@ -107,13 +125,49 @@ export default function Webhooks() {
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm font-semibold text-blue-900 mb-1">Facebook Messenger</p>
-          <p className="text-xs text-blue-700">Automatically receive messages from your connected Facebook pages.</p>
+          <p className="text-xs text-blue-700">Automatically receive messages from your connected Facebook pages. Configure agent reply webhook for live agent handoff.</p>
         </div>
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
           <p className="text-sm font-semibold text-orange-900 mb-1">Zapier Integration</p>
           <p className="text-xs text-orange-700">Trigger Zapier workflows when conversations are created or updated.</p>
         </div>
       </div>
+
+      {/* Facebook Messenger Webhooks */}
+      {activeBrandId && messengerWebhooks.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Facebook Messenger Configuration</h2>
+          <div className="space-y-3">
+            {messengerWebhooks.map(webhook => (
+              <div key={webhook.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm text-gray-900">{webhook.facebook_page_name || 'Facebook Page'}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Page ID: {webhook.facebook_page_id}</p>
+                    {webhook.agent_reply_zapier_url && (
+                      <p className="text-xs text-green-700 mt-1.5 bg-green-50 px-2 py-1 rounded inline-block">✓ Zapier URL configured</p>
+                    )}
+                    {!webhook.agent_reply_zapier_url && (
+                      <p className="text-xs text-orange-700 mt-1.5 bg-orange-50 px-2 py-1 rounded inline-block">⚠ Zapier URL not configured</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setForm({
+                      messenger_id: webhook.id,
+                      page_name: webhook.facebook_page_name,
+                      webhook_url: `${window.location.origin}/functions/messengerWebhook`,
+                      agent_reply_zapier_url: webhook.agent_reply_zapier_url || '',
+                    })}
+                    className="p-2 hover:bg-gray-100 rounded-lg shrink-0"
+                  >
+                    <Edit2 className="w-4 h-4 text-gray-400" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Webhooks List */}
       <div className="space-y-3">
@@ -173,8 +227,8 @@ export default function Webhooks() {
         })}
       </div>
 
-      {/* Form Modal */}
-      {form && (
+      {/* New Webhook Form Modal */}
+      {form && !form.messenger_id && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -207,7 +261,7 @@ export default function Webhooks() {
                     className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400">
                     <option value="">Select a page...</option>
                     {facebookPages.map(page => (
-                      <option key={page.id} value={page.id}>{page.name}</option>
+                      <option key={page.id} value={page.id}>{page.page_name}</option>
                     ))}
                   </select>
                 </div>
@@ -221,6 +275,16 @@ export default function Webhooks() {
                   </code>
                 </div>
               )}
+
+              {form.type === 'facebook' && (
+                <div>
+                  <label className="text-xs font-medium text-gray-500 mb-1.5 block">Agent Reply Zapier Webhook URL</label>
+                  <input value={form.agent_reply_zapier_url || ''} onChange={e => setForm(f => ({ ...f, agent_reply_zapier_url: e.target.value }))}
+                    placeholder="https://hooks.zapier.com/hooks/catch/..."
+                    className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+                  <p className="text-[11px] text-gray-500 mt-1">Zapier webhook URL that sends agent replies back to Facebook Messenger</p>
+                </div>
+              )}
             </div>
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={() => setForm(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 font-medium">
@@ -230,6 +294,50 @@ export default function Webhooks() {
                 className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold disabled:opacity-40"
                 style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
                 {saving ? 'Creating…' : 'Create Webhook'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Facebook Messenger Edit Modal */}
+      {form?.messenger_id && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="font-bold text-gray-900">Edit Facebook Messenger</h2>
+              <button onClick={() => setForm(null)}><X className="w-4 h-4 text-gray-400" /></button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Page Name</label>
+                <input value={form.page_name || ''} disabled
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 bg-gray-50 text-gray-600" />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Webhook URL (read-only)</label>
+                <code className="text-xs bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 block font-mono break-all text-gray-600">
+                  {form.webhook_url}
+                </code>
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Agent Reply Zapier Webhook URL</label>
+                <input value={form.agent_reply_zapier_url || ''} onChange={e => setForm(f => ({ ...f, agent_reply_zapier_url: e.target.value }))}
+                  placeholder="https://hooks.zapier.com/hooks/catch/..."
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400" />
+                <p className="text-[11px] text-gray-500 mt-1">Zapier webhook URL that sends agent replies back to Facebook Messenger</p>
+              </div>
+            </div>
+            <div className="flex gap-3 px-6 pb-6">
+              <button onClick={() => setForm(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 font-medium">
+                Cancel
+              </button>
+              <button onClick={saveMessengerConfig} disabled={saving}
+                className="flex-1 py-2.5 rounded-xl text-white text-sm font-semibold disabled:opacity-40"
+                style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+                {saving ? 'Saving…' : 'Save'}
               </button>
             </div>
           </div>

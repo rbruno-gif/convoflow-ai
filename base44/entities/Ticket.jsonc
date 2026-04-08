@@ -78,6 +78,7 @@
     }
   },
   "required": [
+    "brand_id",
     "customer_name",
     "title"
   ]

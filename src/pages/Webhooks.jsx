@@ -32,8 +32,10 @@ export default function Webhooks() {
   });
 
   const generateWebhookUrl = (brandId, type) => {
+    // Use Base44 function endpoints for webhooks
+    const functionName = type === 'facebook' ? 'facebookWebhookHandler' : 'zapierWebhookHandler';
     const baseUrl = window.location.origin;
-    return `${baseUrl}/api/webhooks/${type}/${brandId}`;
+    return `${baseUrl}/functions/${functionName}?brand_id=${brandId}`;
   };
 
   const copyToClipboard = (text, id) => {

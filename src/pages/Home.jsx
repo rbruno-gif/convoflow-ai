@@ -75,6 +75,45 @@ export default function Home() {
         />
       </section>
 
+      {/* Messenger Demo Section */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">See AI in Action</h2>
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-200">
+          <div className="space-y-4 max-w-2xl mx-auto">
+            {/* Customer message */}
+            <div className="flex justify-end">
+              <div className="bg-primary text-primary-foreground rounded-lg rounded-tr-none px-4 py-3 max-w-xs">
+                <p className="text-sm">Hi, I need help with my order. It hasn't arrived yet.</p>
+              </div>
+            </div>
+            
+            {/* AI response */}
+            <div className="flex justify-start">
+              <div className="bg-gray-100 text-foreground rounded-lg rounded-tl-none px-4 py-3 max-w-xs">
+                <p className="text-sm font-semibold text-primary mb-1">Victor</p>
+                <p className="text-sm">I'd be happy to help! Can you provide your order number so I can check the delivery status?</p>
+              </div>
+            </div>
+            
+            {/* Customer message */}
+            <div className="flex justify-end">
+              <div className="bg-primary text-primary-foreground rounded-lg rounded-tr-none px-4 py-3 max-w-xs">
+                <p className="text-sm">Sure, it's ORD-12345678</p>
+              </div>
+            </div>
+            
+            {/* AI response with action */}
+            <div className="flex justify-start">
+              <div className="bg-gray-100 text-foreground rounded-lg rounded-tl-none px-4 py-3 max-w-xs space-y-2">
+                <p className="text-sm font-semibold text-primary">Victor</p>
+                <p className="text-sm">Perfect! Your order is on its way and should arrive by tomorrow. You can track it here: <a href="#" className="text-primary underline">View tracking</a></p>
+                <p className="text-sm">Is there anything else I can help with?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl text-center space-y-6 mb-20">
         <h2 className="text-3xl md:text-4xl font-bold">Ready to transform your support?</h2>

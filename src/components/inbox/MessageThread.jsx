@@ -42,21 +42,50 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     setSending(true);
     const content = reply.trim();
     setReply('');
-    await base44.entities.Message.create({
-      conversation_id: conversation.id,
-      sender_type: 'agent',
-      sender_name: user?.full_name || 'Agent',
-      content,
-      timestamp: new Date().toISOString(),
-      message_type: 'text',
-    });
-    await base44.entities.Conversation.update(conversation.id, {
-      last_message: content,
-      last_message_time: new Date().toISOString(),
-    });
-    qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
-    qc.invalidateQueries({ queryKey: ['conversations'] });
-    setSending(false);
+    
+    try {
+      // Save message to inbox
+      await base44.entities.Message.create({
+        conversation_id: conversation.id,
+        brand_id: conversation.brand_id,
+        sender_type: 'agent',
+        sender_name: user?.full_name || 'Agent',
+        content,
+        timestamp: new Date().toISOString(),
+        message_type: 'text',
+      });
+      await base44.entities.Conversation.update(conversation.id, {
+        last_message: content,
+        last_message_time: new Date().toISOString(),
+      });
+
+      // If Facebook conversation, send via Zapier
+      if (isFacebookConversation) {
+        const [webhooks] = await Promise.all([
+          base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id }),
+        ]);
+        
+        const webhook = webhooks?.find(w => w.facebook_page_id);
+        if (webhook?.agent_reply_zapier_url) {
+          await fetch(webhook.agent_reply_zapier_url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to: conversation.customer_fb_id,
+              message: content,
+              conversation_id: conversation.id,
+            }),
+          });
+        }
+      }
+
+      qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+    } catch (error) {
+      setReply(content);
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleAIReply = async () => {

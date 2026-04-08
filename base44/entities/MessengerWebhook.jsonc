@@ -35,6 +35,10 @@
       "type": "string",
       "description": "Fallback message text when no KB match"
     },
+    "agent_reply_zapier_url": {
+      "type": "string",
+      "description": "Zapier webhook URL for agent replies to Facebook Messenger"
+    },
     "is_active": {
       "type": "boolean",
       "default": true,

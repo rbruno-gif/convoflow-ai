@@ -37,8 +37,16 @@ export default function BrandSelector() {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden min-w-56">
-          <div className="max-h-64 overflow-y-auto py-1">
+        <div 
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden"
+          style={{
+            top: ref.current ? (ref.current.getBoundingClientRect().bottom + 8) + 'px' : 'auto',
+            left: ref.current ? ref.current.getBoundingClientRect().left + 'px' : 'auto',
+            minWidth: '220px',
+            maxHeight: '256px',
+          }}
+        >
+          <div className="overflow-y-auto py-1">
             {brands.map(brand => (
               <button
                 key={brand.id}

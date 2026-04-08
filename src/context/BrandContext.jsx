@@ -11,13 +11,16 @@ export function BrandProvider({ children }) {
     queryKey: ['brands'],
     queryFn: async () => {
       try {
-        return await base44.entities.Brand.filter({ is_archived: false }, '-created_date', 100);
+        const result = await base44.entities.Brand.filter({ is_archived: false }, '-created_date', 100);
+        console.log('BrandContext: Loaded brands:', result);
+        return result;
       } catch (err) {
-        console.error('Failed to fetch brands:', err);
+        console.error('BrandContext: Failed to fetch brands:', err);
         return [];
       }
     },
     staleTime: Infinity,
+    gcTime: Infinity,
   });
 
   // All brands are accessible (SDK will enforce permissions)

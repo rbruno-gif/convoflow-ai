@@ -110,20 +110,26 @@ Deno.serve(async (req) => {
         is_active: true,
       });
 
+      console.log(`Found ${kbEntries?.length || 0} KB entries for brand ${brandId}`);
+
       if (kbEntries && kbEntries.length > 0) {
         const kbContext = kbEntries
           .map((entry) => `# ${entry.title}\n${entry.content}`)
           .join('\n\n');
 
+        console.log(`Invoking LLM with KB context...`);
         const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `You are a helpful customer support assistant. Based on the knowledge base below, answer the customer's question directly and concisely. If the answer is not in the knowledge base, say "I don't have that information available."\n\nKNOWLEDGE BASE:\n${kbContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT ANSWER:`,
           model: 'gpt_5_mini',
         });
 
-        aiResponse = typeof result === 'string' ? result : result?.text || null;
+        console.log(`LLM response:`, result);
+        aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
+      } else {
+        console.log(`No knowledge base entries found for brand ${brandId}`);
       }
     } catch (e) {
-      console.error('KB lookup failed:', e);
+      console.error('KB lookup or LLM failed:', e.message || e);
     }
 
     // Step 7: Determine final reply

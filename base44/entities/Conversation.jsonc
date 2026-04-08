@@ -21,10 +21,15 @@
         "email",
         "whatsapp",
         "sms",
-        "voice"
+        "voice",
+        "messenger"
       ],
       "default": "chat",
       "description": "Communication channel"
+    },
+    "channel_id": {
+      "type": "string",
+      "description": "External ID for channel-specific conversations (e.g., sender_id for messenger)"
     },
     "status": {
       "type": "string",

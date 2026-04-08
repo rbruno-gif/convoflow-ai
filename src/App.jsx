@@ -98,7 +98,7 @@ const AuthenticatedApp = () => {
         <Route path="/canned-responses" element={<CannedResponses />} />
         <Route path="/business-hours" element={<BusinessHoursSettings />} />
         <Route path="/knowledge-base" element={<KnowledgeBase />} />
-        <Route path="/scraper" element={<KnowledgeScraper />} />
+        <Route path="/knowledge-scraper" element={<KnowledgeScraper />} />
         <Route path="/widget-builder" element={<WidgetBuilder />} />
         <Route path="/ai-agent" element={<AIAgent />} />
         <Route path="/workflows" element={<Workflows />} />

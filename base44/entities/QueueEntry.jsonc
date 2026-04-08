@@ -15,7 +15,8 @@
       "type": "string"
     },
     "position": {
-      "type": "number"
+      "type": "number",
+      "description": "Queue position (1 = first)"
     },
     "priority_lane": {
       "type": "string",
@@ -53,22 +54,22 @@
       "type": "string"
     },
     "required_skill": {
-      "type": "string"
-    },
-    "overflow_action_taken": {
-      "type": "string"
-    },
-    "position_last_sent_at": {
       "type": "string",
-      "format": "date-time"
+      "description": "Required skill tag for routing"
     },
-    "grace_expires_at": {
+    "wait_time_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "position_last_updated": {
       "type": "string",
       "format": "date-time"
     }
   },
   "required": [
     "brand_id",
-    "conversation_id"
+    "department_id",
+    "conversation_id",
+    "customer_name"
   ]
 }

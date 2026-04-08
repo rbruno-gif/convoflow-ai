@@ -3,44 +3,25 @@
   "type": "object",
   "properties": {
     "brand_id": {
-      "type": "string",
-      "description": "Brand this FAQ belongs to"
+      "type": "string"
     },
     "question": {
       "type": "string"
     },
     "answer": {
-      "type": "string"
+      "type": "string",
+      "description": "HTML or markdown answer"
     },
     "category": {
       "type": "string",
-      "enum": [
-        "shipping",
-        "returns",
-        "payment",
-        "products",
-        "orders",
-        "general",
-        "plans",
-        "billing",
-        "activation",
-        "technical_support"
-      ],
-      "default": "general"
-    },
-    "campaign_id": {
-      "type": "string",
-      "description": "Campaign this FAQ belongs to"
-    },
-    "source_url": {
-      "type": "string",
-      "description": "URL this FAQ was scraped from"
+      "description": "FAQ category for organization"
     },
     "keywords": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Keywords for matching customer queries"
     },
     "is_active": {
       "type": "boolean",
@@ -48,10 +29,20 @@
     },
     "usage_count": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "description": "Times this FAQ was provided by bot"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "scraped"
+      ],
+      "default": "manual"
     }
   },
   "required": [
+    "brand_id",
     "question",
     "answer"
   ]

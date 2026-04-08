@@ -1,0 +1,78 @@
+{
+  "name": "Agent",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "description": "Agent email (unique per brand)"
+    },
+    "name": {
+      "type": "string"
+    },
+    "role_id": {
+      "type": "string",
+      "description": "Role ID from Role entity"
+    },
+    "department_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Departments agent is assigned to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "busy",
+        "away",
+        "offline"
+      ],
+      "default": "offline"
+    },
+    "max_concurrent_conversations": {
+      "type": "number",
+      "default": 5,
+      "description": "Max conversations agent can handle simultaneously"
+    },
+    "current_conversation_count": {
+      "type": "number",
+      "default": 0
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Agent skills for skills-based routing"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "last_activity": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "total_conversations_handled": {
+      "type": "number",
+      "default": 0
+    },
+    "average_response_time_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "csat_score": {
+      "type": "number",
+      "description": "Average CSAT score"
+    }
+  },
+  "required": [
+    "brand_id",
+    "email",
+    "name"
+  ]
+}

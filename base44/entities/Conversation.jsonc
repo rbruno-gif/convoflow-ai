@@ -6,21 +6,38 @@
       "type": "string",
       "description": "Brand this conversation belongs to"
     },
+    "department_id": {
+      "type": "string",
+      "description": "Department this conversation is routed to"
+    },
     "customer_name": {
       "type": "string",
-      "description": "Customer's name from Facebook"
+      "description": "Customer name"
     },
-    "customer_fb_id": {
+    "customer_email": {
       "type": "string",
-      "description": "Facebook user ID"
+      "description": "Customer email"
+    },
+    "customer_phone": {
+      "type": "string",
+      "description": "Customer phone"
     },
     "customer_avatar": {
       "type": "string",
       "description": "Customer avatar URL"
     },
-    "campaign_id": {
+    "channel": {
       "type": "string",
-      "description": "Campaign this conversation belongs to"
+      "enum": [
+        "chat",
+        "email",
+        "whatsapp",
+        "sms",
+        "facebook",
+        "voice"
+      ],
+      "default": "chat",
+      "description": "Communication channel"
     },
     "status": {
       "type": "string",
@@ -44,7 +61,7 @@
     },
     "assigned_agent": {
       "type": "string",
-      "description": "Agent email assigned to this convo"
+      "description": "Agent email assigned to this conversation"
     },
     "last_message": {
       "type": "string"
@@ -63,13 +80,15 @@
         "type": "string"
       }
     },
-    "order_intent": {
-      "type": "boolean",
-      "default": false,
-      "description": "AI detected order intent"
-    },
-    "flagged_reason": {
-      "type": "string"
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
     },
     "sentiment": {
       "type": "string",
@@ -78,46 +97,33 @@
         "neutral",
         "negative"
       ],
-      "default": "neutral",
-      "description": "Detected sentiment from latest messages"
+      "default": "neutral"
     },
     "is_urgent": {
       "type": "boolean",
-      "default": false,
-      "description": "Auto-flagged as urgent (negative sentiment + keywords)"
-    },
-    "sentiment_updated_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When sentiment was last analyzed"
+      "default": false
     },
     "intent": {
       "type": "string",
       "enum": [
-        "order_inquiry",
-        "product_support",
-        "billing_issue",
+        "sales",
+        "support",
+        "billing",
         "complaint",
         "feedback",
-        "general_question",
-        "returns_refunds",
-        "shipping",
-        "technical_support",
         "other"
       ],
-      "default": "general_question",
-      "description": "Detected conversation intent"
+      "default": "other"
     },
     "conversation_summary": {
       "type": "string",
-      "description": "AI-generated summary of conversation"
+      "description": "AI-generated summary"
     },
     "key_topics": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Key topics/keywords extracted from conversation"
+      }
     },
     "resolution_status": {
       "type": "string",
@@ -128,13 +134,39 @@
       ],
       "default": "unresolved"
     },
-    "ai_resolution_attempted": {
-      "type": "boolean",
-      "default": false,
-      "description": "AI attempted to resolve before handoff"
+    "transfer_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from_agent": {
+            "type": "string"
+          },
+          "to_agent": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "wait_time_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "queue_position": {
+      "type": "number",
+      "description": "Position in queue if waiting"
     }
   },
   "required": [
+    "brand_id",
+    "department_id",
     "customer_name"
   ]
 }

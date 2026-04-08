@@ -2,13 +2,15 @@
   "name": "FAQSuggestion",
   "type": "object",
   "properties": {
-    "question": {
+    "brand_id": {
       "type": "string",
-      "description": "Suggested FAQ question"
+      "description": "Brand this suggestion belongs to"
+    },
+    "question": {
+      "type": "string"
     },
     "answer": {
-      "type": "string",
-      "description": "Suggested FAQ answer"
+      "type": "string"
     },
     "category": {
       "type": "string",
@@ -29,8 +31,7 @@
         "approved",
         "rejected"
       ],
-      "default": "pending",
-      "description": "Approval status"
+      "default": "pending"
     },
     "source": {
       "type": "string",
@@ -39,21 +40,17 @@
         "manual",
         "customer_request"
       ],
-      "default": "manual",
-      "description": "Where the suggestion came from"
+      "default": "manual"
     },
     "suggested_by": {
-      "type": "string",
-      "description": "Email of user who made suggestion"
+      "type": "string"
     },
     "frequency": {
       "type": "number",
-      "default": 1,
-      "description": "How many times this question was asked"
+      "default": 1
     },
     "admin_notes": {
-      "type": "string",
-      "description": "Admin feedback or notes on approval/rejection"
+      "type": "string"
     },
     "approved_at": {
       "type": "string",

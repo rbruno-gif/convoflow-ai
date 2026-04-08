@@ -2,6 +2,10 @@
   "name": "Order",
   "type": "object",
   "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this order belongs to"
+    },
     "conversation_id": {
       "type": "string"
     },

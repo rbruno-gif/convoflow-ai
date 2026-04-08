@@ -5,11 +5,15 @@ import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileTex
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
-export default function MessageThread({ conversation, onUpdate }) {
+export default function MessageThread({ conversation, onUpdate, onInsertReply, externalReply }) {
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
-  const [actionState, setActionState] = useState({}); // inline action feedback
+  const [actionState, setActionState] = useState({});
   const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    if (externalReply) setReply(externalReply);
+  }, [externalReply]);
   const bottomRef = useRef(null);
   const qc = useQueryClient();
 

@@ -6,10 +6,12 @@ import { MessageSquare } from 'lucide-react';
 import ConversationList from '@/components/inbox/ConversationList';
 import MessageThread from '@/components/inbox/MessageThread';
 import CustomerSidebar from '@/components/inbox/CustomerSidebar';
+import AIGuidancePanel from '@/components/inbox/AIGuidancePanel';
 
 export default function Conversations() {
   const [selectedId, setSelectedId] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [insertReply, setInsertReply] = useState('');
 
   const { activeBrandId } = useBrand();
 
@@ -52,7 +54,7 @@ export default function Conversations() {
 
       <div className="flex-1 flex flex-col min-w-0" style={{ minHeight: 0 }}>
         {selected ? (
-          <MessageThread conversation={selected} onUpdate={refetch} />
+          <MessageThread conversation={selected} onUpdate={refetch} externalReply={insertReply} />
         ) : (
           <div className="flex-1 flex items-center justify-center bg-gray-50">
             <div className="text-center">
@@ -68,6 +70,7 @@ export default function Conversations() {
       </div>
 
       {selected && <CustomerSidebar conversation={selected} />}
+      {selected && <AIGuidancePanel conversation={selected} onInsertReply={setInsertReply} />}
     </div>
   );
 }

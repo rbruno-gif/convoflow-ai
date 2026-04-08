@@ -1,9 +1,9 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import {
-  LayoutDashboard, MessageSquare, BarChart3, Bot, Eye, Zap,
+  LayoutDashboard, MessageSquare, BarChart3, Bot, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
-  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio
+  ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio, Inbox, BarChart2, Code2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -11,19 +11,19 @@ import BrandSwitcher from '@/components/brands/BrandSwitcher';
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/conversations', icon: MessageSquare, label: 'Inbox' },
-  { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { path: '/inbox', icon: Inbox, label: 'Inbox' },
+  { path: '/live-support', icon: Radio, label: 'Live Support' },
+  { path: '/brand-analytics', icon: BarChart2, label: 'Analytics' },
   { path: '/ai-agent', icon: Bot, label: 'AI Agent' },
-  { path: '/visitors', icon: Eye, label: 'Visitors' },
-  { path: '/flows', icon: Zap, label: 'Flows' },
+  { path: '/flows', icon: Zap, label: 'Workflows' },
+  { path: '/widget-builder', icon: Code2, label: 'Widget Builder' },
+  { path: '/knowledge-scraper', icon: Globe, label: 'KB Scraper' },
   { path: '/tickets', icon: Ticket, label: 'Tickets' },
   { path: '/leads', icon: Users, label: 'Leads' },
   { path: '/flagged', icon: AlertTriangle, label: 'Flagged' },
   { path: '/agents', icon: UserCheck, label: 'Agents' },
-  { path: '/integrations', icon: Plug, label: 'Integrations' },
   { path: '/brands', icon: Building2, label: 'Brands' },
-  { path: '/knowledge-scraper', icon: Globe, label: 'KB Scraper' },
-  { path: '/live-support', icon: Radio, label: 'Live Support' },
+  { path: '/integrations', icon: Plug, label: 'Integrations' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 

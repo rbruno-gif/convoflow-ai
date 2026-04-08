@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 export default function SecurityCompliance({ brandId, onChangesDetected }) {
   const qc = useQueryClient();
@@ -12,9 +11,7 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
 
   const { data: settings = [] } = useQuery({
     queryKey: ['brand-settings', brandId],
-    queryFn: () => brandId
-      ? base44.entities.BrandSettings.filter({ brand_id: brandId })
-      : base44.entities.BrandSettings.list(),
+    queryFn: () => brandId ? base44.entities.BrandSettings.filter({ brand_id: brandId }) : base44.entities.BrandSettings.list(),
   });
 
   useEffect(() => {
@@ -44,7 +41,7 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
     <div className="p-8 max-w-4xl">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Security & Compliance</h2>
-        <p className="text-sm text-gray-500 mt-1">Configure authentication and data protection settings</p>
+        <p className="text-sm text-gray-500 mt-1">Configure authentication and data protection</p>
       </div>
 
       <div className="space-y-8">
@@ -55,7 +52,7 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
             options={[
               { value: 'disabled', label: 'Disabled' },
               { value: 'optional', label: 'Optional' },
-              { value: 'required', label: 'Required for All' },
+              { value: 'required', label: 'Required' },
             ]}
             onChange={(value) => setForm(f => ({ ...f, two_factor_authentication: value }))}
           />
@@ -75,29 +72,14 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
             onChange={(value) => setForm(f => ({ ...f, password_min_length: Number(value) }))}
           />
           <ToggleField
-            label="Require Uppercase Letters"
-            value={form.password_require_uppercase || true}
+            label="Require Uppercase"
+            value={form.password_require_uppercase !== false}
             onChange={(value) => setForm(f => ({ ...f, password_require_uppercase: value }))}
           />
           <ToggleField
             label="Require Numbers"
-            value={form.password_require_numbers || true}
+            value={form.password_require_numbers !== false}
             onChange={(value) => setForm(f => ({ ...f, password_require_numbers: value }))}
-          />
-        </Section>
-
-        <Section title="Login Security">
-          <InputField
-            label="Failed Login Attempts Before Lockout"
-            type="number"
-            value={form.login_attempt_limit || 5}
-            onChange={(value) => setForm(f => ({ ...f, login_attempt_limit: Number(value) }))}
-          />
-          <InputField
-            label="Lockout Duration (minutes)"
-            type="number"
-            value={form.login_lockout_duration_minutes || 30}
-            onChange={(value) => setForm(f => ({ ...f, login_lockout_duration_minutes: Number(value) }))}
           />
         </Section>
 
@@ -108,15 +90,14 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
             options={[
               { value: 'us', label: 'United States' },
               { value: 'eu', label: 'European Union' },
-              { value: 'uk', label: 'United Kingdom' },
             ]}
             onChange={(value) => setForm(f => ({ ...f, data_residency: value }))}
           />
           <ToggleField
-            label="Conversation Redaction (PII Protection)"
-            value={form.conversation_redaction_enabled || true}
+            label="PII Redaction"
+            value={form.conversation_redaction_enabled !== false}
             onChange={(value) => setForm(f => ({ ...f, conversation_redaction_enabled: value }))}
-            helperText="Automatically redact credit cards, SSNs, and sensitive data"
+            helperText="Automatically redact sensitive data"
           />
         </Section>
 
@@ -124,7 +105,7 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
           <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-blue-900 mb-1">Compliance</p>
-            <p className="text-xs text-blue-700">All changes are logged in audit logs for compliance tracking.</p>
+            <p className="text-xs text-blue-700">All changes are logged for compliance tracking.</p>
           </div>
         </div>
       </div>
@@ -135,7 +116,7 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
           className="px-6 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-2"
           style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #ef4444, #dc2626)' }}
         >
-          {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save Security Settings'}
+          {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save'}
         </button>
       </div>
     </div>
@@ -191,9 +172,9 @@ function ToggleField({ label, value, onChange, helperText }) {
       </div>
       <button
         onClick={() => onChange(!value)}
-        className={cn('w-12 h-7 rounded-full transition-colors shrink-0 mt-0.5', value ? 'bg-green-500' : 'bg-gray-300')}
+        className={`w-12 h-7 rounded-full transition-colors shrink-0 mt-0.5 ${value ? 'bg-green-500' : 'bg-gray-300'}`}
       >
-        <div className={cn('w-5 h-5 rounded-full bg-white transition-transform', value ? 'translate-x-6' : 'translate-x-1')} />
+        <div className={`w-5 h-5 rounded-full bg-white transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>
     </div>
   );

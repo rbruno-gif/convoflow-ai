@@ -6,47 +6,12 @@ import { Plus, Trash2, Edit2, CheckCircle, AlertCircle } from 'lucide-react';
 const BUILT_IN_ROLES = ['Super Admin', 'Brand Manager', 'Supervisor', 'Agent', 'Read Only'];
 
 const PERMISSION_CATEGORIES = {
-  inbox: ['view_conversations', 'reply_conversations', 'assign_conversations', 'transfer_conversations', 'delete_conversations', 'view_all_agents_conversations', 'export_history'],
-  tickets: ['create_tickets', 'edit_tickets', 'delete_tickets', 'reassign_tickets', 'close_tickets', 'view_all_tickets', 'export_tickets'],
-  knowledge_base: ['view_faqs', 'add_faqs', 'edit_faqs', 'delete_faqs', 'approve_scraped_content', 'trigger_rescrape'],
-  ai_agent: ['view_settings', 'edit_config', 'enable_disable_tools', 'view_agentic_log', 'approve_actions'],
-  analytics: ['view_own_stats', 'view_team_stats', 'view_brand_stats', 'export_reports', 'schedule_reports'],
-  settings: ['view_settings', 'edit_brand_settings', 'manage_agents', 'manage_roles', 'manage_departments', 'manage_integrations', 'manage_billing'],
-  queue: ['view_queue', 'manage_queue_order', 'override_assignment', 'view_all_depts_queues'],
-  workflows: ['view_workflows', 'create_workflows', 'edit_workflows', 'delete_workflows', 'enable_disable_workflows'],
-  customers: ['view_profiles', 'edit_profiles', 'delete_profiles', 'export_data'],
-  outbound: ['view_campaigns', 'create_campaigns', 'send_campaigns', 'view_analytics'],
-};
-
-const DEFAULT_PERMISSIONS = {
-  'Super Admin': Object.keys(PERMISSION_CATEGORIES).reduce((acc, cat) => ({
-    ...acc,
-    [cat]: PERMISSION_CATEGORIES[cat].reduce((p, perm) => ({ ...p, [perm]: true }), {})
-  }), {}),
-  'Brand Manager': {
-    inbox: { view_conversations: true, reply_conversations: true, assign_conversations: true, view_all_agents_conversations: true },
-    tickets: { create_tickets: true, edit_tickets: true, view_all_tickets: true },
-    ai_agent: { view_settings: true, edit_config: true },
-    analytics: { view_brand_stats: true, export_reports: true },
-    settings: { view_settings: true, edit_brand_settings: true, manage_agents: true },
-  },
-  'Supervisor': {
-    inbox: { view_conversations: true, reply_conversations: true, assign_conversations: true, view_all_agents_conversations: true },
-    tickets: { create_tickets: true, edit_tickets: true, view_all_tickets: true },
-    queue: { view_queue: true, manage_queue_order: true },
-    analytics: { view_team_stats: true },
-  },
-  'Agent': {
-    inbox: { view_conversations: true, reply_conversations: true, assign_conversations: false },
-    tickets: { create_tickets: true, edit_tickets: true },
-    queue: { view_queue: true },
-    analytics: { view_own_stats: true },
-  },
-  'Read Only': {
-    inbox: { view_conversations: true },
-    tickets: { view_all_tickets: true },
-    analytics: { view_brand_stats: true },
-  },
+  inbox: ['view_conversations', 'reply_conversations', 'assign_conversations', 'transfer_conversations', 'delete_conversations'],
+  tickets: ['create_tickets', 'edit_tickets', 'delete_tickets', 'reassign_tickets'],
+  knowledge_base: ['view_faqs', 'add_faqs', 'edit_faqs', 'delete_faqs'],
+  ai_agent: ['view_settings', 'edit_config', 'enable_disable_tools'],
+  analytics: ['view_own_stats', 'view_team_stats', 'view_brand_stats', 'export_reports'],
+  settings: ['view_settings', 'edit_brand_settings', 'manage_agents', 'manage_roles'],
 };
 
 export default function RoleManagement({ brandId, onChangesDetected }) {
@@ -74,8 +39,7 @@ export default function RoleManagement({ brandId, onChangesDetected }) {
   };
 
   const handleDeleteRole = async (roleId, roleName) => {
-    const role = roles.find(r => r.id === roleId);
-    if (role.is_built_in || BUILT_IN_ROLES.includes(roleName)) {
+    if (BUILT_IN_ROLES.includes(roleName)) {
       alert('Built-in roles cannot be deleted');
       return;
     }
@@ -157,10 +121,8 @@ function RoleCard({ role, isBuiltIn, onEdit, onDelete }) {
           <p className="font-semibold text-gray-900">{role.assigned_count || 0}</p>
         </div>
         <div className="bg-gray-50 rounded-lg p-2">
-          <p className="text-gray-500 mb-1">Permissions Enabled</p>
-          <p className="font-semibold text-gray-900">
-            {Object.values(role.permissions || {}).reduce((sum, cat) => sum + Object.values(cat).filter(Boolean).length, 0)}
-          </p>
+          <p className="text-gray-500 mb-1">Permissions</p>
+          <p className="font-semibold text-gray-900">{Object.keys(role.permissions || {}).length}</p>
         </div>
       </div>
     </div>
@@ -170,7 +132,7 @@ function RoleCard({ role, isBuiltIn, onEdit, onDelete }) {
 function RoleFormModal({ role, onSave, onClose, saved }) {
   const [form, setForm] = useState(
     role ? { name: role.name, description: role.description || '', permissions: role.permissions || {} }
-      : { name: '', description: '', permissions: DEFAULT_PERMISSIONS['Agent'] }
+      : { name: '', description: '', permissions: {} }
   );
 
   const handlePermissionToggle = (category, permission) => {
@@ -194,7 +156,6 @@ function RoleFormModal({ role, onSave, onClose, saved }) {
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Basic Info */}
           <div>
             <label className="text-xs font-semibold text-gray-600 mb-2 block">Role Name</label>
             <input
@@ -206,7 +167,7 @@ function RoleFormModal({ role, onSave, onClose, saved }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-600 mb-2 block">Description (Optional)</label>
+            <label className="text-xs font-semibold text-gray-600 mb-2 block">Description</label>
             <textarea
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
@@ -216,7 +177,6 @@ function RoleFormModal({ role, onSave, onClose, saved }) {
             />
           </div>
 
-          {/* Permissions Grid */}
           <div>
             <p className="text-xs font-semibold text-gray-600 mb-4">Permissions</p>
             <div className="space-y-4">

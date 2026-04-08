@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Trash2, Edit2, Copy, CheckCircle, Eye, EyeOff, Key, GitBranch } from 'lucide-react';
+import { Plus, Trash2, Edit2, Copy, CheckCircle, Eye, EyeOff, Key } from 'lucide-react';
 
-const WEBHOOK_EVENTS = ['conversation_created', 'ticket_created', 'ticket_updated', 'ticket_resolved', 'agent_assigned', 'sla_breached', 'call_ended', 'message_received', 'csat_submitted'];
+const WEBHOOK_EVENTS = ['conversation_created', 'ticket_created', 'ticket_resolved', 'message_received'];
 
 export default function APIWebhooks({ brandId, onChangesDetected }) {
   const qc = useQueryClient();
@@ -60,7 +60,7 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
         <button
           onClick={() => setTab('api-keys')}
           className={`flex items-center gap-2 pb-3 px-2 font-medium text-sm border-b-2 transition-colors ${
-            tab === 'api-keys' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            tab === 'api-keys' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500'
           }`}
         >
           <Key className="w-4 h-4" /> API Keys ({apiKeys.length})
@@ -68,10 +68,10 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
         <button
           onClick={() => setTab('webhooks')}
           className={`flex items-center gap-2 pb-3 px-2 font-medium text-sm border-b-2 transition-colors ${
-            tab === 'webhooks' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            tab === 'webhooks' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500'
           }`}
         >
-          <GitBranch className="w-4 h-4" /> Webhooks ({webhooks.length})
+          Webhooks ({webhooks.length})
         </button>
       </div>
 
@@ -137,7 +137,6 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
 
           {webhooks.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
-              <GitBranch className="w-8 h-8 mx-auto mb-2 opacity-20" />
               <p>No webhooks configured.</p>
             </div>
           ) : (
@@ -179,16 +178,10 @@ function APIKeyRow({ apiKey, onEdit, onDelete, copied, onCopy }) {
           <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-gray-600">
             {showSecret ? `sk_...${apiKey.key_last_4}` : `sk_••••••••${apiKey.key_last_4}`}
           </code>
-          <button
-            onClick={() => setShowSecret(!showSecret)}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
+          <button onClick={() => setShowSecret(!showSecret)} className="p-1 hover:bg-gray-100 rounded">
             {showSecret ? <EyeOff className="w-3 h-3 text-gray-400" /> : <Eye className="w-3 h-3 text-gray-400" />}
           </button>
-          <button
-            onClick={() => onCopy(apiKey.id)}
-            className="p-1 hover:bg-gray-100 rounded"
-          >
+          <button onClick={() => onCopy(apiKey.id)} className="p-1 hover:bg-gray-100 rounded">
             <Copy className={`w-3 h-3 ${copied === apiKey.id ? 'text-green-500' : 'text-gray-400'}`} />
           </button>
         </div>
@@ -237,7 +230,6 @@ function APIKeyFormModal({ apiKey, onSave, onClose, saved }) {
             >
               <option value="read_only">Read Only</option>
               <option value="read_write">Read & Write</option>
-              <option value="admin">Admin</option>
             </select>
           </div>
         </div>
@@ -254,7 +246,7 @@ function APIKeyFormModal({ apiKey, onSave, onClose, saved }) {
             className="px-4 py-2 rounded-lg text-white text-sm font-semibold flex items-center gap-2"
             style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #6366f1, #4f46e5)' }}
           >
-            {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save Key'}
+            {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save'}
           </button>
         </div>
       </div>
@@ -264,27 +256,25 @@ function APIKeyFormModal({ apiKey, onSave, onClose, saved }) {
 
 function WebhookRow({ webhook, onEdit, onDelete }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900">{webhook.name}</h3>
-          <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-gray-600 mt-1 inline-block truncate">{webhook.url}</code>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={onEdit} className="p-2 hover:bg-gray-100 rounded-lg">
-            <Edit2 className="w-4 h-4 text-gray-400" />
-          </button>
-          <button onClick={onDelete} className="p-2 hover:bg-red-50 rounded-lg">
-            <Trash2 className="w-4 h-4 text-red-400" />
-          </button>
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-start justify-between">
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-gray-900">{webhook.name}</h3>
+        <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-gray-600 mt-1 inline-block truncate">{webhook.url}</code>
+        <div className="flex flex-wrap gap-1 mt-2">
+          {(webhook.events || []).map(event => (
+            <span key={event} className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
+              {event.replace(/_/g, ' ')}
+            </span>
+          ))}
         </div>
       </div>
-      <div className="flex flex-wrap gap-1">
-        {(webhook.events || []).map(event => (
-          <span key={event} className="text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
-            {event.replace(/_/g, ' ')}
-          </span>
-        ))}
+      <div className="flex gap-2">
+        <button onClick={onEdit} className="p-2 hover:bg-gray-100 rounded-lg">
+          <Edit2 className="w-4 h-4 text-gray-400" />
+        </button>
+        <button onClick={onDelete} className="p-2 hover:bg-red-50 rounded-lg">
+          <Trash2 className="w-4 h-4 text-red-400" />
+        </button>
       </div>
     </div>
   );
@@ -292,8 +282,8 @@ function WebhookRow({ webhook, onEdit, onDelete }) {
 
 function WebhookFormModal({ webhook, onSave, onClose, saved }) {
   const [form, setForm] = useState(
-    webhook ? { name: webhook.name, url: webhook.url, secret: webhook.secret, events: webhook.events || [] }
-      : { name: '', url: '', secret: '', events: [] }
+    webhook ? { name: webhook.name, url: webhook.url, events: webhook.events || [] }
+      : { name: '', url: '', events: [] }
   );
 
   const handleEventToggle = (event) => {
@@ -332,7 +322,7 @@ function WebhookFormModal({ webhook, onSave, onClose, saved }) {
           </div>
 
           <div>
-            <p className="text-xs font-semibold text-gray-600 mb-3">Events to Subscribe To</p>
+            <p className="text-xs font-semibold text-gray-600 mb-3">Events</p>
             <div className="grid grid-cols-2 gap-2">
               {WEBHOOK_EVENTS.map(event => (
                 <label key={event} className="flex items-center gap-2 cursor-pointer">
@@ -361,7 +351,7 @@ function WebhookFormModal({ webhook, onSave, onClose, saved }) {
             className="px-4 py-2 rounded-lg text-white text-sm font-semibold flex items-center gap-2"
             style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #3b82f6, #2563eb)' }}
           >
-            {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save Webhook'}
+            {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save'}
           </button>
         </div>
       </div>

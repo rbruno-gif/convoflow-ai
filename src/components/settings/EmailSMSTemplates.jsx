@@ -3,9 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, Edit2, CheckCircle, Mail, MessageSquare } from 'lucide-react';
 
-const EMAIL_CATEGORIES = ['ticket_created', 'ticket_updated', 'ticket_resolved', 'csat_survey', 'welcome', 'business_hours_auto_reply', 'callback_confirmation'];
-const SMS_CATEGORIES = ['ticket_created', 'agent_reply', 'callback_reminder', 'appointment_confirmation'];
-const MERGE_FIELDS = ['{customer_name}', '{ticket_id}', '{brand_name}', '{agent_name}', '{business_hours}', '{callback_time}'];
+const EMAIL_CATEGORIES = ['ticket_created', 'ticket_resolved', 'welcome'];
+const SMS_CATEGORIES = ['ticket_created', 'callback_reminder'];
 
 export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
   const qc = useQueryClient();
@@ -67,18 +66,18 @@ export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
         <button
           onClick={() => setTab('email')}
           className={`flex items-center gap-2 pb-3 px-2 font-medium text-sm border-b-2 transition-colors ${
-            tab === 'email' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            tab === 'email' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500'
           }`}
         >
-          <Mail className="w-4 h-4" /> Email Templates ({emailTemplates.length})
+          <Mail className="w-4 h-4" /> Email ({emailTemplates.length})
         </button>
         <button
           onClick={() => setTab('sms')}
           className={`flex items-center gap-2 pb-3 px-2 font-medium text-sm border-b-2 transition-colors ${
-            tab === 'sms' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+            tab === 'sms' ? 'border-violet-600 text-violet-600' : 'border-transparent text-gray-500'
           }`}
         >
-          <MessageSquare className="w-4 h-4" /> SMS Templates ({smsTemplates.length})
+          <MessageSquare className="w-4 h-4" /> SMS ({smsTemplates.length})
         </button>
       </div>
 
@@ -115,13 +114,12 @@ export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
 
 function TemplateRow({ template, onEdit, onDelete }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 flex items-center justify-between">
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-gray-900">{template.name}</h3>
         <p className="text-xs text-gray-500 mt-1 capitalize">{template.category.replace(/_/g, ' ')}</p>
-        {template.subject && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{template.subject}</p>}
       </div>
-      <div className="flex gap-2 ml-4 shrink-0">
+      <div className="flex gap-2">
         <button onClick={onEdit} className="p-2 hover:bg-gray-100 rounded-lg">
           <Edit2 className="w-4 h-4 text-gray-400" />
         </button>
@@ -140,19 +138,18 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-8 border-b border-gray-100">
-          <h2 className="text-xl font-bold text-gray-900">{template ? 'Edit' : 'Create'} {templateType === 'email' ? 'Email' : 'SMS'} Template</h2>
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900">{template ? 'Edit' : 'Create'} {templateType === 'email' ? 'Email' : 'SMS'}</h2>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-semibold text-gray-600 mb-2 block">Template Name</label>
+              <label className="text-xs font-semibold text-gray-600 mb-2 block">Name</label>
               <input
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Ticket Created"
                 className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
               />
             </div>
@@ -172,49 +169,27 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
 
           {templateType === 'email' && (
             <div>
-              <label className="text-xs font-semibold text-gray-600 mb-2 block">Subject Line</label>
+              <label className="text-xs font-semibold text-gray-600 mb-2 block">Subject</label>
               <input
                 value={form.subject || ''}
                 onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                placeholder="Ticket #{ticket_id}"
                 className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
               />
             </div>
           )}
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-semibold text-gray-600">Message Body</label>
-              <div className="flex gap-1 flex-wrap">
-                {MERGE_FIELDS.map(field => (
-                  <button
-                    key={field}
-                    onClick={() => {
-                      const textarea = document.querySelector('textarea[name="body"]');
-                      const start = textarea.selectionStart;
-                      const end = textarea.selectionEnd;
-                      const newBody = form.body.substring(0, start) + field + form.body.substring(end);
-                      setForm(f => ({ ...f, body: newBody }));
-                    }}
-                    className="text-[10px] px-2 py-1 rounded-lg bg-violet-50 text-violet-700 hover:bg-violet-100 font-medium"
-                  >
-                    {field}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <label className="text-xs font-semibold text-gray-600 mb-2 block">Body</label>
             <textarea
-              name="body"
               value={form.body}
               onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
-              placeholder="Enter your message..."
-              rows={8}
-              className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none font-mono"
+              rows={6}
+              className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
             />
           </div>
         </div>
 
-        <div className="p-8 border-t border-gray-100 flex gap-3 justify-end">
+        <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50"
@@ -226,7 +201,7 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
             className="px-4 py-2 rounded-lg text-white text-sm font-semibold flex items-center gap-2"
             style={{ background: saved ? '#10b981' : 'linear-gradient(135deg, #f59e0b, #ec4899)' }}
           >
-            {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save Template'}
+            {saved ? <><CheckCircle className="w-4 h-4" /> Saved</> : 'Save'}
           </button>
         </div>
       </div>

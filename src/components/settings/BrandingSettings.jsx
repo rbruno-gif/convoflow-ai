@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { CheckCircle, Upload } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { CheckCircle } from 'lucide-react';
 
 export default function BrandingSettings({ brandId, onChangesDetected }) {
   const qc = useQueryClient();
@@ -12,16 +11,13 @@ export default function BrandingSettings({ brandId, onChangesDetected }) {
 
   const { data: settings = [] } = useQuery({
     queryKey: ['brand-settings', brandId],
-    queryFn: () => brandId
-      ? base44.entities.BrandSettings.filter({ brand_id: brandId })
-      : base44.entities.BrandSettings.list(),
+    queryFn: () => brandId ? base44.entities.BrandSettings.filter({ brand_id: brandId }) : base44.entities.BrandSettings.list(),
   });
 
   useEffect(() => {
     if (settings.length > 0) {
-      const s = settings[0];
-      setInitialForm(s);
-      setForm(s);
+      setInitialForm(settings[0]);
+      setForm(settings[0]);
     }
   }, [settings]);
 
@@ -42,82 +38,34 @@ export default function BrandingSettings({ brandId, onChangesDetected }) {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleColorChange = (field, value) => {
-    setForm(f => ({ ...f, [field]: value }));
-  };
-
-  const handleFileUpload = async (field, file) => {
-    const url = await base44.integrations.Core.UploadFile({ file });
-    setForm(f => ({ ...f, [field]: url.file_url }));
-  };
-
   return (
     <div className="p-8 max-w-4xl">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Branding & White Label</h2>
-        <p className="text-sm text-gray-500 mt-1">Customize the brand appearance across the platform</p>
+        <p className="text-sm text-gray-500 mt-1">Customize brand appearance across the platform</p>
       </div>
 
       <div className="space-y-8">
-        {/* Logo Section */}
-        <Section title="Logo & Favicon">
-          <div className="grid grid-cols-2 gap-6">
-            <FileUploadField
-              label="Logo (Light)"
-              value={form.logo_light_url}
-              onUpload={(file) => handleFileUpload('logo_light_url', file)}
-              previewUrl={form.logo_light_url}
-            />
-            <FileUploadField
-              label="Logo (Dark)"
-              value={form.logo_dark_url}
-              onUpload={(file) => handleFileUpload('logo_dark_url', file)}
-              previewUrl={form.logo_dark_url}
-            />
-          </div>
-          <div className="mt-4">
-            <FileUploadField
-              label="Favicon"
-              value={form.favicon_url}
-              onUpload={(file) => handleFileUpload('favicon_url', file)}
-              previewUrl={form.favicon_url}
-            />
-          </div>
-        </Section>
-
-        {/* Colors Section */}
         <Section title="Brand Colors">
           <div className="grid grid-cols-3 gap-4">
-            <ColorPicker
+            <ColorField
               label="Primary Color"
               value={form.primary_color || '#7c3aed'}
-              onChange={(value) => handleColorChange('primary_color', value)}
+              onChange={(value) => setForm(f => ({ ...f, primary_color: value }))}
             />
-            <ColorPicker
+            <ColorField
               label="Secondary Color"
               value={form.secondary_color || '#4f46e5'}
-              onChange={(value) => handleColorChange('secondary_color', value)}
+              onChange={(value) => setForm(f => ({ ...f, secondary_color: value }))}
             />
-            <ColorPicker
+            <ColorField
               label="Accent Color"
               value={form.accent_color || '#ec4899'}
-              onChange={(value) => handleColorChange('accent_color', value)}
+              onChange={(value) => setForm(f => ({ ...f, accent_color: value }))}
             />
           </div>
         </Section>
 
-        {/* Custom Domain */}
-        <Section title="Custom Domain">
-          <InputField
-            label="Custom Domain"
-            value={form.custom_domain || ''}
-            onChange={(value) => setForm(f => ({ ...f, custom_domain: value }))}
-            placeholder="e.g. support.yourbrand.com"
-            helperText="Configure DNS records as shown in your domain provider"
-          />
-        </Section>
-
-        {/* Email Branding */}
         <Section title="Email Branding">
           <div className="space-y-4">
             <InputField
@@ -133,69 +81,19 @@ export default function BrandingSettings({ brandId, onChangesDetected }) {
               placeholder="e.g. support@yourbrand.com"
               type="email"
             />
-            <div>
-              <label className="text-xs font-semibold text-gray-600 mb-2 block">Email Footer Text</label>
-              <textarea
-                value={form.email_footer_text || ''}
-                onChange={(e) => setForm(f => ({ ...f, email_footer_text: e.target.value }))}
-                rows={3}
-                className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none"
-              />
-            </div>
           </div>
         </Section>
 
-        {/* Login Page */}
-        <Section title="Login Page">
-          <div className="space-y-4">
-            <FileUploadField
-              label="Login Page Logo"
-              value={form.login_page_logo_url}
-              onUpload={(file) => handleFileUpload('login_page_logo_url', file)}
-              previewUrl={form.login_page_logo_url}
-            />
-            <ColorPicker
-              label="Login Background Color"
-              value={form.login_page_bg_color || '#ffffff'}
-              onChange={(value) => setForm(f => ({ ...f, login_page_bg_color: value }))}
-            />
-            <InputField
-              label="Welcome Message"
-              value={form.login_page_welcome_message || ''}
-              onChange={(value) => setForm(f => ({ ...f, login_page_welcome_message: value }))}
-              placeholder="Welcome to your support portal"
-            />
-            <InputField
-              label="Support Contact"
-              value={form.login_page_support_contact || ''}
-              onChange={(value) => setForm(f => ({ ...f, login_page_support_contact: value }))}
-              placeholder="support@yourbrand.com"
-            />
-          </div>
-        </Section>
-
-        {/* White Label */}
         <Section title="White Label Mode">
           <ToggleField
             label="Hide 'Powered by' references"
             value={form.white_label_mode || false}
             onChange={(value) => setForm(f => ({ ...f, white_label_mode: value }))}
-            helperText="Remove all U2C branding from customer-facing surfaces"
-          />
-        </Section>
-
-        {/* Browser Tab */}
-        <Section title="Browser Settings">
-          <InputField
-            label="Browser Tab Title"
-            value={form.browser_tab_title || ''}
-            onChange={(value) => setForm(f => ({ ...f, browser_tab_title: value }))}
-            placeholder="My Brand Support"
+            helperText="Remove all branding from customer-facing surfaces"
           />
         </Section>
       </div>
 
-      {/* Save Button */}
       <div className="mt-12 flex justify-end gap-3">
         <button
           onClick={save}
@@ -218,7 +116,7 @@ function Section({ title, children }) {
   );
 }
 
-function InputField({ label, value, onChange, placeholder, helperText, type = 'text' }) {
+function InputField({ label, value, onChange, placeholder, type = 'text' }) {
   return (
     <div>
       <label className="text-xs font-semibold text-gray-600 mb-2 block">{label}</label>
@@ -229,12 +127,11 @@ function InputField({ label, value, onChange, placeholder, helperText, type = 't
         placeholder={placeholder}
         className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
       />
-      {helperText && <p className="text-xs text-gray-400 mt-1">{helperText}</p>}
     </div>
   );
 }
 
-function ColorPicker({ label, value, onChange }) {
+function ColorField({ label, value, onChange }) {
   return (
     <div>
       <label className="text-xs font-semibold text-gray-600 mb-2 block">{label}</label>
@@ -256,32 +153,6 @@ function ColorPicker({ label, value, onChange }) {
   );
 }
 
-function FileUploadField({ label, value, onUpload, previewUrl }) {
-  return (
-    <div>
-      <label className="text-xs font-semibold text-gray-600 mb-2 block">{label}</label>
-      <div className="flex flex-col gap-3">
-        {previewUrl && (
-          <img
-            src={previewUrl}
-            alt="Preview"
-            className="w-24 h-24 rounded-lg object-contain border border-gray-200"
-          />
-        )}
-        <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 cursor-pointer hover:border-violet-400 transition-colors">
-          <Upload className="w-4 h-4 text-gray-400" />
-          <span className="text-xs text-gray-600">Upload {label.toLowerCase()}</span>
-          <input
-            type="file"
-            onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])}
-            className="hidden"
-          />
-        </label>
-      </div>
-    </div>
-  );
-}
-
 function ToggleField({ label, value, onChange, helperText }) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -291,9 +162,9 @@ function ToggleField({ label, value, onChange, helperText }) {
       </div>
       <button
         onClick={() => onChange(!value)}
-        className={cn('w-12 h-7 rounded-full transition-colors shrink-0 mt-0.5', value ? 'bg-green-500' : 'bg-gray-300')}
+        className={`w-12 h-7 rounded-full transition-colors shrink-0 mt-0.5 ${value ? 'bg-green-500' : 'bg-gray-300'}`}
       >
-        <div className={cn('w-5 h-5 rounded-full bg-white transition-transform', value ? 'translate-x-6' : 'translate-x-1')} />
+        <div className={`w-5 h-5 rounded-full bg-white transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>
     </div>
   );

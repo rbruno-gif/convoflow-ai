@@ -27,9 +27,24 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const url = new URL(req.url);
     
-    // Step 2: Extract brand_id from query params
-    const brandId = url.searchParams.get('brand_id');
+    // Step 2: Extract webhook_token from query params and look up brand_id
+    const webhookToken = url.searchParams.get('token');
+    let brandId = null;
+    
+    if (webhookToken) {
+      try {
+        const webhooks = await base44.asServiceRole.entities.Webhook.filter({ webhook_token: webhookToken });
+        if (webhooks && webhooks.length > 0) {
+          brandId = webhooks[0].brand_id;
+          console.log(`[Webhook] Found brand_id: ${brandId} for token: ${webhookToken}`);
+        }
+      } catch (e) {
+        console.warn(`[Webhook] Could not look up webhook token: ${e.message}`);
+      }
+    }
+    
     if (!brandId) {
+      console.warn('[Webhook] No brand_id found, returning fallback');
       return new Response(
         JSON.stringify({ response: 'Thanks for your message. We will be with you shortly.' }),
         {

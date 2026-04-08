@@ -9,7 +9,7 @@ import {
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
 import BrandSwitcher from '@/components/brands/BrandSwitcher';
-import BrandSelector from '@/components/layout/BrandSelector';
+import BrandSelector from '@/components/layout/BrandSelector.jsx';
 
 const navItems = [
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },

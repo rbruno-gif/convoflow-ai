@@ -1,0 +1,73 @@
+{
+  "name": "AgenticAgent",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Agent display name, e.g. Max \u2013 U2C Mobile Assistant"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "customer_facing",
+        "internal_assistant"
+      ],
+      "default": "customer_facing"
+    },
+    "personality_tone": {
+      "type": "string",
+      "enum": [
+        "professional",
+        "friendly",
+        "formal"
+      ],
+      "default": "professional"
+    },
+    "confidence_threshold": {
+      "type": "number",
+      "default": 70,
+      "description": "Percentage below which agent hands off to human"
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "live",
+        "shadow"
+      ],
+      "default": "shadow",
+      "description": "shadow = proposes actions only; live = executes autonomously"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "enabled_tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of enabled tool keys"
+    },
+    "guardrails": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Hard limits the agent cannot override"
+    },
+    "approval_gates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Action types that require human approval before executing"
+    }
+  },
+  "required": [
+    "brand_id",
+    "name"
+  ]
+}

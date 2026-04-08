@@ -1,0 +1,96 @@
+{
+  "name": "AgenticAction",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "agent_id": {
+      "type": "string",
+      "description": "AgenticAgent ID"
+    },
+    "agent_name": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Groups all actions from one reasoning loop"
+    },
+    "step": {
+      "type": "string",
+      "enum": [
+        "understand",
+        "plan",
+        "execute",
+        "verify",
+        "respond",
+        "log"
+      ],
+      "default": "understand"
+    },
+    "tool_used": {
+      "type": "string"
+    },
+    "input_data": {
+      "type": "string"
+    },
+    "output_result": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "success",
+        "failed",
+        "pending_approval",
+        "approved",
+        "rejected",
+        "skipped"
+      ],
+      "default": "success"
+    },
+    "approval_required": {
+      "type": "boolean",
+      "default": false
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "autonomous": {
+      "type": "boolean",
+      "default": true,
+      "description": "true = AI acted alone; false = human approved"
+    },
+    "intent_classified": {
+      "type": "string"
+    },
+    "confidence_score": {
+      "type": "number"
+    },
+    "shadow_mode": {
+      "type": "boolean",
+      "default": false
+    },
+    "shadow_verdict": {
+      "type": "string",
+      "enum": [
+        "correct",
+        "incorrect",
+        "pending"
+      ],
+      "default": "pending"
+    }
+  },
+  "required": [
+    "brand_id",
+    "agent_id",
+    "step"
+  ]
+}

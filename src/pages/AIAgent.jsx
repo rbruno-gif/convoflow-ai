@@ -2,10 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import { Bot, Send, Zap, BookOpen, Plus, Trash2, Edit2, CheckCircle } from 'lucide-react';
+import { Bot, Send, Zap, BookOpen, Plus, Trash2, Edit2, CheckCircle, Cpu, Shield, Eye, BarChart2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import PersonaTester from '@/components/aiagent/PersonaTester';
 import StyleGuideUploader from '@/components/aiagent/StyleGuideUploader';
+import AgentConfigurator from '@/components/agentic/AgentConfigurator';
+import AgenticDashboard from '@/components/agentic/AgenticDashboard';
+import AgenticAuditLog from '@/components/agentic/AgenticAuditLog';
+import ShadowModeReview from '@/components/agentic/ShadowModeReview';
 
 export default function AIAgent() {
   const [tab, setTab] = useState('overview');
@@ -22,14 +26,23 @@ export default function AIAgent() {
           <h1 className="font-bold text-gray-900">AI Agent</h1>
           <p className="text-xs text-gray-400">{activeBrand?.name || 'All brands'} · Powered by ConvoFlow</p>
         </div>
-        <div className="ml-auto flex gap-1">
-          {['overview', 'knowledge', 'persona test', 'settings'].map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={cn('px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all',
-                tab === t ? 'text-white' : 'text-gray-500 hover:bg-gray-100'
+        <div className="ml-auto flex gap-1 flex-wrap">
+          {[
+            { key: 'overview', label: 'Overview' },
+            { key: 'knowledge', label: 'Knowledge' },
+            { key: 'persona test', label: 'Persona Test' },
+            { key: 'settings', label: 'Settings' },
+            { key: 'agentic-agents', label: '⚡ Agents', highlight: true },
+            { key: 'agentic-dashboard', label: '⚡ Dashboard', highlight: true },
+            { key: 'shadow-review', label: '👁 Shadow Review', highlight: true },
+            { key: 'agentic-audit', label: '🛡 Audit Log', highlight: true },
+          ].map(({ key, label, highlight }) => (
+            <button key={key} onClick={() => setTab(key)}
+              className={cn('px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                tab === key ? 'text-white' : highlight ? 'text-violet-600 bg-violet-50 hover:bg-violet-100' : 'text-gray-500 hover:bg-gray-100'
               )}
-              style={tab === t ? { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' } : {}}
-            >{t}</button>
+              style={tab === key ? { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' } : {}}
+            >{label}</button>
           ))}
         </div>
       </div>
@@ -38,6 +51,10 @@ export default function AIAgent() {
         {tab === 'knowledge' && <KnowledgeSection brandId={activeBrandId} />}
         {tab === 'persona test' && <PersonaTester brandId={activeBrandId} />}
         {tab === 'settings' && <AISettingsSection brandId={activeBrandId} />}
+        {tab === 'agentic-agents' && <AgentConfigurator brandId={activeBrandId} />}
+        {tab === 'agentic-dashboard' && <AgenticDashboard brandId={activeBrandId} />}
+        {tab === 'shadow-review' && <ShadowModeReview brandId={activeBrandId} />}
+        {tab === 'agentic-audit' && <AgenticAuditLog brandId={activeBrandId} />}
       </div>
     </div>
   );

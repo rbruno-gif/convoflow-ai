@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
       conversation_id: conversation.id,
       brand_id: brandId,
       sender_type: 'customer',
-      sender_name: profile_name || 'Facebook User',
+      sender_name: profileName || 'Facebook User',
       content: body,
       timestamp: new Date().toISOString(),
       message_type: 'text',

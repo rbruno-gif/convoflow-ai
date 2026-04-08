@@ -85,16 +85,6 @@ Deno.serve(async (req) => {
 
     const body = messageBody;
 
-    if (!from || !body) {
-      return new Response(JSON.stringify({ response: 'Thanks for your message.' }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      });
-    }
-
     // Step 3: Find or create customer profile
     let customers = await base44.asServiceRole.entities.CustomerProfile.filter({
       brand_id: brandId,

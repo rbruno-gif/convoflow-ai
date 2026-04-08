@@ -25,31 +25,55 @@ Deno.serve(async (req) => {
     }
 
     const base44 = createClientFromRequest(req);
-    const url = new URL(req.url);
     
-    // Step 2: Extract webhook_token from query params and look up brand_id
-    const webhookToken = url.searchParams.get('token');
-    let brandId = url.searchParams.get('brand_id'); // fallback to brand_id param if provided
+    // Step 1: Parse incoming payload from Facebook (or Zapier)
+    const bodyText = await req.text();
+    const payload = JSON.parse(bodyText);
     
-    console.log(`[Webhook] Received with token: ${webhookToken}, brand_id param: ${brandId}`);
+    // Extract Facebook page ID from payload (Facebook sends this)
+    let facebookPageId = null;
+    let from = null;
+    let messageBody = null;
+    let profileName = null;
     
-    if (webhookToken && !brandId) {
+    // Handle Facebook's webhook format (nested under messaging array)
+    if (payload.entry && payload.entry[0]) {
+      facebookPageId = payload.entry[0].id;
+      const messaging = payload.entry[0].messaging[0];
+      if (messaging) {
+        from = messaging.sender.id;
+        messageBody = messaging.message?.text;
+        // Note: Facebook doesn't send profile_name in the webhook, we'll fetch it later if needed
+      }
+    } 
+    // Handle Zapier/custom format
+    else if (payload.from && payload.body) {
+      from = payload.from;
+      messageBody = payload.body;
+      profileName = payload.profile_name;
+    }
+    
+    console.log(`[Webhook] Incoming message - Page: ${facebookPageId}, From: ${from}, Body: ${messageBody}`);
+    
+    // Step 2: Look up brand_id using Facebook page ID
+    let brandId = null;
+    if (facebookPageId) {
       try {
-        const webhooks = await base44.asServiceRole.entities.Webhook.filter({ webhook_token: webhookToken });
-        console.log(`[Webhook] Webhook lookup returned ${webhooks?.length || 0} results`);
+        const webhooks = await base44.asServiceRole.entities.MessengerWebhook.filter({ 
+          facebook_page_id: facebookPageId 
+        });
+        console.log(`[Webhook] MessengerWebhook lookup returned ${webhooks?.length || 0} results`);
         if (webhooks && webhooks.length > 0) {
           brandId = webhooks[0].brand_id;
-          console.log(`[Webhook] Found brand_id: ${brandId} for token: ${webhookToken}`);
-        } else {
-          console.warn(`[Webhook] No webhook found with token: ${webhookToken}`);
+          console.log(`[Webhook] Found brand_id: ${brandId} for page: ${facebookPageId}`);
         }
       } catch (e) {
-        console.error(`[Webhook] Error looking up webhook: ${e.message}`);
+        console.error(`[Webhook] Error looking up MessengerWebhook: ${e.message}`);
       }
     }
     
     if (!brandId) {
-      console.warn('[Webhook] No brand_id found, returning fallback');
+      console.warn(`[Webhook] No brand_id found for page ${facebookPageId}, returning fallback`);
       return new Response(
         JSON.stringify({ response: 'Thanks for your message. We will be with you shortly.' }),
         {
@@ -62,10 +86,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Step 4: Parse incoming payload from Zapier
-    const bodyText = await req.text();
-    const payload = JSON.parse(bodyText);
-    const { from, body, profile_name } = payload;
+    const { from: _, body, profile_name } = { from, body: messageBody, profile_name: profileName };
 
     if (!from || !body) {
       return new Response(JSON.stringify({ response: 'Thanks for your message.' }), {

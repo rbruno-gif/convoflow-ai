@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileText } from 'lucide-react';
+import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileText, Facebook } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -136,6 +136,8 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     onUpdate?.();
   };
 
+  const isFacebookConversation = !!conversation.customer_fb_id;
+
   const ActionBtn = ({ id, icon: Icon, label, onClick, color = 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' }) => {
     const state = actionState[id];
     return (
@@ -185,9 +187,15 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         <div ref={bottomRef} />
       </div>
 
-      {/* AI Suggested quick reply hint */}
+      {/* Channel indicator or quick reply hint */}
       <div className="px-4 pt-2 bg-white border-t border-gray-100">
-        <p className="text-[10px] text-gray-400 mb-1">Type <span className="font-mono bg-gray-100 px-1 rounded">/</span> for quick replies · <span className="text-violet-500">Enter</span> to send</p>
+        {isFacebookConversation ? (
+          <p className="text-[10px] text-blue-600 font-medium flex items-center gap-1.5 mb-1">
+            <Facebook className="w-3.5 h-3.5" /> Replying via Facebook Messenger
+          </p>
+        ) : (
+          <p className="text-[10px] text-gray-400 mb-1">Type <span className="font-mono bg-gray-100 px-1 rounded">/</span> for quick replies · <span className="text-violet-500">Enter</span> to send</p>
+        )}
       </div>
 
       {/* Input */}
@@ -212,9 +220,10 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
             onClick={sendMessage}
             disabled={sending || !reply.trim()}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white transition-colors disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+            style={isFacebookConversation ? { background: '#1877F2' } : { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
           >
-            <Send className="w-3.5 h-3.5" /> Send
+            {isFacebookConversation ? <Facebook className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+            Send
           </button>
         </div>
       </div>

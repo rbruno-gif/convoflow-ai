@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import { MessageSquare, Filter, Search, Bot, User, AlertTriangle, CheckCircle } from 'lucide-react';
+import { MessageSquare, Filter, Search, Bot, User, AlertTriangle, CheckCircle, Facebook } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { BrandAvatar } from '@/components/brands/BrandSwitcher';
@@ -136,6 +136,7 @@ function ConvoRow({ convo, selected, onSelect, brands, showBrand }) {
               {brand.name}
             </span>
           )}
+          {convo.customer_fb_id && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-0.5"><Facebook className="w-2.5 h-2.5" /> Facebook</span>}
           {convo.mode === 'ai' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 flex items-center gap-0.5"><Bot className="w-2.5 h-2.5" /> AI</span>}
           {convo.mode === 'human' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-0.5"><User className="w-2.5 h-2.5" /> Agent</span>}
           {isUrgent && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 flex items-center gap-0.5"><AlertTriangle className="w-2.5 h-2.5" /> Urgent</span>}

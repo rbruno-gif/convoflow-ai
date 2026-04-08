@@ -35,7 +35,7 @@ export default function BrandSwitcher() {
     };
   }, [open]);
 
-  if (!activeBrand && !isInitialized) return null;
+  if (!activeBrand) return null;
 
   return (
     <div ref={ref} className="relative px-3 pb-3">
@@ -46,9 +46,9 @@ export default function BrandSwitcher() {
       >
         <BrandAvatar brand={activeBrand} size={28} />
         <div className="flex-1 min-w-0 text-left">
-          <p className="text-xs font-semibold text-white truncate">{activeBrand.name}</p>
+          <p className="text-xs font-semibold text-white truncate">{activeBrand?.name || 'Loading...'}</p>
           <p className="text-[10px] text-gray-400 truncate">
-            {activeBrand.slug === 'u2c-group' ? '⚡ Super Admin' : activeBrand.slug}
+            {activeBrand?.slug === 'u2c-group' ? '⚡ Super Admin' : activeBrand?.slug}
           </p>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">

@@ -73,13 +73,13 @@ Deno.serve(async (req) => {
       const persona = settings?.ai_persona_name || 'AI Assistant';
 
       const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-      const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
+      const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n').slice(0, 500);
 
       // Fetch recent conversation history
       const recentMessages = await base44.asServiceRole.entities.Message.filter(
         { conversation_id: conversation.id },
         'timestamp',
-        10
+        3
       );
       const history = recentMessages
         .map(m => `${m.sender_type === 'customer' ? 'Customer' : persona}: ${m.content}`)

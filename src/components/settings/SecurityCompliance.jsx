@@ -44,11 +44,10 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
     <div className="p-8 max-w-4xl">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Security & Compliance</h2>
-        <p className="text-sm text-gray-500 mt-1">Configure authentication, data protection, and compliance settings</p>
+        <p className="text-sm text-gray-500 mt-1">Configure authentication and data protection settings</p>
       </div>
 
       <div className="space-y-8">
-        {/* Authentication */}
         <Section title="Authentication">
           <SelectField
             label="Two-Factor Authentication"
@@ -57,7 +56,6 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
               { value: 'disabled', label: 'Disabled' },
               { value: 'optional', label: 'Optional' },
               { value: 'required', label: 'Required for All' },
-              { value: 'roles_only', label: 'Required for Specific Roles' },
             ]}
             onChange={(value) => setForm(f => ({ ...f, two_factor_authentication: value }))}
           />
@@ -67,28 +65,8 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
             value={form.session_timeout_minutes || 60}
             onChange={(value) => setForm(f => ({ ...f, session_timeout_minutes: Number(value) }))}
           />
-          <ToggleField
-            label="Enable Single Sign-On (SSO)"
-            value={form.sso_enabled || false}
-            onChange={(value) => setForm(f => ({ ...f, sso_enabled: value }))}
-            helperText="Configure SAML or OAuth provider"
-          />
-          {form.sso_enabled && (
-            <SelectField
-              label="SSO Provider"
-              value={form.sso_provider || ''}
-              options={[
-                { value: 'saml', label: 'SAML' },
-                { value: 'oauth_google', label: 'Google Workspace' },
-                { value: 'oauth_microsoft', label: 'Microsoft Entra' },
-                { value: 'oauth_okta', label: 'Okta' },
-              ]}
-              onChange={(value) => setForm(f => ({ ...f, sso_provider: value }))}
-            />
-          )}
         </Section>
 
-        {/* Password Policy */}
         <Section title="Password Policy">
           <InputField
             label="Minimum Length"
@@ -106,26 +84,8 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
             value={form.password_require_numbers || true}
             onChange={(value) => setForm(f => ({ ...f, password_require_numbers: value }))}
           />
-          <ToggleField
-            label="Require Special Characters"
-            value={form.password_require_special_chars || false}
-            onChange={(value) => setForm(f => ({ ...f, password_require_special_chars: value }))}
-          />
-          <InputField
-            label="Password Expiry (days, blank = no expiry)"
-            type="number"
-            value={form.password_expiry_days || ''}
-            onChange={(value) => setForm(f => ({ ...f, password_expiry_days: value ? Number(value) : null }))}
-          />
-          <InputField
-            label="Prevent Reuse of Last N Passwords"
-            type="number"
-            value={form.password_prevent_reuse || 3}
-            onChange={(value) => setForm(f => ({ ...f, password_prevent_reuse: Number(value) }))}
-          />
         </Section>
 
-        {/* Login Attempt Limits */}
         <Section title="Login Security">
           <InputField
             label="Failed Login Attempts Before Lockout"
@@ -141,35 +101,7 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
           />
         </Section>
 
-        {/* IP Restrictions */}
-        <Section title="IP Restrictions">
-          <div>
-            <label className="text-xs font-semibold text-gray-600 mb-2 block">Allowed IP Ranges (CIDR notation)</label>
-            <textarea
-              value={(form.allowed_ip_ranges || []).join('\n')}
-              onChange={e => setForm(f => ({ ...f, allowed_ip_ranges: e.target.value.split('\n').filter(Boolean) }))}
-              placeholder="192.168.1.0/24&#10;10.0.0.0/8"
-              rows={3}
-              className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none font-mono"
-            />
-            <p className="text-xs text-gray-400 mt-1">Leave empty to allow all IPs</p>
-          </div>
-        </Section>
-
-        {/* Data & Compliance */}
-        <Section title="Data Retention & Compliance">
-          <InputField
-            label="Auto-delete Conversations After (days, blank = keep forever)"
-            type="number"
-            value={form.data_retention_days || ''}
-            onChange={(value) => setForm(f => ({ ...f, data_retention_days: value ? Number(value) : null }))}
-          />
-          <InputField
-            label="Auto-anonymize PII After (days)"
-            type="number"
-            value={form.data_anonymize_after_days || ''}
-            onChange={(value) => setForm(f => ({ ...f, data_anonymize_after_days: value ? Number(value) : null }))}
-          />
+        <Section title="Data Protection">
           <SelectField
             label="Data Residency"
             value={form.data_residency || 'us'}
@@ -180,37 +112,23 @@ export default function SecurityCompliance({ brandId, onChangesDetected }) {
             ]}
             onChange={(value) => setForm(f => ({ ...f, data_residency: value }))}
           />
-        </Section>
-
-        {/* Redaction & Privacy */}
-        <Section title="Data Protection">
           <ToggleField
-            label="Conversation Redaction"
+            label="Conversation Redaction (PII Protection)"
             value={form.conversation_redaction_enabled || true}
             onChange={(value) => setForm(f => ({ ...f, conversation_redaction_enabled: value }))}
-            helperText="Automatically redact credit cards, SSNs, and other PII patterns"
-          />
-          <ToggleField
-            label="HIPAA Mode (Enterprise)"
-            value={form.hipaa_mode_enabled || false}
-            onChange={(value) => setForm(f => ({ ...f, hipaa_mode_enabled: value }))}
-            helperText="Enhanced encryption and access controls for healthcare compliance"
+            helperText="Automatically redact credit cards, SSNs, and sensitive data"
           />
         </Section>
 
-        {/* Compliance Notice */}
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 flex gap-4">
           <AlertTriangle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-blue-900 mb-1">Compliance Features</p>
-            <p className="text-xs text-blue-700">
-              All changes are logged in the compliance audit trail. Enable data export and right-to-erasure tools for GDPR compliance.
-            </p>
+            <p className="text-sm font-semibold text-blue-900 mb-1">Compliance</p>
+            <p className="text-xs text-blue-700">All changes are logged in audit logs for compliance tracking.</p>
           </div>
         </div>
       </div>
 
-      {/* Save Button */}
       <div className="mt-12 flex justify-end gap-3">
         <button
           onClick={save}

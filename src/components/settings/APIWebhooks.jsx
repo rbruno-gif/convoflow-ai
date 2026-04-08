@@ -3,10 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, Edit2, Copy, CheckCircle, Eye, EyeOff, Key, GitBranch } from 'lucide-react';
 
-const WEBHOOK_EVENTS = [
-  'conversation_created', 'ticket_created', 'ticket_updated', 'ticket_resolved',
-  'agent_assigned', 'sla_breached', 'call_ended', 'message_received', 'csat_submitted'
-];
+const WEBHOOK_EVENTS = ['conversation_created', 'ticket_created', 'ticket_updated', 'ticket_resolved', 'agent_assigned', 'sla_breached', 'call_ended', 'message_received', 'csat_submitted'];
 
 export default function APIWebhooks({ brandId, onChangesDetected }) {
   const qc = useQueryClient();
@@ -20,16 +17,12 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
 
   const { data: apiKeys = [] } = useQuery({
     queryKey: ['api-keys', brandId],
-    queryFn: () => brandId
-      ? base44.entities.APIKey.filter({ brand_id: brandId })
-      : base44.entities.APIKey.list(),
+    queryFn: () => brandId ? base44.entities.APIKey.filter({ brand_id: brandId }) : base44.entities.APIKey.list(),
   });
 
   const { data: webhooks = [] } = useQuery({
     queryKey: ['webhooks', brandId],
-    queryFn: () => brandId
-      ? base44.entities.Webhook.filter({ brand_id: brandId })
-      : base44.entities.Webhook.list(),
+    queryFn: () => brandId ? base44.entities.Webhook.filter({ brand_id: brandId }) : base44.entities.Webhook.list(),
   });
 
   const handleSaveAPIKey = async (keyData) => {
@@ -60,10 +53,9 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
     <div className="p-8 max-w-5xl">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900">API & Webhooks</h2>
-        <p className="text-sm text-gray-500 mt-1">Manage API keys, webhooks, and third-party integrations</p>
+        <p className="text-sm text-gray-500 mt-1">Manage API keys and webhook integrations</p>
       </div>
 
-      {/* Tab Navigation */}
       <div className="flex gap-4 mb-8 border-b border-gray-200">
         <button
           onClick={() => setTab('api-keys')}
@@ -83,7 +75,6 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
         </button>
       </div>
 
-      {/* API Keys Section */}
       {tab === 'api-keys' && (
         <div className="space-y-4">
           <div className="flex justify-end mb-4">
@@ -99,7 +90,7 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
           {apiKeys.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <Key className="w-8 h-8 mx-auto mb-2 opacity-20" />
-              <p>No API keys yet. Generate your first one.</p>
+              <p>No API keys yet.</p>
             </div>
           ) : (
             apiKeys.map(key => (
@@ -132,7 +123,6 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
         </div>
       )}
 
-      {/* Webhooks Section */}
       {tab === 'webhooks' && (
         <div className="space-y-4">
           <div className="flex justify-end mb-4">
@@ -148,7 +138,7 @@ export default function APIWebhooks({ brandId, onChangesDetected }) {
           {webhooks.length === 0 ? (
             <div className="text-center py-12 text-gray-400">
               <GitBranch className="w-8 h-8 mx-auto mb-2 opacity-20" />
-              <p>No webhooks configured. Add one to receive event notifications.</p>
+              <p>No webhooks configured.</p>
             </div>
           ) : (
             webhooks.map(webhook => (
@@ -202,9 +192,6 @@ function APIKeyRow({ apiKey, onEdit, onDelete, copied, onCopy }) {
             <Copy className={`w-3 h-3 ${copied === apiKey.id ? 'text-green-500' : 'text-gray-400'}`} />
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Scope: <span className="font-semibold capitalize">{apiKey.scope}</span> • Created: {new Date(apiKey.created_date).toLocaleDateString()}
-        </p>
       </div>
       <div className="flex gap-2">
         <button onClick={onEdit} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -220,8 +207,7 @@ function APIKeyRow({ apiKey, onEdit, onDelete, copied, onCopy }) {
 
 function APIKeyFormModal({ apiKey, onSave, onClose, saved }) {
   const [form, setForm] = useState(
-    apiKey ? { name: apiKey.name, scope: apiKey.scope, rate_limit_per_minute: apiKey.rate_limit_per_minute }
-      : { name: '', scope: 'read_only', rate_limit_per_minute: 60 }
+    apiKey ? { name: apiKey.name, scope: apiKey.scope } : { name: '', scope: 'read_only' }
   );
 
   return (
@@ -237,7 +223,7 @@ function APIKeyFormModal({ apiKey, onSave, onClose, saved }) {
             <input
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              placeholder="e.g. Mobile App Integration"
+              placeholder="e.g. Mobile App"
               className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
             />
           </div>
@@ -253,16 +239,6 @@ function APIKeyFormModal({ apiKey, onSave, onClose, saved }) {
               <option value="read_write">Read & Write</option>
               <option value="admin">Admin</option>
             </select>
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-gray-600 mb-2 block">Rate Limit (calls/minute)</label>
-            <input
-              type="number"
-              value={form.rate_limit_per_minute}
-              onChange={e => setForm(f => ({ ...f, rate_limit_per_minute: Number(e.target.value) }))}
-              className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
-            />
           </div>
         </div>
 
@@ -323,9 +299,7 @@ function WebhookFormModal({ webhook, onSave, onClose, saved }) {
   const handleEventToggle = (event) => {
     setForm(f => ({
       ...f,
-      events: f.events.includes(event)
-        ? f.events.filter(e => e !== event)
-        : [...f.events, event]
+      events: f.events.includes(event) ? f.events.filter(e => e !== event) : [...f.events, event]
     }));
   };
 
@@ -342,7 +316,7 @@ function WebhookFormModal({ webhook, onSave, onClose, saved }) {
             <input
               value={form.name}
               onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              placeholder="e.g. Ticket Sync Service"
+              placeholder="e.g. Ticket Sync"
               className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
             />
           </div>
@@ -352,18 +326,7 @@ function WebhookFormModal({ webhook, onSave, onClose, saved }) {
             <input
               value={form.url}
               onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
-              placeholder="https://your-api.com/webhooks/tickets"
-              className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-gray-600 mb-2 block">Secret (for HMAC signature verification)</label>
-            <input
-              value={form.secret}
-              onChange={e => setForm(f => ({ ...f, secret: e.target.value }))}
-              placeholder="Generate a random secret string"
-              type="password"
+              placeholder="https://your-api.com/webhooks"
               className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
             />
           </div>
@@ -379,7 +342,7 @@ function WebhookFormModal({ webhook, onSave, onClose, saved }) {
                     onChange={() => handleEventToggle(event)}
                     className="w-4 h-4 accent-violet-600"
                   />
-                  <span className="text-xs text-gray-600 capitalize">{event.replace(/_/g, ' ')}</span>
+                  <span className="text-xs text-gray-600">{event.replace(/_/g, ' ')}</span>
                 </label>
               ))}
             </div>

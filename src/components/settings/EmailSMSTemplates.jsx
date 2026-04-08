@@ -3,21 +3,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Plus, Trash2, Edit2, CheckCircle, Mail, MessageSquare } from 'lucide-react';
 
-const EMAIL_CATEGORIES = [
-  'ticket_created', 'ticket_updated', 'ticket_resolved', 'csat_survey',
-  'welcome', 'business_hours_auto_reply', 'callback_confirmation', 'campaign',
-  'agent_assignment', 'escalation'
-];
-
-const SMS_CATEGORIES = [
-  'ticket_created', 'agent_reply', 'callback_reminder', 'appointment_confirmation',
-  'campaign', 'out_of_hours'
-];
-
-const MERGE_FIELDS = [
-  '{customer_name}', '{ticket_id}', '{brand_name}', '{agent_name}',
-  '{business_hours}', '{callback_time}', '{ticket_url}'
-];
+const EMAIL_CATEGORIES = ['ticket_created', 'ticket_updated', 'ticket_resolved', 'csat_survey', 'welcome', 'business_hours_auto_reply', 'callback_confirmation'];
+const SMS_CATEGORIES = ['ticket_created', 'agent_reply', 'callback_reminder', 'appointment_confirmation'];
+const MERGE_FIELDS = ['{customer_name}', '{ticket_id}', '{brand_name}', '{agent_name}', '{business_hours}', '{callback_time}'];
 
 export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
   const qc = useQueryClient();
@@ -28,16 +16,12 @@ export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
 
   const { data: emailTemplates = [] } = useQuery({
     queryKey: ['email-templates', brandId],
-    queryFn: () => brandId
-      ? base44.entities.EmailTemplate.filter({ brand_id: brandId })
-      : base44.entities.EmailTemplate.list(),
+    queryFn: () => brandId ? base44.entities.EmailTemplate.filter({ brand_id: brandId }) : base44.entities.EmailTemplate.list(),
   });
 
   const { data: smsTemplates = [] } = useQuery({
     queryKey: ['sms-templates', brandId],
-    queryFn: () => brandId
-      ? base44.entities.SMSTemplate.filter({ brand_id: brandId })
-      : base44.entities.SMSTemplate.list(),
+    queryFn: () => brandId ? base44.entities.SMSTemplate.filter({ brand_id: brandId }) : base44.entities.SMSTemplate.list(),
   });
 
   const templates = tab === 'email' ? emailTemplates : smsTemplates;
@@ -79,7 +63,6 @@ export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
         </button>
       </div>
 
-      {/* Tab Navigation */}
       <div className="flex gap-4 mb-8 border-b border-gray-200">
         <button
           onClick={() => setTab('email')}
@@ -99,7 +82,6 @@ export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
         </button>
       </div>
 
-      {/* Templates Grid */}
       <div className="space-y-3">
         {templates.length === 0 ? (
           <div className="text-center py-12 text-gray-400">
@@ -117,7 +99,6 @@ export default function EmailSMSTemplates({ brandId, onChangesDetected }) {
         )}
       </div>
 
-      {/* Template Form Modal */}
       {showForm && (
         <TemplateFormModal
           template={editingTemplate}
@@ -157,14 +138,6 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
     template ? { ...template } : { name: '', category: categories[0], subject: '', body: '' }
   );
 
-  const insertMergeField = (field) => {
-    const textarea = document.querySelector('textarea[name="body"]');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const newBody = form.body.substring(0, start) + field + form.body.substring(end);
-    setForm(f => ({ ...f, body: newBody }));
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -173,14 +146,13 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Name and Category */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-2 block">Template Name</label>
               <input
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Ticket Created Notification"
+                placeholder="e.g. Ticket Created"
                 className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
               />
             </div>
@@ -198,20 +170,18 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
             </div>
           </div>
 
-          {/* Subject (Email only) */}
           {templateType === 'email' && (
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-2 block">Subject Line</label>
               <input
                 value={form.subject || ''}
                 onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                placeholder="Ticket #{ticket_id} Created"
+                placeholder="Ticket #{ticket_id}"
                 className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
               />
             </div>
           )}
 
-          {/* Body with Merge Fields */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-semibold text-gray-600">Message Body</label>
@@ -219,7 +189,13 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
                 {MERGE_FIELDS.map(field => (
                   <button
                     key={field}
-                    onClick={() => insertMergeField(field)}
+                    onClick={() => {
+                      const textarea = document.querySelector('textarea[name="body"]');
+                      const start = textarea.selectionStart;
+                      const end = textarea.selectionEnd;
+                      const newBody = form.body.substring(0, start) + field + form.body.substring(end);
+                      setForm(f => ({ ...f, body: newBody }));
+                    }}
                     className="text-[10px] px-2 py-1 rounded-lg bg-violet-50 text-violet-700 hover:bg-violet-100 font-medium"
                   >
                     {field}
@@ -235,16 +211,7 @@ function TemplateFormModal({ template, templateType, onSave, onClose, categories
               rows={8}
               className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400 resize-none font-mono"
             />
-            <p className="text-xs text-gray-400 mt-2">Character count: {form.body.length}</p>
           </div>
-
-          {/* Preview */}
-          {form.body && (
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-gray-600 mb-2">Preview</p>
-              <div className="text-sm text-gray-700 whitespace-pre-wrap break-words">{form.body}</div>
-            </div>
-          )}
         </div>
 
         <div className="p-8 border-t border-gray-100 flex gap-3 justify-end">

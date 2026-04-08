@@ -284,14 +284,14 @@ function FileUploadField({ label, value, onUpload, previewUrl }) {
 
 function ToggleField({ label, value, onChange, helperText }) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-start justify-between gap-4">
       <div>
         <p className="text-sm font-semibold text-gray-900">{label}</p>
         {helperText && <p className="text-xs text-gray-500 mt-1">{helperText}</p>}
       </div>
       <button
         onClick={() => onChange(!value)}
-        className={cn('w-12 h-7 rounded-full transition-colors', value ? 'bg-green-500' : 'bg-gray-300')}
+        className={cn('w-12 h-7 rounded-full transition-colors shrink-0 mt-0.5', value ? 'bg-green-500' : 'bg-gray-300')}
       >
         <div className={cn('w-5 h-5 rounded-full bg-white transition-transform', value ? 'translate-x-6' : 'translate-x-1')} />
       </button>

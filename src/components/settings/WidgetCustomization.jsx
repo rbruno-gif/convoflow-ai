@@ -58,9 +58,7 @@ export default function WidgetCustomization({ brandId, onChangesDetected }) {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Settings Form */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Launcher */}
           <SettingsSection title="Widget Launcher">
             <SelectField
               label="Style"
@@ -88,7 +86,6 @@ export default function WidgetCustomization({ brandId, onChangesDetected }) {
             />
           </SettingsSection>
 
-          {/* Colors */}
           <SettingsSection title="Colors & Appearance">
             <ColorField
               label="Primary Color"
@@ -117,7 +114,6 @@ export default function WidgetCustomization({ brandId, onChangesDetected }) {
             />
           </SettingsSection>
 
-          {/* Branding */}
           <SettingsSection title="Chatbot Branding">
             <InputField
               label="Chatbot Name"
@@ -136,44 +132,6 @@ export default function WidgetCustomization({ brandId, onChangesDetected }) {
             />
           </SettingsSection>
 
-          {/* Triggers */}
-          <SettingsSection title="Widget Triggers">
-            <InputField
-              label="Show After (seconds)"
-              type="number"
-              value={form.widget_trigger_delay_seconds || 0}
-              onChange={(value) => setForm(f => ({ ...f, widget_trigger_delay_seconds: Number(value) }))}
-            />
-            <ToggleField
-              label="Show on Exit Intent"
-              value={form.widget_trigger_exit_intent || false}
-              onChange={(value) => setForm(f => ({ ...f, widget_trigger_exit_intent: value }))}
-            />
-            <InputField
-              label="Show After Scroll (%)"
-              type="number"
-              value={form.widget_trigger_scroll_percentage || ''}
-              onChange={(value) => setForm(f => ({ ...f, widget_trigger_scroll_percentage: value ? Number(value) : null }))}
-            />
-          </SettingsSection>
-
-          {/* Proactive Message */}
-          <SettingsSection title="Proactive Message">
-            <InputField
-              label="Message Text"
-              value={form.widget_proactive_message || ''}
-              onChange={(value) => setForm(f => ({ ...f, widget_proactive_message: value }))}
-              placeholder="Hi! Need help today?"
-            />
-            <InputField
-              label="Delay (seconds)"
-              type="number"
-              value={form.widget_proactive_delay || 5}
-              onChange={(value) => setForm(f => ({ ...f, widget_proactive_delay: Number(value) }))}
-            />
-          </SettingsSection>
-
-          {/* Advanced */}
           <SettingsSection title="Advanced Settings">
             <ToggleField
               label="Full Screen on Mobile"
@@ -185,30 +143,20 @@ export default function WidgetCustomization({ brandId, onChangesDetected }) {
               value={form.widget_sound_enabled || true}
               onChange={(value) => setForm(f => ({ ...f, widget_sound_enabled: value }))}
             />
-            <ToggleField
-              label="GDPR Consent Checkbox"
-              value={form.widget_gdpr_consent_enabled || false}
-              onChange={(value) => setForm(f => ({ ...f, widget_gdpr_consent_enabled: value }))}
-            />
           </SettingsSection>
         </div>
 
-        {/* Live Preview */}
         {previewMode && (
           <div className="lg:col-span-1 sticky top-8">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
               <div className="bg-gray-100 p-8 min-h-96 flex items-center justify-center">
                 <WidgetPreview settings={form} />
               </div>
-              <div className="p-4 border-t border-gray-100 text-center text-xs text-gray-500">
-                Live Preview
-              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Save Button */}
       <div className="mt-12 flex justify-end gap-3">
         <button
           onClick={save}
@@ -231,7 +179,7 @@ function SettingsSection({ title, children }) {
   );
 }
 
-function InputField({ label, value, onChange, type = 'text', placeholder }) {
+function InputField({ label, value, onChange, type = 'text' }) {
   return (
     <div>
       <label className="text-xs font-semibold text-gray-600 mb-2 block">{label}</label>
@@ -239,7 +187,6 @@ function InputField({ label, value, onChange, type = 'text', placeholder }) {
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
         className="w-full text-sm rounded-lg border border-gray-200 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400"
       />
     </div>

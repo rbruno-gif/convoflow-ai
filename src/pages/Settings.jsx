@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useBrand } from '@/context/BrandContext';
 import { Settings as SettingsIcon, ShieldCheck, Palette, Zap, Mail, Key } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import RoleManagement from '@/components/settings/RoleManagement.jsx';
-import BrandingSettings from '@/components/settings/BrandingSettings.jsx';
-import WidgetCustomization from '@/components/settings/WidgetCustomization.jsx';
-import EmailSMSTemplates from '@/components/settings/EmailSMSTemplates.jsx';
-import SecurityCompliance from '@/components/settings/SecurityCompliance.jsx';
-import APIWebhooks from '@/components/settings/APIWebhooks.jsx';
+import RoleManagement from '@/components/settings/RoleManagement';
+import BrandingSettings from '@/components/settings/BrandingSettings';
+import WidgetCustomization from '@/components/settings/WidgetCustomization';
+import EmailSMSTemplates from '@/components/settings/EmailSMSTemplates';
+import SecurityCompliance from '@/components/settings/SecurityCompliance';
+import APIWebhooks from '@/components/settings/APIWebhooks';
 
 const TABS = [
   { key: 'roles', label: 'Roles & Permissions', icon: ShieldCheck, color: '#6366f1' },

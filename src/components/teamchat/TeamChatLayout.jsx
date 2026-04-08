@@ -28,10 +28,11 @@ export default function TeamChatLayout() {
   const { data: messages = [] } = useQuery({
     queryKey: ['channel-messages', selectedChannelId],
     queryFn: () => selectedChannelId
-      ? base44.entities.ChannelMessage.filter({ channel_id: selectedChannelId }, 'created_date', 200)
+      ? base44.entities.ChannelMessage.filter({ channel_id: selectedChannelId }, '-created_date', 200)
       : [],
     enabled: !!selectedChannelId,
-    refetchInterval: 3000,
+    staleTime: 2000,
+    refetchInterval: 5000,
   });
 
   const { data: user } = useQuery({
@@ -46,17 +47,22 @@ export default function TeamChatLayout() {
   const handleSendMessage = async () => {
     if (!messageInput.trim() || !selectedChannelId) return;
 
-    await base44.entities.ChannelMessage.create({
-      brand_id: activeBrandId,
-      channel_id: selectedChannelId,
-      sender_id: user.email,
-      sender_name: user.full_name,
-      content: messageInput,
-      is_system: false,
-    });
+    try {
+      await base44.entities.ChannelMessage.create({
+        brand_id: activeBrandId,
+        channel_id: selectedChannelId,
+        sender_id: user.email,
+        sender_name: user.full_name,
+        content: messageInput,
+        is_system: false,
+      });
 
-    setMessageInput('');
-    qc.invalidateQueries({ queryKey: ['channel-messages', selectedChannelId] });
+      setMessageInput('');
+      qc.invalidateQueries({ queryKey: ['channel-messages', selectedChannelId] });
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // TODO: Add toast notification for error feedback
+    }
   };
 
   return (
@@ -81,8 +87,8 @@ export default function TeamChatLayout() {
             <div className="flex items-center gap-3">
               <Hash className="w-5 h-5 text-gray-400" />
               <div>
-                <h2 className="font-bold text-gray-900">{selectedChannel.name}</h2>
-                {selectedChannel.description && (
+                <h2 className="font-bold text-gray-900">{selectedChannel?.name || 'Select a channel'}</h2>
+                {selectedChannel?.description && (
                   <p className="text-xs text-gray-500 mt-0.5">{selectedChannel.description}</p>
                 )}
               </div>

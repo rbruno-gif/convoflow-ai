@@ -1,9 +1,11 @@
 /// <reference lib="deno.window" />
+/* eslint-disable no-undef */
 import Anthropic from 'npm:@anthropic-ai/sdk@0.24.3';
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
+const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 const client = new Anthropic({
-  apiKey: Deno.env.get('ANTHROPIC_API_KEY'),
+  apiKey: anthropicApiKey,
 });
 
 Deno.serve(async (req) => {

@@ -7,7 +7,7 @@ export default function ChannelThread({ messages, user, channel }) {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages.length]);
 
   if (messages.length === 0) {
     return (

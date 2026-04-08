@@ -1,24 +1,47 @@
 import { useState } from 'react';
 import { base44 } from '@/api/base44Client';
-import { X } from 'lucide-react';
+import { X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useQuery } from '@tanstack/react-query';
+import { validateChannelName, normalizeChannelName, channelNameExists } from '@/utils/channelValidator';
 
 export default function CreateChannelPanel({ brandId, onClose, onSuccess }) {
   const [name, setName] = useState('');
   const [type, setType] = useState('public');
   const [description, setDescription] = useState('');
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
+
+  const { data: existingChannels = [] } = useQuery({
+    queryKey: ['channels', brandId],
+    queryFn: () => base44.entities.Channel.filter({ brand_id: brandId }, 'name', 100),
+  });
 
   const handleCreate = async () => {
-    if (!name.trim()) return;
+    setError('');
+    
+    // Validate channel name
+    const validationError = validateChannelName(name);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    const normalizedName = normalizeChannelName(name);
+    
+    // Check for duplicate
+    if (channelNameExists(existingChannels, name)) {
+      setError('Channel name already exists');
+      return;
+    }
 
     setCreating(true);
     try {
       const user = await base44.auth.me();
       const channel = await base44.entities.Channel.create({
         brand_id: brandId,
-        name: name.toLowerCase().replace(/\s+/g, '-'),
+        name: normalizedName,
         type,
         description,
         created_by: user.email,
@@ -37,6 +60,7 @@ export default function CreateChannelPanel({ brandId, onClose, onSuccess }) {
       onSuccess();
     } catch (error) {
       console.error('Create channel error:', error);
+      setError(error.message || 'Failed to create channel');
     } finally {
       setCreating(false);
     }
@@ -52,6 +76,13 @@ export default function CreateChannelPanel({ brandId, onClose, onSuccess }) {
           </button>
         </div>
 
+        {error && (
+          <div className="flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
         <div>
           <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Channel Name</label>
           <div className="flex items-center gap-2">
@@ -59,7 +90,7 @@ export default function CreateChannelPanel({ brandId, onClose, onSuccess }) {
             <Input
               placeholder="general"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); setError(''); }}
               className="flex-1"
             />
           </div>

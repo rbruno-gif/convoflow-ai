@@ -20,16 +20,19 @@ export default function Inbox() {
     queryFn: () => activeBrandId
       ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_at', 100)
       : [],
-    refetchInterval: 3000, // Refresh every 3 seconds for real-time updates
+    enabled: !!activeBrandId,
+    staleTime: 2000,
+    refetchInterval: 5000,
   });
 
   // Fetch messages for selected conversation
   const { data: messages = [] } = useQuery({
     queryKey: ['messages', selectedConversationId],
     queryFn: () => selectedConversationId
-      ? base44.entities.Message.filter({ conversation_id: selectedConversationId }, 'created_date', 200)
+      ? base44.entities.Message.filter({ conversation_id: selectedConversationId }, '-created_date', 200)
       : [],
-    refetchInterval: 2000,
+    staleTime: 2000,
+    refetchInterval: 5000,
   });
 
   // Fetch notifications
@@ -38,7 +41,9 @@ export default function Inbox() {
     queryFn: () => activeBrandId
       ? base44.entities.Notification.filter({ brand_id: activeBrandId, is_read: false }, '-created_date', 50)
       : [],
-    refetchInterval: 2000,
+    enabled: !!activeBrandId,
+    staleTime: 3000,
+    refetchInterval: 10000,
   });
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);

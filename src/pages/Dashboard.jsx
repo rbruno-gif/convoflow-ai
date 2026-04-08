@@ -46,9 +46,19 @@ export default function Dashboard() {
 
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = subDays(new Date(), 6 - i);
-    const dayStr = format(d, 'MMM d');
-    const convCount = conversations.filter(c => c.created_date && format(new Date(c.created_date), 'MMM d') === dayStr).length;
-    const callCount = voiceCalls.filter(c => c.created_date && format(new Date(c.created_date), 'MMM d') === dayStr).length;
+    const startOfDay = d.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(startOfDay).setHours(23, 59, 59, 999);
+    
+    const convCount = conversations.filter(c => {
+      const cDate = new Date(c.created_date).getTime();
+      return cDate >= startOfDay && cDate <= endOfDay;
+    }).length;
+    
+    const callCount = voiceCalls.filter(c => {
+      const cDate = new Date(c.created_date).getTime();
+      return cDate >= startOfDay && cDate <= endOfDay;
+    }).length;
+    
     return { day: format(d, 'EEE'), chats: convCount, calls: callCount };
   });
 

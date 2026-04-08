@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import React from 'react';
 import {
   LayoutDashboard, MessageSquare, BarChart3, Bot, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
@@ -46,6 +47,11 @@ const navItems = [
 export default function Layout() {
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [user, setUser] = useState(null);
+
+  React.useEffect(() => {
+    base44.auth.me().then(setUser).catch(() => {});
+  }, []);
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -77,10 +83,12 @@ export default function Layout() {
         )}
 
         {/* Nav */}
-        <nav className="flex-1 py-3 overflow-y-auto space-y-0.5 px-2">
-          {navItems.map(({ path, icon: Icon, label }) => {
-            const active = location.pathname === path;
-            return (
+         <nav className="flex-1 py-3 overflow-y-auto space-y-0.5 px-2">
+          {navItems
+            .filter(item => !item.admin || user?.role === 'admin')
+            .map(({ path, icon: Icon, label }) => {
+              const active = location.pathname === path;
+              return (
               <Link key={path} to={path}
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all',

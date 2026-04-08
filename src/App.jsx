@@ -8,6 +8,7 @@ import { BrandProvider } from '@/context/BrandContext';
 import Brands from '@/pages/Brands';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from '@/components/Layout';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Pages
 import Home from '@/pages/Home';
@@ -130,16 +131,18 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <BrandProvider>
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        </BrandProvider>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <BrandProvider>
+            <Router>
+              <AuthenticatedApp />
+            </Router>
+          </BrandProvider>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

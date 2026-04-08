@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { Settings as SettingsIcon, Save, Upload, CheckCircle } from 'lucide-react';
 
 export default function Settings() {
+  const { activeBrandId, activeBrand } = useBrand();
   const [form, setForm] = useState({
     primary_color: '#3b82f6',
     widget_position: 'bottom-right',
@@ -20,11 +22,15 @@ export default function Settings() {
   const qc = useQueryClient();
 
   const { data: settings = [] } = useQuery({
-    queryKey: ['widget-settings'],
-    queryFn: () => base44.entities.WidgetSettings.list(),
+    queryKey: ['widget-settings', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.WidgetSettings.filter({ brand_id: activeBrandId })
+      : base44.entities.WidgetSettings.list(),
   });
 
   useEffect(() => {
+    setSettingsId(null);
+    setForm({ primary_color: '#3b82f6', widget_position: 'bottom-right', greeting_message: '', chatbot_name: 'ShopBot', show_branding: true, privacy_policy_url: '', terms_of_service_url: '', data_deletion_url: '' });
     if (settings.length > 0) {
       const s = settings[0];
       setSettingsId(s.id);
@@ -33,9 +39,10 @@ export default function Settings() {
   }, [settings]);
 
   const save = async () => {
-    if (settingsId) await base44.entities.WidgetSettings.update(settingsId, form);
-    else { const c = await base44.entities.WidgetSettings.create(form); setSettingsId(c.id); }
-    qc.invalidateQueries({ queryKey: ['widget-settings'] });
+    const payload = activeBrandId ? { ...form, brand_id: activeBrandId } : form;
+    if (settingsId) await base44.entities.WidgetSettings.update(settingsId, payload);
+    else { const c = await base44.entities.WidgetSettings.create(payload); setSettingsId(c.id); }
+    qc.invalidateQueries({ queryKey: ['widget-settings', activeBrandId] });
     setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
@@ -56,7 +63,7 @@ export default function Settings() {
         </div>
         <div>
           <h1 className="text-xl font-bold text-gray-900">Settings</h1>
-          <p className="text-xs text-gray-400">Widget and app configuration</p>
+          <p className="text-xs text-gray-400">{activeBrand?.name || 'All brands'} · Widget and app configuration</p>
         </div>
       </div>
 

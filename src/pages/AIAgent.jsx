@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useBrand } from '@/context/BrandContext';
 import { Bot, Send, Zap, BookOpen, Plus, Trash2, Edit2, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function AIAgent() {
   const [tab, setTab] = useState('overview');
+  const { activeBrandId, activeBrand } = useBrand();
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -16,7 +18,7 @@ export default function AIAgent() {
         </div>
         <div>
           <h1 className="font-bold text-gray-900">AI Agent</h1>
-          <p className="text-xs text-gray-400">U2C AI Assistant · Powered by ConvoFlow</p>
+          <p className="text-xs text-gray-400">{activeBrand?.name || 'All brands'} · Powered by ConvoFlow</p>
         </div>
         <div className="ml-auto flex gap-1">
           {['overview', 'knowledge', 'test', 'settings'].map(t => (
@@ -30,19 +32,21 @@ export default function AIAgent() {
         </div>
       </div>
       <div className="flex-1 overflow-y-auto">
-        {tab === 'overview' && <AIOverview />}
-        {tab === 'knowledge' && <KnowledgeSection />}
-        {tab === 'test' && <AITestChat />}
-        {tab === 'settings' && <AISettingsSection />}
+        {tab === 'overview' && <AIOverview brandId={activeBrandId} />}
+        {tab === 'knowledge' && <KnowledgeSection brandId={activeBrandId} />}
+        {tab === 'test' && <AITestChat brandId={activeBrandId} />}
+        {tab === 'settings' && <AISettingsSection brandId={activeBrandId} />}
       </div>
     </div>
   );
 }
 
-function AIOverview() {
+function AIOverview({ brandId }) {
   const { data: conversations = [] } = useQuery({
-    queryKey: ['conversations'],
-    queryFn: () => base44.entities.Conversation.list('-created_date', 200),
+    queryKey: ['conversations', brandId],
+    queryFn: () => brandId
+      ? base44.entities.Conversation.filter({ brand_id: brandId }, '-created_date', 200)
+      : base44.entities.Conversation.list('-created_date', 200),
   });
   const total = conversations.length;
   const aiHandled = conversations.filter(c => c.mode === 'ai').length;
@@ -84,18 +88,24 @@ function AIOverview() {
   );
 }
 
-function KnowledgeSection() {
+function KnowledgeSection({ brandId }) {
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [form, setForm] = useState({ question: '', answer: '', category: 'general' });
   const [saved, setSaved] = useState(false);
   const qc = useQueryClient();
-  const { data: faqs = [] } = useQuery({ queryKey: ['faqs'], queryFn: () => base44.entities.FAQ.list() });
+  const { data: faqs = [] } = useQuery({
+    queryKey: ['faqs', brandId],
+    queryFn: () => brandId
+      ? base44.entities.FAQ.filter({ brand_id: brandId })
+      : base44.entities.FAQ.list(),
+  });
 
   const save = async () => {
+    const payload = brandId ? { ...form, brand_id: brandId, is_active: true } : { ...form, is_active: true };
     if (editItem) await base44.entities.FAQ.update(editItem.id, form);
-    else await base44.entities.FAQ.create({ ...form, is_active: true });
-    qc.invalidateQueries({ queryKey: ['faqs'] });
+    else await base44.entities.FAQ.create(payload);
+    qc.invalidateQueries({ queryKey: ['faqs', brandId] });
     setShowForm(false); setEditItem(null); setForm({ question: '', answer: '', category: 'general' });
     setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
@@ -138,7 +148,7 @@ function KnowledgeSection() {
             <div className="flex gap-1 shrink-0">
               <button onClick={() => { setEditItem(faq); setForm({ question: faq.question, answer: faq.answer, category: faq.category }); setShowForm(true); }}
                 className="p-1.5 hover:bg-gray-100 rounded-lg"><Edit2 className="w-3.5 h-3.5 text-gray-400" /></button>
-              <button onClick={async () => { await base44.entities.FAQ.delete(faq.id); qc.invalidateQueries({ queryKey: ['faqs'] }); }}
+              <button onClick={async () => { await base44.entities.FAQ.delete(faq.id); qc.invalidateQueries({ queryKey: ['faqs', brandId] }); }}
                 className="p-1.5 hover:bg-red-50 rounded-lg"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
             </div>
           </div>
@@ -149,7 +159,7 @@ function KnowledgeSection() {
   );
 }
 
-function AITestChat() {
+function AITestChat({ brandId }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -160,10 +170,12 @@ function AITestChat() {
     if (!input.trim() || loading) return;
     const userMsg = { role: 'customer', content: input.trim() };
     setMessages(p => [...p, userMsg]); setInput(''); setLoading(true);
+    const faqFilter = brandId ? { is_active: true, brand_id: brandId } : { is_active: true };
+    const kbFilter = brandId ? { is_active: true, brand_id: brandId } : { is_active: true };
     const [faqs, knowledgeDocs, settingsList] = await Promise.all([
-      base44.entities.FAQ.filter({ is_active: true }),
-      base44.entities.KnowledgeDoc.filter({ is_active: true }),
-      base44.entities.AgentSettings.list(),
+      base44.entities.FAQ.filter(faqFilter),
+      base44.entities.KnowledgeDoc.filter(kbFilter),
+      brandId ? base44.entities.AgentSettings.filter({ brand_id: brandId }) : base44.entities.AgentSettings.list(),
     ]);
     const s = settingsList[0];
     const instructions = s?.ai_instructions || '';
@@ -209,19 +221,25 @@ function AITestChat() {
   );
 }
 
-function AISettingsSection() {
+function AISettingsSection({ brandId }) {
   const [form, setForm] = useState({ store_name: '', ai_persona_name: '', welcome_message: '', ai_instructions: '', handoff_message: '', is_ai_active: true });
   const [settingsId, setSettingsId] = useState(null);
   const [saved, setSaved] = useState(false);
   const qc = useQueryClient();
-  const { data: settings = [] } = useQuery({ queryKey: ['agent-settings'], queryFn: () => base44.entities.AgentSettings.list() });
+  const { data: settings = [] } = useQuery({
+    queryKey: ['agent-settings', brandId],
+    queryFn: () => brandId ? base44.entities.AgentSettings.filter({ brand_id: brandId }) : base44.entities.AgentSettings.list(),
+  });
   useEffect(() => {
+    setSettingsId(null);
+    setForm({ store_name: '', ai_persona_name: '', welcome_message: '', ai_instructions: '', handoff_message: '', is_ai_active: true });
     if (settings.length > 0) { const s = settings[0]; setSettingsId(s.id); setForm({ store_name: s.store_name || '', ai_persona_name: s.ai_persona_name || '', welcome_message: s.welcome_message || '', ai_instructions: s.ai_instructions || '', handoff_message: s.handoff_message || '', is_ai_active: s.is_ai_active !== false }); }
   }, [settings]);
   const save = async () => {
-    if (settingsId) await base44.entities.AgentSettings.update(settingsId, form);
-    else { const c = await base44.entities.AgentSettings.create(form); setSettingsId(c.id); }
-    qc.invalidateQueries({ queryKey: ['agent-settings'] }); setSaved(true); setTimeout(() => setSaved(false), 2000);
+    const payload = brandId ? { ...form, brand_id: brandId } : form;
+    if (settingsId) await base44.entities.AgentSettings.update(settingsId, payload);
+    else { const c = await base44.entities.AgentSettings.create(payload); setSettingsId(c.id); }
+    qc.invalidateQueries({ queryKey: ['agent-settings', brandId] }); setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
   return (
     <div className="p-6 max-w-2xl">

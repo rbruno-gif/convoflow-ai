@@ -14,7 +14,7 @@ const WEBHOOK_BASE = `${window.location.origin.includes('localhost') ? 'https://
 
 const emptyForm = { page_name: '', page_id: '', page_access_token: '', company: '', verify_token: '', is_active: true };
 
-export default function FacebookPagesManager() {
+export default function FacebookPagesManager({ brandId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -23,8 +23,10 @@ export default function FacebookPagesManager() {
   const { toast } = useToast();
 
   const { data: pages = [] } = useQuery({
-    queryKey: ['facebook-pages'],
-    queryFn: () => base44.entities.FacebookPage.list('-created_date', 50),
+    queryKey: ['facebook-pages', brandId],
+    queryFn: () => brandId
+      ? base44.entities.FacebookPage.filter({ brand_id: brandId }, '-created_date', 50)
+      : base44.entities.FacebookPage.list('-created_date', 50),
   });
 
   const openNew = () => {
@@ -51,22 +53,23 @@ export default function FacebookPagesManager() {
       await base44.entities.FacebookPage.update(editing, form);
       toast({ title: 'Page updated' });
     } else {
-      await base44.entities.FacebookPage.create({ ...form, webhook_url: WEBHOOK_BASE });
+      const payload = brandId ? { ...form, webhook_url: WEBHOOK_BASE, brand_id: brandId } : { ...form, webhook_url: WEBHOOK_BASE };
+      await base44.entities.FacebookPage.create(payload);
       toast({ title: 'Facebook page added!' });
     }
-    qc.invalidateQueries({ queryKey: ['facebook-pages'] });
+    qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
     cancel();
   };
 
   const deletePage = async (id) => {
     await base44.entities.FacebookPage.delete(id);
-    qc.invalidateQueries({ queryKey: ['facebook-pages'] });
+    qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
     toast({ title: 'Page removed' });
   };
 
   const toggleActive = async (page) => {
     await base44.entities.FacebookPage.update(page.id, { is_active: !page.is_active });
-    qc.invalidateQueries({ queryKey: ['facebook-pages'] });
+    qc.invalidateQueries({ queryKey: ['facebook-pages', brandId] });
   };
 
   const copyToClipboard = (text) => {

@@ -1,27 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-const FB_PAGE_ACCESS_TOKEN = Deno.env.get('FB_PAGE_ACCESS_TOKEN');
-
-async function sendFacebookMessage(recipientId, text) {
-  const res = await fetch('https://graph.facebook.com/v18.0/me/messages', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${FB_PAGE_ACCESS_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      recipient: { id: recipientId },
-      message: { text },
-    }),
-  });
-
-  const data = await res.json();
-  if (!res.ok) {
-    console.error('Facebook send error:', data);
-  }
-  return data;
-}
-
 Deno.serve(async (req) => {
   try {
     // Parse form-encoded body from Twilio
@@ -147,10 +125,7 @@ Respond as ${persona}. Be concise, warm, and helpful. Do not repeat the customer
         ai_resolution_attempted: true,
       });
 
-      // Send reply via Facebook Graph API
-      await sendFacebookMessage(from, aiReply);
-
-      console.log('AI reply sent via Facebook to', from);
+      console.log('AI reply generated for', from);
 
       return new Response(JSON.stringify({ reply: aiReply, status: 'ok' }), {
         status: 200,

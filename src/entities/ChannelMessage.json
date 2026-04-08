@@ -11,7 +11,7 @@
     },
     "sender_id": {
       "type": "string",
-      "description": "Agent email"
+      "description": "Agent email or 'system'"
     },
     "sender_name": {
       "type": "string"
@@ -24,17 +24,24 @@
       "items": {
         "type": "object",
         "properties": {
-          "url": {"type": "string"},
-          "filename": {"type": "string"},
-          "mime_type": {"type": "string"}
+          "url": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          }
         }
       }
     },
-    "is_pinned": {
+    "is_system": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "description": "System message (channel created, member joined)"
     },
-    "is_announcement": {
+    "is_pinned": {
       "type": "boolean",
       "default": false
     },

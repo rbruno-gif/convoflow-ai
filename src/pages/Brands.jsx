@@ -110,7 +110,15 @@ export default function Brands() {
         <NewBrandWizard
           onClose={() => setShowWizard(false)}
           onCreate={async (data) => {
-            await base44.entities.Brand.create(data);
+            const brand = await base44.entities.Brand.create(data);
+            
+            // Auto-provision default channels
+            const user = await base44.auth.me();
+            await base44.functions.invoke('provisionBrandChannels', {
+              brandId: brand.id,
+              userId: user.email,
+            });
+            
             refetch();
             setShowWizard(false);
           }}

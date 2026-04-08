@@ -8,11 +8,11 @@
     },
     "name": {
       "type": "string",
-      "description": "Channel name (e.g., #general)"
+      "description": "Channel name (e.g., general, support)"
     },
     "type": {
       "type": "string",
-      "enum": ["public", "private", "cross_brand"],
+      "enum": ["public", "private"],
       "default": "public"
     },
     "description": {
@@ -22,6 +22,22 @@
       "type": "boolean",
       "default": false,
       "description": "Auto-created default channels"
+    },
+    "manager_post_only": {
+      "type": "boolean",
+      "default": false,
+      "description": "Only managers can post (agents can read/react)"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Agent emails in this channel (for private channels)"
+    },
+    "unread_count_by_user": {
+      "type": "object",
+      "description": "Unread message count per agent email"
     },
     "created_by": {
       "type": "string"

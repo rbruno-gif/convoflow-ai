@@ -12,6 +12,11 @@ import Layout from '@/components/Layout';
 // Pages
 import Home from '@/pages/Home';
 import Dashboard from '@/pages/Dashboard';
+import GroupDashboard from '@/pages/GroupDashboard';
+import DepartmentManagement from '@/pages/DepartmentManagement';
+import CustomerProfilesPage from '@/pages/CustomerProfilesPage';
+import AuditLogPage from '@/pages/AuditLogPage';
+import AgentManagement from '@/pages/AgentManagement';
 import Conversations from '@/pages/Conversations';
 import Analytics from '@/pages/Analytics';
 import BrandInbox from '@/pages/BrandInbox';
@@ -25,7 +30,6 @@ import AutoReplies from '@/pages/AutoReplies';
 import AgentCapacityPage from '@/pages/AgentCapacityPage';
 import CustomerProfiles from '@/pages/CustomerProfiles';
 import SLARules from '@/pages/SLARules';
-import AuditLogPage from '@/pages/AuditLogPage';
 import ProactiveCampaigns from '@/pages/ProactiveCampaigns';
 import QueueManagement from '@/pages/QueueManagement';
 import AIAgent from '@/pages/AIAgent';
@@ -74,7 +78,12 @@ const AuthenticatedApp = () => {
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/data-deletion" element={<DataDeletion />} />
       <Route element={<Layout />}>
+        <Route path="/group" element={<GroupDashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/departments" element={<DepartmentManagement />} />
+        <Route path="/agents" element={<AgentManagement />} />
+        <Route path="/customers" element={<CustomerProfilesPage />} />
+        <Route path="/audit-log" element={<AuditLogPage />} />
         <Route path="/conversations" element={<Conversations />} />
         <Route path="/inbox" element={<BrandInbox />} />
         <Route path="/analytics" element={<Analytics />} />
@@ -82,13 +91,11 @@ const AuthenticatedApp = () => {
         <Route path="/widget-builder" element={<WidgetBuilder />} />
         <Route path="/reporting" element={<ReportingDashboard />} />
         <Route path="/team-chat" element={<TeamChat />} />
-        <Route path="/departments" element={<Departments />} />
         <Route path="/business-hours" element={<BusinessHoursPage />} />
         <Route path="/auto-replies" element={<AutoReplies />} />
         <Route path="/agent-capacity" element={<AgentCapacityPage />} />
         <Route path="/customer-profiles" element={<CustomerProfiles />} />
         <Route path="/sla-rules" element={<SLARules />} />
-        <Route path="/audit-log" element={<AuditLogPage />} />
         <Route path="/campaigns" element={<ProactiveCampaigns />} />
         <Route path="/queue" element={<QueueManagement />} />
         <Route path="/ai-agent" element={<AIAgent />} />
@@ -97,7 +104,6 @@ const AuthenticatedApp = () => {
         <Route path="/tickets" element={<Tickets />} />
         <Route path="/leads" element={<Leads />} />
         <Route path="/flagged" element={<Flagged />} />
-        <Route path="/agents" element={<Agents />} />
         <Route path="/integrations" element={<Integrations />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/commit-logs" element={<CommitLogs />} />

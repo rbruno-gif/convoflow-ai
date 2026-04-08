@@ -1,0 +1,56 @@
+{
+  "name": "BrandSettings",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this settings record belongs to"
+    },
+    "logo_light_url": {
+      "type": "string",
+      "description": "Logo for light theme"
+    },
+    "logo_dark_url": {
+      "type": "string",
+      "description": "Logo for dark theme"
+    },
+    "favicon_url": {
+      "type": "string"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#7c3aed"
+    },
+    "secondary_color": {
+      "type": "string",
+      "default": "#4f46e5"
+    },
+    "accent_color": {
+      "type": "string",
+      "default": "#ec4899"
+    },
+    "timezone": {
+      "type": "string",
+      "default": "America/New_York"
+    },
+    "default_language": {
+      "type": "string",
+      "default": "en"
+    },
+    "email_sender_name": {
+      "type": "string",
+      "description": "e.g., 'U2C Mobile Support'"
+    },
+    "email_from_address": {
+      "type": "string",
+      "description": "e.g., 'support@u2cmobile.com'"
+    },
+    "default_auto_reply_message": {
+      "type": "string",
+      "description": "Auto-reply when outside business hours"
+    }
+  },
+  "required": [
+    "brand_id"
+  ]
+}

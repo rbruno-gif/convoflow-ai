@@ -11,8 +11,13 @@ import { cn } from '@/lib/utils';
 import BrandSwitcher from '@/components/brands/BrandSwitcher';
 
 const navItems = [
+  { path: '/group', icon: Building2, label: 'U2C Group', admin: true },
   { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/inbox', icon: Inbox, label: 'Inbox' },
+  { path: '/departments', icon: Layers, label: 'Departments' },
+  { path: '/agents', icon: Users, label: 'Agents' },
+  { path: '/customers', icon: User, label: 'Customers' },
+  { path: '/audit-log', icon: Shield, label: 'Audit Log', admin: true },
   { path: '/live-support', icon: Radio, label: 'Live Support' },
   { path: '/voice', icon: Phone, label: 'Voice Calls' },
   { path: '/team-chat', icon: Hash, label: 'Team Chat' },

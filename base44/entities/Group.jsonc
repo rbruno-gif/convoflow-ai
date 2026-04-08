@@ -1,0 +1,33 @@
+{
+  "name": "Group",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Parent group name (e.g., U2C Group)"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Unique URL-safe identifier"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "primary_color": {
+      "type": "string",
+      "default": "#7c3aed"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Super-admin user ID who created this"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ]
+}

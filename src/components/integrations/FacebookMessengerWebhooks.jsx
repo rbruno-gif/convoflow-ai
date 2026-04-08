@@ -231,9 +231,6 @@ export default function FacebookMessengerWebhooks() {
       {/* New Webhook Panel */}
       {showNewPanel && (
         <NewWebhookPanel
-          brandId={activeBrandId}
-          brandSlug={activeBrand?.slug}
-          departments={departments}
           onClose={() => setShowNewPanel(false)}
           onSuccess={() => {
             setShowNewPanel(false);

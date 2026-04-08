@@ -4,6 +4,8 @@ import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
 import { Bot, Send, Zap, BookOpen, Plus, Trash2, Edit2, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import PersonaTester from '@/components/aiagent/PersonaTester';
+import StyleGuideUploader from '@/components/aiagent/StyleGuideUploader';
 
 export default function AIAgent() {
   const [tab, setTab] = useState('overview');
@@ -21,7 +23,7 @@ export default function AIAgent() {
           <p className="text-xs text-gray-400">{activeBrand?.name || 'All brands'} · Powered by ConvoFlow</p>
         </div>
         <div className="ml-auto flex gap-1">
-          {['overview', 'knowledge', 'test', 'settings'].map(t => (
+          {['overview', 'knowledge', 'persona test', 'settings'].map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={cn('px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition-all',
                 tab === t ? 'text-white' : 'text-gray-500 hover:bg-gray-100'
@@ -34,7 +36,7 @@ export default function AIAgent() {
       <div className="flex-1 overflow-y-auto">
         {tab === 'overview' && <AIOverview brandId={activeBrandId} />}
         {tab === 'knowledge' && <KnowledgeSection brandId={activeBrandId} />}
-        {tab === 'test' && <AITestChat brandId={activeBrandId} />}
+        {tab === 'persona test' && <PersonaTester brandId={activeBrandId} />}
         {tab === 'settings' && <AISettingsSection brandId={activeBrandId} />}
       </div>
     </div>
@@ -241,10 +243,25 @@ function AISettingsSection({ brandId }) {
     else { const c = await base44.entities.AgentSettings.create(payload); setSettingsId(c.id); }
     qc.invalidateQueries({ queryKey: ['agent-settings', brandId] }); setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
+
+  const handleStyleGuideUpdate = async (mergedInstructions) => {
+    const newForm = { ...form, ai_instructions: mergedInstructions };
+    setForm(newForm);
+    const payload = brandId ? { ...newForm, brand_id: brandId } : newForm;
+    if (settingsId) await base44.entities.AgentSettings.update(settingsId, payload);
+    else { const c = await base44.entities.AgentSettings.create(payload); setSettingsId(c.id); }
+    qc.invalidateQueries({ queryKey: ['agent-settings', brandId] });
+  };
+
   return (
     <div className="p-6 max-w-2xl">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
         <h2 className="font-bold text-gray-900">AI Settings</h2>
+        <StyleGuideUploader
+          brandId={brandId}
+          currentInstructions={form.ai_instructions}
+          onInstructionsUpdated={handleStyleGuideUpdate}
+        />
         {[{ label: 'Store Name', field: 'store_name' }, { label: 'AI Persona Name', field: 'ai_persona_name' }, { label: 'Welcome Message', field: 'welcome_message', textarea: true, rows: 2 }, { label: 'AI Instructions', field: 'ai_instructions', textarea: true, rows: 8 }, { label: 'Handoff Message', field: 'handoff_message', textarea: true, rows: 2 }].map(({ label, field, textarea, rows }) => (
           <div key={field}>
             <label className="text-xs font-medium text-gray-500 mb-1.5 block">{label}</label>

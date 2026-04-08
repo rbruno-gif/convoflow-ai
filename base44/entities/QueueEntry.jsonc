@@ -1,0 +1,74 @@
+{
+  "name": "QueueEntry",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "position": {
+      "type": "number"
+    },
+    "priority_lane": {
+      "type": "string",
+      "enum": [
+        "vip",
+        "standard",
+        "low"
+      ],
+      "default": "standard"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "assigned",
+        "accepted",
+        "abandoned",
+        "overflow"
+      ],
+      "default": "waiting"
+    },
+    "entered_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "assigned_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "assigned_agent_email": {
+      "type": "string"
+    },
+    "required_skill": {
+      "type": "string"
+    },
+    "overflow_action_taken": {
+      "type": "string"
+    },
+    "position_last_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "grace_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "brand_id",
+    "conversation_id"
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "name": "QueueSettings",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "max_queue_size": {
+      "type": "number",
+      "default": 20
+    },
+    "max_wait_minutes": {
+      "type": "number",
+      "default": 10
+    },
+    "assignment_method": {
+      "type": "string",
+      "enum": [
+        "round_robin",
+        "least_busy",
+        "skills_based",
+        "manual",
+        "sticky_agent"
+      ],
+      "default": "least_busy"
+    },
+    "assignment_fallback": {
+      "type": "string",
+      "enum": [
+        "least_busy",
+        "manual",
+        "round_robin"
+      ],
+      "default": "least_busy"
+    },
+    "send_position_updates": {
+      "type": "boolean",
+      "default": true
+    },
+    "position_message_template": {
+      "type": "string"
+    },
+    "update_interval_minutes": {
+      "type": "number",
+      "default": 2
+    },
+    "agent_accept_timeout_seconds": {
+      "type": "number",
+      "default": 60
+    },
+    "overflow_actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "ai_takeover",
+          "callback_request",
+          "voicemail_ticket",
+          "redirect_department",
+          "schedule_callback"
+        ]
+      }
+    },
+    "overflow_department_id": {
+      "type": "string"
+    },
+    "grace_period_minutes": {
+      "type": "number",
+      "default": 5
+    },
+    "csat_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority_lanes_enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "wait_threshold_message": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "brand_id"
+  ]
+}

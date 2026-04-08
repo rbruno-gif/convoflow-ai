@@ -25,6 +25,7 @@ const navItems = [
   { path: '/leads', icon: Users, label: 'Leads' },
   { path: '/flagged', icon: AlertTriangle, label: 'Flagged' },
   { path: '/agents', icon: UserCheck, label: 'Agents' },
+  { path: '/queue', icon: Layers, label: 'Queue' },
   { path: '/departments', icon: Layers, label: 'Departments' },
   { path: '/business-hours', icon: Clock, label: 'Business Hours' },
   { path: '/auto-replies', icon: Zap, label: 'Auto-Replies' },

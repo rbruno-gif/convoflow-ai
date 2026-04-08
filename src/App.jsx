@@ -27,6 +27,7 @@ import CustomerProfiles from '@/pages/CustomerProfiles';
 import SLARules from '@/pages/SLARules';
 import AuditLogPage from '@/pages/AuditLogPage';
 import ProactiveCampaigns from '@/pages/ProactiveCampaigns';
+import QueueManagement from '@/pages/QueueManagement';
 import AIAgent from '@/pages/AIAgent';
 import Visitors from '@/pages/Visitors';
 import Flows from '@/pages/Flows';
@@ -88,6 +89,7 @@ const AuthenticatedApp = () => {
         <Route path="/sla-rules" element={<SLARules />} />
         <Route path="/audit-log" element={<AuditLogPage />} />
         <Route path="/campaigns" element={<ProactiveCampaigns />} />
+        <Route path="/queue" element={<QueueManagement />} />
         <Route path="/ai-agent" element={<AIAgent />} />
         <Route path="/visitors" element={<Visitors />} />
         <Route path="/flows" element={<Flows />} />

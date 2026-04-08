@@ -1,0 +1,54 @@
+{
+  "name": "CallbackRequest",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string"
+    },
+    "department_id": {
+      "type": "string"
+    },
+    "customer_name": {
+      "type": "string"
+    },
+    "customer_phone": {
+      "type": "string"
+    },
+    "conversation_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "scheduled",
+        "completed",
+        "missed"
+      ],
+      "default": "pending"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "assigned_agent_email": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "overflow",
+        "wait_threshold",
+        "voicemail"
+      ],
+      "default": "overflow"
+    }
+  },
+  "required": [
+    "brand_id",
+    "customer_name"
+  ]
+}

@@ -83,7 +83,8 @@ Deno.serve(async (req) => {
     brandId = brandId || '69d5d0811141577dd21cc040';
     console.log(`[Webhook] Using brand_id: ${brandId}`);
 
-    const body = messageBody;
+    const body = messageBody || 'Hi';
+    console.log(`[Webhook] Message body: "${body}"`);
 
     // Step 3: Find or create customer profile
     let customers = await base44.asServiceRole.entities.CustomerProfile.filter({

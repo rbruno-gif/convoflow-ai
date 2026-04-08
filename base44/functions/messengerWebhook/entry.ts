@@ -84,6 +84,17 @@ Deno.serve(async (req) => {
     console.log(`[Webhook] Using brand_id: ${brandId}`);
 
     const body = messageBody;
+    
+    if (!body) {
+      console.error('[Webhook] No message body extracted, cannot proceed');
+      return new Response(JSON.stringify({ 
+        success: true,
+        response: 'Thanks for your message!',
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      });
+    }
 
     // Step 3: Find or create customer profile
     let customers = await base44.asServiceRole.entities.CustomerProfile.filter({
@@ -171,20 +182,23 @@ Deno.serve(async (req) => {
       console.log(`Invoking LLM with KB + FAQ context (using ${faqsToUse.length} FAQs)...`);
       const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
         prompt: `You are a helpful U2C Mobile customer support assistant. Based on the knowledge base and FAQs below, answer the customer's question directly and concisely. Be friendly and helpful.\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT, HELPFUL ANSWER:`,
-        model: 'gpt_4o_mini',
+        model: 'gpt_5_mini',
       });
 
-      console.log(`LLM response received`);
-      aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
+      console.log(`LLM response received:`, JSON.stringify(result));
+      aiResponse = typeof result === 'string' ? result : result?.data || result?.text || result?.message || result || null;
+      console.log(`aiResponse extracted:`, aiResponse);
     } catch (e) {
       console.error('KB lookup or LLM failed:', e.message || e);
       // Fallback: still try LLM with general U2C prompt
       try {
         const fallbackResult = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `You are a helpful U2C Mobile customer support assistant. Answer this customer question helpfully and concisely. If unsure say to call 1-844-222-4127.\n\nCustomer question: ${body}`,
-          model: 'gpt_4o_mini',
+          model: 'gpt_5_mini',
         });
-        aiResponse = typeof fallbackResult === 'string' ? fallbackResult : fallbackResult?.text || null;
+        console.log(`Fallback LLM response:`, JSON.stringify(fallbackResult));
+        aiResponse = typeof fallbackResult === 'string' ? fallbackResult : fallbackResult?.data || fallbackResult?.text || fallbackResult || null;
+        console.log(`Fallback aiResponse:`, aiResponse);
       } catch (e2) {
         console.error('Fallback LLM also failed:', e2.message || e2);
         aiResponse = 'Thanks for reaching out! For immediate help, please call us at 1-844-222-4127.';

@@ -23,13 +23,13 @@ export function BrandProvider({ children }) {
     if (!user) return [];
     // Admin sees all brands
     if (user.role === 'admin') return allBrands;
-    // Others see only brands they're assigned to
+    // Others see only brands they're assigned to (or where can_see_all_brands is true)
     return allBrands.filter(b =>
-      b.assigned_agents?.includes(user.email)
+      b.assigned_agents?.includes(user.email) || b.can_see_all_brands
     );
   })();
 
-  const activeBrands = accessibleBrands.filter(b => b.is_active);
+  const activeBrands = accessibleBrands;
 
   // Auto-select: prefer stored brand, fallback to first accessible
   useEffect(() => {

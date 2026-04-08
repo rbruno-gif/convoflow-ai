@@ -149,6 +149,26 @@ Deno.serve(async (req) => {
       last_message_time: new Date().toISOString(),
     });
 
+    // Step 9: Send reply back to Facebook Messenger
+    try {
+      const pageAccessToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+      if (pageAccessToken) {
+        await fetch('https://graph.facebook.com/v18.0/me/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            recipient: { id: from },
+            message: { text: replyText },
+            access_token: pageAccessToken,
+          }),
+        });
+      }
+    } catch (e) {
+      console.error('Failed to send message back to Facebook:', e);
+    }
+
     return new Response(JSON.stringify({ response: replyText }), {
       status: 200,
       headers: {

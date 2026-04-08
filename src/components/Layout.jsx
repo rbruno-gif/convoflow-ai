@@ -4,7 +4,7 @@ import {
   LayoutDashboard, MessageSquare, BarChart3, Bot, Zap,
   Ticket, Users, AlertTriangle, UserCheck, Plug, Settings,
   ChevronLeft, ChevronRight, GitCommit, LogOut, Building2, Globe, Radio, Inbox, BarChart2, Code2, Hash,
-  Clock, Layers, Shield, User, Megaphone, Activity
+  Clock, Layers, Shield, User, Megaphone, Activity, Webhook
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { cn } from '@/lib/utils';
@@ -36,7 +36,7 @@ const navItems = [
   { path: '/campaigns', icon: Megaphone, label: 'Campaigns' },
   { path: '/audit-log', icon: Shield, label: 'Audit Log' },
   { path: '/brands', icon: Building2, label: 'Brands' },
-  { path: '/webhooks', icon: Plug, label: 'Webhooks' },
+  { path: '/webhooks', icon: Webhook, label: 'Webhooks' },
   { path: '/integrations', icon: Plug, label: 'Integrations' },
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];

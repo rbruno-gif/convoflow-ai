@@ -94,34 +94,46 @@ Deno.serve(async (req) => {
 
       console.log(`Zapier message saved - Conversation: ${conversation.id}, From: ${from}`);
 
-      // Get AI response from knowledge base
+      // Get AI response from knowledge base + FAQs
       let aiResponse = null;
       try {
-        const kbEntries = await base44.asServiceRole.entities.KnowledgeDoc.filter({
-          brand_id: brandId,
-          is_active: true,
-        });
+        const [kbEntries, faqEntries] = await Promise.all([
+          base44.asServiceRole.entities.KnowledgeDoc.filter({
+            brand_id: brandId,
+            is_active: true,
+          }),
+          base44.asServiceRole.entities.FAQ.filter({
+            brand_id: brandId,
+            is_active: true,
+          }),
+        ]);
 
-        console.log(`Found ${kbEntries?.length || 0} KB entries for brand ${brandId}`);
+        console.log(`Found ${kbEntries?.length || 0} KB docs and ${faqEntries?.length || 0} FAQs for brand ${brandId}`);
 
-        if (kbEntries && kbEntries.length > 0) {
-          const kbContext = kbEntries
+        if ((kbEntries && kbEntries.length > 0) || (faqEntries && faqEntries.length > 0)) {
+          const kbContext = (kbEntries || [])
             .map((entry) => `# ${entry.title}\n${entry.content}`)
             .join('\n\n');
+          
+          const faqContext = (faqEntries || [])
+            .map((faq) => `Q: ${faq.question}\nA: ${faq.answer}`)
+            .join('\n\n');
 
-          console.log(`Invoking LLM with KB context...`);
+          console.log(`Invoking LLM with KB + FAQ context...`);
           const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
-            prompt: `You are a helpful customer support assistant. Based on the knowledge base below, answer the customer's question directly and concisely. If the answer is not in the knowledge base, say "I don't have that information available."\n\nKNOWLEDGE BASE:\n${kbContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT ANSWER:`,
+            prompt: `You are a helpful U2C Mobile customer support assistant. Based on the knowledge base and FAQs below, answer the customer's question directly and concisely. Be friendly and helpful.\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCUSTOMER QUESTION: ${body}\n\nPROVIDE A DIRECT, HELPFUL ANSWER:`,
             model: 'gpt_5_mini',
           });
 
-          console.log(`LLM response:`, result);
+          console.log(`LLM response received`);
           aiResponse = typeof result === 'string' ? result : result?.text || result?.message || null;
         } else {
           console.log(`No knowledge base entries found for brand ${brandId}`);
+          aiResponse = 'Thanks for your message! An agent will get back to you shortly.';
         }
       } catch (e) {
         console.error('KB lookup or LLM failed:', e.message || e);
+        aiResponse = 'Thanks for your message! An agent will assist you shortly.';
       }
 
       // Save AI response if generated

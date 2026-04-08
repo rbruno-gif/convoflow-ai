@@ -74,18 +74,25 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     const s = settingsList[0];
     const instructions = s?.ai_instructions || '';
     const persona = s?.ai_persona_name || 'U2C AI Assistant';
-    const faqContext = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-    const kbContext = knowledgeDocs.map(d => `# ${d.title}\n${d.content}`).join('\n\n');
+    const faqContext = (faqs || []).map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+    const kbContext = (knowledgeDocs || []).map(d => `# ${d.title}\n${d.content}`).join('\n\n');
     const recentHistory = messages.slice(-10).map(m =>
       `${m.sender_type === 'customer' ? 'Customer' : persona}: ${m.content}`
     ).join('\n');
 
+    // Use fallback if no KB/FAQ available
+    let prompt = `${instructions}\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCONVERSATION:\n${recentHistory}\n\nRespond as ${persona}. Be concise, warm, and helpful.`;
+
+    if (!kbContext && !faqContext) {
+      prompt = `You are ${persona}, a helpful customer support assistant for U2C Mobile. Answer the following question helpfully and professionally.\n\nCUSTOMER QUESTION: ${lastUserMsg.content}\n\nRespond concisely and warmly.`;
+    }
+
     const response = await base44.integrations.Core.InvokeLLM({
-      prompt: `${instructions}\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCONVERSATION:\n${recentHistory}\n\nRespond as ${persona}. Be concise, warm, and helpful.`,
+      prompt,
       model: 'gpt_5_mini',
     });
 
-    const aiReply = typeof response === 'string' ? response : response?.text || 'Let me connect you with a human agent.';
+    const aiReply = typeof response === 'string' ? response : response?.text || 'Thanks for reaching out! An agent will assist you shortly.';
     await base44.entities.Message.create({
       conversation_id: conversation.id,
       sender_type: 'ai',

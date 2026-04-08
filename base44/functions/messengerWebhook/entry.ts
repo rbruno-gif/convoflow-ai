@@ -143,6 +143,22 @@ Deno.serve(async (req) => {
 
     console.log(`Facebook message saved - Conversation: ${conversation.id}, From: ${from}`);
 
+    // Step 5.5: Check if conversation is in human mode — if so, don't respond, let agent handle
+    if (conversation.mode === 'human') {
+      console.log(`Conversation ${conversation.id} is in human mode — agent will respond manually`);
+      return new Response(JSON.stringify({ 
+        success: true,
+        response: '',
+        mode: 'human'
+      }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+    }
+
     // Step 6: Get AI response from knowledge base + FAQs using LLM
     // Fallback FAQs for U2C Mobile
     const fallbackFAQs = [

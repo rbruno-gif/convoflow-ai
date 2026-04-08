@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileText, Facebook } from 'lucide-react';
+import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileText, Facebook, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -59,30 +59,105 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         last_message_time: new Date().toISOString(),
       });
 
-      // If Facebook conversation, send via Zapier
-      if (isFacebookConversation) {
-        const [webhooks] = await Promise.all([
-          base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id }),
-        ]);
-        
+      // If Facebook conversation in human mode, send via Zapier
+      if (isFacebookConversation && conversation.mode === 'human') {
+        const webhooks = await base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id });
         const webhook = webhooks?.find(w => w.facebook_page_id);
-        if (webhook?.agent_reply_zapier_url) {
-          await fetch(webhook.agent_reply_zapier_url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: conversation.customer_fb_id,
-              message: content,
-              conversation_id: conversation.id,
-            }),
-          });
+        
+        if (!webhook?.agent_reply_zapier_url) {
+          setReply(content);
+          setSending(false);
+          return;
         }
+
+        const fbRes = await fetch(webhook.agent_reply_zapier_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: conversation.customer_fb_id,
+            message: content,
+            conversation_id: conversation.id,
+          }),
+        });
+        
+        if (!fbRes.ok) throw new Error('Facebook send failed');
       }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
       qc.invalidateQueries({ queryKey: ['conversations'] });
     } catch (error) {
+      console.error('Send error:', error);
       setReply(content);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const transferToAgent = async () => {
+    setSending(true);
+    setAction('transfer', 'loading');
+    try {
+      // Update conversation to human mode
+      await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'active' });
+      
+      // Look up MessengerWebhook for this brand
+      const webhooks = await base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id });
+      const webhook = webhooks?.find(w => w.facebook_page_id);
+      
+      if (webhook?.agent_reply_zapier_url) {
+        // Send handoff message to customer
+        await fetch(webhook.agent_reply_zapier_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: conversation.customer_fb_id,
+            message: 'You are now connected with a live agent. How can I help you?',
+            conversation_id: conversation.id,
+          }),
+        });
+      }
+      
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
+      setAction('transfer', 'done');
+      onUpdate?.();
+    } catch (error) {
+      console.error('Transfer error:', error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const returnToAI = async () => {
+    setSending(true);
+    setAction('return', 'loading');
+    try {
+      // Update conversation back to AI mode
+      await base44.entities.Conversation.update(conversation.id, { mode: 'ai' });
+      
+      // Look up MessengerWebhook for this brand
+      const webhooks = await base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id });
+      const webhook = webhooks?.find(w => w.facebook_page_id);
+      
+      if (webhook?.agent_reply_zapier_url) {
+        // Send reactivation message to customer
+        await fetch(webhook.agent_reply_zapier_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: conversation.customer_fb_id,
+            message: 'You are now being assisted by our AI assistant. How can I help you?',
+            conversation_id: conversation.id,
+          }),
+        });
+      }
+      
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
+      setAction('return', 'done');
+      onUpdate?.();
+    } catch (error) {
+      console.error('Return to AI error:', error);
     } finally {
       setSending(false);
     }
@@ -195,16 +270,22 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         <div className="flex-1">
           <p className="font-semibold text-sm text-gray-900">{conversation.customer_name}</p>
           <p className="text-xs text-gray-400">
-            {conversation.mode === 'ai' ? '🤖 AI Handled' : '👤 Agent Handled'}
+            {conversation.mode === 'ai' || !conversation.mode ? '🤖 AI Handled' : '👤 Agent Handled'}
             {conversation.assigned_agent && ` · ${conversation.assigned_agent}`}
           </p>
         </div>
         {/* Action bar */}
         <div className="flex items-center gap-1">
+          {isFacebookConversation && (conversation.mode === 'ai' || !conversation.mode) && (
+            <ActionBtn id="transfer" icon={UserCheck} label="Transfer" onClick={transferToAgent}
+              color="text-blue-500 hover:text-blue-700 hover:bg-blue-50" />
+          )}
+          {isFacebookConversation && conversation.mode === 'human' && (
+            <ActionBtn id="return" icon={Bot} label="Return to AI" onClick={returnToAI}
+              color="text-violet-500 hover:text-violet-700 hover:bg-violet-50" />
+          )}
           <ActionBtn id="flag" icon={Flag} label="Flag" onClick={flagConversation}
             color="text-orange-500 hover:text-orange-700 hover:bg-orange-50" />
-          <ActionBtn id="handoff" icon={UserCheck} label="Handoff" onClick={handoffToAgent}
-            color="text-blue-500 hover:text-blue-700 hover:bg-blue-50" />
           <ActionBtn id="resolve" icon={CheckCircle} label="Resolve" onClick={resolveConversation}
             color="text-green-500 hover:text-green-700 hover:bg-green-50" />
         </div>
@@ -219,9 +300,16 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
       {/* Channel indicator or quick reply hint */}
       <div className="px-4 pt-2 bg-white border-t border-gray-100">
         {isFacebookConversation ? (
-          <p className="text-[10px] text-blue-600 font-medium flex items-center gap-1.5 mb-1">
-            <Facebook className="w-3.5 h-3.5" /> Replying via Facebook Messenger
-          </p>
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-[10px] text-blue-600 font-medium flex items-center gap-1.5">
+              <Facebook className="w-3.5 h-3.5" /> Replying via Facebook Messenger
+            </p>
+            {conversation.mode === 'ai' || !conversation.mode ? (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 font-medium">AI Active</span>
+            ) : (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Live Agent</span>
+            )}
+          </div>
         ) : (
           <p className="text-[10px] text-gray-400 mb-1">Type <span className="font-mono bg-gray-100 px-1 rounded">/</span> for quick replies · <span className="text-violet-500">Enter</span> to send</p>
         )}

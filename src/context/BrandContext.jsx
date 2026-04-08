@@ -7,9 +7,18 @@ const BrandContext = createContext(null);
 export function BrandProvider({ children }) {
   const [activeBrandId, setActiveBrandId] = useState(() => localStorage.getItem('activeBrandId') || null);
   const [user, setUser] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    const loadUser = async () => {
+      try {
+        const u = await base44.auth.me();
+        setUser(u);
+      } catch (err) {
+        console.warn('Failed to load user:', err);
+      }
+    };
+    loadUser();
   }, []);
 
   const { data: allBrands = [] } = useQuery({
@@ -29,17 +38,15 @@ export function BrandProvider({ children }) {
     );
   })();
 
-  const activeBrands = accessibleBrands;
-
   // Auto-select: prefer stored brand, fallback to first accessible
   useEffect(() => {
+    if (!user) return;
+
     if (!activeBrandId && accessibleBrands.length > 0) {
       const first = accessibleBrands[0];
       setActiveBrandId(first.id);
       localStorage.setItem('activeBrandId', first.id);
-    }
-    // If stored brand is no longer accessible, reset
-    if (activeBrandId && accessibleBrands.length > 0) {
+    } else if (activeBrandId && accessibleBrands.length > 0) {
       const stillAccessible = accessibleBrands.find(b => b.id === activeBrandId);
       if (!stillAccessible) {
         const first = accessibleBrands[0];
@@ -47,7 +54,9 @@ export function BrandProvider({ children }) {
         localStorage.setItem('activeBrandId', first.id);
       }
     }
-  }, [accessibleBrands, activeBrandId]);
+
+    setIsInitialized(true);
+  }, [accessibleBrands, activeBrandId, user]);
 
   const switchBrand = (brandId) => {
     setActiveBrandId(brandId);
@@ -62,7 +71,7 @@ export function BrandProvider({ children }) {
       activeBrandId,
       brands: accessibleBrands,
       allBrands,
-      activeBrands,
+      isInitialized,
       switchBrand,
       user,
     }}>
@@ -72,5 +81,9 @@ export function BrandProvider({ children }) {
 }
 
 export function useBrand() {
-  return useContext(BrandContext);
+  const context = useContext(BrandContext);
+  if (!context) {
+    throw new Error('useBrand must be used within BrandProvider');
+  }
+  return context;
 }

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
+import BrandSelectorGrid from '@/components/brands/BrandSelectorGrid';
 import GroupDashboard from '@/pages/GroupDashboard';
 import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -84,6 +85,8 @@ export default function Dashboard() {
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">{activeBrand?.name || 'ConvoFlow'} · Overview</p>
       </div>
+
+      <BrandSelectorGrid />
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
         {stats.map(({ icon: Icon, label, value, sub, color, bg }) => (

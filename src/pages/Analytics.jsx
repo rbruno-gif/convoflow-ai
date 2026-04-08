@@ -14,22 +14,24 @@ import CSATAnalytics from '@/components/analytics/CSATAnalytics';
 import ReportsExport from '@/components/analytics/ReportsExport';
 
 export default function Analytics() {
-  const [dateRange, setDateRange] = useState('30d'); // today, 7d, 30d, 90d, custom
-  const [customDateRange, setCustomDateRange] = useState(null);
-  const { activeBrandId } = useBrand();
+  const [dateRange, setDateRange] = useState('30d');
+  const { activeBrandId, activeBrand, isInitialized } = useBrand();
 
-  const { data: conversations = [] } = useQuery({
-    queryKey: ['conversations', activeBrandId, dateRange],
+  // Only query when brand is initialized and available
+  const { data: conversations = [], isLoading: convosLoading } = useQuery({
+    queryKey: ['analytics-conversations', activeBrandId, dateRange],
     queryFn: () => activeBrandId
       ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-created_date', 1000)
       : [],
+    enabled: !!activeBrandId && isInitialized,
   });
 
-  const { data: tickets = [] } = useQuery({
-    queryKey: ['tickets', activeBrandId, dateRange],
+  const { data: tickets = [], isLoading: ticketsLoading } = useQuery({
+    queryKey: ['analytics-tickets', activeBrandId, dateRange],
     queryFn: () => activeBrandId
       ? base44.entities.Ticket.filter({ brand_id: activeBrandId }, '-created_date', 1000)
       : [],
+    enabled: !!activeBrandId && isInitialized,
   });
 
   // Calculate metrics
@@ -47,6 +49,21 @@ export default function Analytics() {
     { label: 'Avg First Response', value: '2.3 min', change: '-15%' },
   ];
 
+  if (!isInitialized || !activeBrandId) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              <p className="text-sm text-muted-foreground">Loading analytics...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -54,7 +71,7 @@ export default function Analytics() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Analytics & Reports</h1>
-            <p className="text-muted-foreground mt-1">Platform insights and performance metrics</p>
+            <p className="text-muted-foreground mt-1">{activeBrand?.name} · Insights and metrics</p>
           </div>
           <Button className="gap-2">
             <Download className="w-4 h-4" /> Export Report
@@ -79,11 +96,19 @@ export default function Analytics() {
         </div>
 
         {/* Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {metrics.map((metric, idx) => (
-            <MetricCard key={idx} {...metric} />
-          ))}
-        </div>
+        {convosLoading || ticketsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-24 bg-white rounded-lg border border-gray-100 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {metrics.map((metric, idx) => (
+              <MetricCard key={idx} {...metric} />
+            ))}
+          </div>
+        )}
 
         {/* Analytics Sections */}
         <div className="space-y-6">

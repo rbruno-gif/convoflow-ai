@@ -9,32 +9,39 @@ import { formatDistanceToNow, subDays, format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function Dashboard() {
-  const { activeBrandId, activeBrand } = useBrand();
+  const { activeBrandId, activeBrand, isInitialized } = useBrand();
 
-  const { data: conversations = [] } = useQuery({
-    queryKey: ['conversations', activeBrandId],
+  const { data: conversations = [], isLoading: convosLoading } = useQuery({
+    queryKey: ['dashboard-conversations', activeBrandId],
     queryFn: () => activeBrandId
-      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-last_message_time', 100)
-      : base44.entities.Conversation.list('-last_message_time', 100),
+      ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-created_date', 100)
+      : [],
+    enabled: !!activeBrandId && isInitialized,
     refetchInterval: 30000,
   });
-  const { data: tickets = [] } = useQuery({
-    queryKey: ['tickets', activeBrandId],
+
+  const { data: tickets = [], isLoading: ticketsLoading } = useQuery({
+    queryKey: ['dashboard-tickets', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.Ticket.filter({ brand_id: activeBrandId }, '-created_date', 50)
-      : base44.entities.Ticket.list('-created_date', 50),
+      : [],
+    enabled: !!activeBrandId && isInitialized,
   });
-  const { data: leads = [] } = useQuery({
-    queryKey: ['leads', activeBrandId],
+
+  const { data: leads = [], isLoading: leadsLoading } = useQuery({
+    queryKey: ['dashboard-leads', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.Lead.filter({ brand_id: activeBrandId }, '-created_date', 50)
-      : base44.entities.Lead.list('-created_date', 50),
+      : [],
+    enabled: !!activeBrandId && isInitialized,
   });
-  const { data: voiceCalls = [] } = useQuery({
-    queryKey: ['voice-calls', activeBrandId],
+
+  const { data: voiceCalls = [], isLoading: callsLoading } = useQuery({
+    queryKey: ['dashboard-voice-calls', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.VoiceCall.filter({ brand_id: activeBrandId }, '-created_date', 20)
-      : base44.entities.VoiceCall.list('-created_date', 20),
+      : [],
+    enabled: !!activeBrandId && isInitialized,
   });
 
   const active = conversations.filter(c => c.status === 'active').length;
@@ -74,10 +81,26 @@ export default function Dashboard() {
 
   const recent = conversations.slice(0, 5);
 
+  // Show loading state while initializing
+  if (!isInitialized || !activeBrandId) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // If the active brand is U2C Group, show the group-level hub
   if (activeBrand?.slug === 'u2c-group') {
     return <GroupDashboard />;
   }
+
+  const isLoading = convosLoading || ticketsLoading || leadsLoading || callsLoading;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">

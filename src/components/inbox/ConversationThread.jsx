@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { Send, MoreVertical, Archive, CheckCircle, RotateCcw } from 'lucide-react';
+import { Send, MoreVertical, Archive, CheckCircle, RotateCcw, AlertCircle } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import TransferPanel from '@/components/inbox/TransferPanel';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,10 +12,13 @@ import { cn } from '@/lib/utils';
 
 export default function ConversationThread({ conversation, messages, onRefresh }) {
   const [messageContent, setMessageContent] = useState('');
+  const [isInternalNote, setIsInternalNote] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
   const { activeBrandId } = useBrand();
+  const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -25,29 +29,43 @@ export default function ConversationThread({ conversation, messages, onRefresh }
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!messageContent.trim()) return;
+    if (!messageContent.trim() || !activeBrandId) return;
     setSending(true);
+    setSendError(null);
 
     try {
       await base44.entities.Message.create({
         brand_id: activeBrandId,
         conversation_id: conversation.id,
         sender_type: 'agent',
-        sender_id: 'current-user', // TODO: Get from auth context
-        sender_name: 'You',
+        sender_id: 'current-user',
+        sender_name: 'Agent',
         content: messageContent,
+        is_internal_note: isInternalNote,
       });
 
-      // Update conversation last_message_at
+      // Update conversation metadata
       await base44.entities.Conversation.update(conversation.id, {
         last_message_at: new Date().toISOString(),
         first_response_at: conversation.first_response_at || new Date().toISOString(),
+        unread_count: 0,
       });
 
       setMessageContent('');
+      setIsInternalNote(false);
+      toast({
+        title: 'Message sent',
+        description: isInternalNote ? 'Internal note added' : 'Reply sent to customer',
+      });
       onRefresh();
     } catch (error) {
       console.error('Failed to send message:', error);
+      setSendError(error.message || 'Failed to send message. Please try again.');
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send message',
+        variant: 'destructive',
+      });
     } finally {
       setSending(false);
     }
@@ -201,7 +219,13 @@ export default function ConversationThread({ conversation, messages, onRefresh }
 
       {/* Message Composer */}
       {conversation.status !== 'resolved' && (
-        <div className="border-t p-4 space-y-3">
+        <div className={`border-t p-4 space-y-3 ${isInternalNote ? 'bg-yellow-50' : ''}`}>
+          {sendError && (
+            <div className="flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-red-700">{sendError}</p>
+            </div>
+          )}
           <Textarea
             value={messageContent}
             onChange={e => setMessageContent(e.target.value)}
@@ -214,10 +238,19 @@ export default function ConversationThread({ conversation, messages, onRefresh }
             placeholder="Type a message... (Shift+Enter for newline)"
             className="min-h-20"
           />
-          <div className="flex gap-2 justify-end">
+          <div className="flex items-center gap-3 justify-between">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isInternalNote}
+                onChange={e => setIsInternalNote(e.target.checked)}
+                className="rounded"
+              />
+              <span className="text-xs font-medium">🔒 Internal Note (not sent to customer)</span>
+            </label>
             <Button
               onClick={sendMessage}
-              disabled={!messageContent.trim() || sending}
+              disabled={!messageContent.trim() || sending || !activeBrandId}
               className="gap-2"
             >
               <Send className="w-4 h-4" />

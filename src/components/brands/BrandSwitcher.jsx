@@ -10,14 +10,29 @@ export default function BrandSwitcher() {
   useEffect(() => {
     if (!open) return;
 
-    const handler = (e) => {
+    const handleClickOutside = (e) => {
       if (ref.current && !ref.current.contains(e.target)) {
         setOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setOpen(false);
+      }
+    };
+
+    // Use a small delay to avoid the click that opened the menu from closing it
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [open]);
 
   if (!activeBrand || brands.length === 0) return null;
@@ -74,10 +89,16 @@ export default function BrandSwitcher() {
 }
 
 function BrandOption({ brand, active, onSelect, isGroup }) {
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect();
+  };
+
   return (
     <button
-      onClick={onSelect}
-      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 transition-colors"
+      onClick={handleClick}
+      className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-white/10 transition-colors text-left"
     >
       <BrandAvatar brand={brand} size={24} />
       <div className="flex-1 min-w-0 text-left">

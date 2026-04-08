@@ -14,13 +14,30 @@ import FacebookMessengerWebhooks from '@/components/integrations/FacebookMesseng
 import WhatsAppIntegration from '@/components/integrations/WhatsAppIntegration';
 
 export default function Integrations() {
-  const { activeBrand, activeBrandId } = useBrand();
+  const { activeBrand, activeBrandId, isInitialized } = useBrand();
 
-  if (!activeBrandId) {
+  if (!isInitialized) {
     return (
       <div className="p-8 max-w-3xl">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Loading integrations...</p>
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-sm text-muted-foreground">Initializing...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeBrandId || !activeBrand) {
+    return (
+      <div className="p-8 max-w-3xl">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center max-w-xs">
+            <Plug className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-40" />
+            <p className="text-sm font-medium text-foreground">Brand not selected</p>
+            <p className="text-xs text-muted-foreground mt-1">Please select a brand from the sidebar to manage integrations.</p>
+          </div>
         </div>
       </div>
     );

@@ -5,7 +5,14 @@ import { base44 } from '@/api/base44Client';
 const BrandContext = createContext(null);
 
 export function BrandProvider({ children }) {
-  const [activeBrandId, setActiveBrandId] = useState(() => localStorage.getItem('activeBrandId') || null);
+  const [activeBrand, setActiveBrand] = useState(() => {
+    try {
+      const stored = localStorage.getItem('u2c_active_brand');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
   const [user, setUser] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -30,9 +37,7 @@ export function BrandProvider({ children }) {
   // Role-based brand visibility
   const accessibleBrands = (() => {
     if (!user) return [];
-    // Admin sees all brands
     if (user.role === 'admin') return allBrands;
-    // Others see only brands they're assigned to (or where can_see_all_brands is true)
     return allBrands.filter(b =>
       b.assigned_agents?.includes(user.email) || b.can_see_all_brands
     );
@@ -40,35 +45,55 @@ export function BrandProvider({ children }) {
 
   // Auto-select: prefer stored brand, fallback to first accessible
   useEffect(() => {
-    if (!user) return;
+    if (!user || accessibleBrands.length === 0) return;
 
-    if (!activeBrandId && accessibleBrands.length > 0) {
-      const first = accessibleBrands[0];
-      setActiveBrandId(first.id);
-      localStorage.setItem('activeBrandId', first.id);
-    } else if (activeBrandId && accessibleBrands.length > 0) {
-      const stillAccessible = accessibleBrands.find(b => b.id === activeBrandId);
-      if (!stillAccessible) {
-        const first = accessibleBrands[0];
-        setActiveBrandId(first.id);
-        localStorage.setItem('activeBrandId', first.id);
+    let selectedBrand = null;
+
+    // Try to use stored brand if still accessible
+    if (activeBrand && activeBrand.id) {
+      const stillAccessible = accessibleBrands.find(b => b.id === activeBrand.id);
+      if (stillAccessible) {
+        selectedBrand = stillAccessible;
       }
     }
 
+    // Fallback to first accessible brand
+    if (!selectedBrand) {
+      selectedBrand = accessibleBrands[0];
+    }
+
+    if (selectedBrand && (!activeBrand || activeBrand.id !== selectedBrand.id)) {
+      const brandData = {
+        id: selectedBrand.id,
+        name: selectedBrand.name,
+        slug: selectedBrand.slug,
+        primary_color: selectedBrand.primary_color,
+      };
+      setActiveBrand(brandData);
+      localStorage.setItem('u2c_active_brand', JSON.stringify(brandData));
+    }
+
     setIsInitialized(true);
-  }, [accessibleBrands, activeBrandId, user]);
+  }, [accessibleBrands, user]);
 
   const switchBrand = (brandId) => {
-    setActiveBrandId(brandId);
-    localStorage.setItem('activeBrandId', brandId);
+    const brand = accessibleBrands.find(b => b.id === brandId);
+    if (brand) {
+      const brandData = {
+        id: brand.id,
+        name: brand.name,
+        slug: brand.slug,
+        primary_color: brand.primary_color,
+      };
+      setActiveBrand(brandData);
+      localStorage.setItem('u2c_active_brand', JSON.stringify(brandData));
+    }
   };
-
-  const activeBrand = accessibleBrands.find(b => b.id === activeBrandId) || accessibleBrands[0] || null;
 
   return (
     <BrandContext.Provider value={{
       activeBrand,
-      activeBrandId,
+      activeBrandId: activeBrand?.id,
       brands: accessibleBrands,
       allBrands,
       isInitialized,

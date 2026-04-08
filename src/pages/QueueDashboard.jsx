@@ -4,14 +4,20 @@ import { useBrand } from '@/context/BrandContext';
 import { Users, Clock, AlertTriangle } from 'lucide-react';
 
 export default function QueueDashboard() {
-  const { activeBrandId } = useBrand();
+  const { activeBrandId, activeBrand } = useBrand();
 
-  const { data: conversations = [] } = useQuery({
-    queryKey: ['conversations', activeBrandId],
+  // Get unassigned conversations for queue
+  const { data: conversations = [], isLoading } = useQuery({
+    queryKey: ['queue-conversations', activeBrandId],
     queryFn: () => activeBrandId
-      ? base44.entities.Conversation.filter({ brand_id: activeBrandId })
+      ? base44.entities.Conversation.filter({ 
+          brand_id: activeBrandId,
+          status: 'open',
+          assigned_agent_id: null,
+        }, 'created_date', 100)
       : [],
-    refetchInterval: 5000,
+    enabled: !!activeBrandId,
+    refetchInterval: 5000, // Poll for real-time queue updates
   });
 
   const { data: departments = [] } = useQuery({

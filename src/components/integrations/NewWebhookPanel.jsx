@@ -39,8 +39,8 @@ export default function NewWebhookPanel({ onClose, onSuccess }) {
   const handleCreate = async () => {
     setError('');
     
-    if (!activeBrandId) {
-      setError('Brand is required. Please select a brand from the brand switcher.');
+    if (!activeBrandId || !activeBrand) {
+      setError('No brand selected. Please select a brand from the brand switcher first.');
       return;
     }
 
@@ -57,7 +57,7 @@ export default function NewWebhookPanel({ onClose, onSuccess }) {
     setLoading(true);
     try {
       const webhookToken = crypto.randomUUID();
-      const productionDomain = 'https://caped-smart-chat-pulse.base44.app';
+      const productionDomain = window.location.origin;
       const fullWebhookUrl = `${productionDomain}/api/functions/messengerWebhook?brand=${activeBrand.slug}&token=${webhookToken}`;
 
       const allowedSenderList = allowedSenders

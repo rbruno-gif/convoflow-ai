@@ -154,13 +154,20 @@ Deno.serve(async (req) => {
         });
 
         console.log(`AI response saved for conversation ${conversation.id}`);
+        console.log(`Returning AI response to Zapier: ${aiResponse}`);
       }
     } catch (err) {
       console.error('Error processing Zapier webhook:', err);
+      aiResponse = 'An error occurred processing your message. An agent will assist you shortly.';
     }
 
-    // Acknowledge receipt
-    return new Response(JSON.stringify({ success: true, received: true }), {
+    // Return the AI response to Zapier so it can relay back to customer/Facebook
+    return new Response(JSON.stringify({ 
+      success: true, 
+      received: true,
+      response: aiResponse || 'Thanks for your message! An agent will assist you shortly.',
+      conversation_id: conversation?.id,
+    }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

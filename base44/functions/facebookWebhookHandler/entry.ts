@@ -21,14 +21,14 @@ Deno.serve(async (req) => {
       });
     }
 
-    const base44 = createClientFromRequest(req);
+    const url = new URL(req.url);
     const body = await req.text();
     const data = JSON.parse(body);
 
     // Verify Facebook webhook (if verification token is provided)
     const verifyToken = Deno.env.get('FACEBOOK_VERIFY_TOKEN');
-    const hubVerifyToken = new URL(req.url).searchParams.get('hub.verify_token');
-    const hubChallenge = new URL(req.url).searchParams.get('hub.challenge');
+    const hubVerifyToken = url.searchParams.get('hub.verify_token');
+    const hubChallenge = url.searchParams.get('hub.challenge');
 
     // Handle Facebook's webhook verification
     if (hubVerifyToken && hubChallenge) {
@@ -42,9 +42,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Extract brand ID from URL
-    const urlParts = new URL(req.url).pathname.split('/');
-    const brandId = urlParts[urlParts.length - 1];
+    const base44 = createClientFromRequest(req);
+
+    // Extract brand ID from query params or URL path
+    let brandId = url.searchParams.get('brand_id');
+    
+    if (!brandId) {
+      const urlParts = url.pathname.split('/');
+      brandId = urlParts[urlParts.length - 1];
+    }
 
     // Process incoming messages from Facebook
     if (data.entry) {

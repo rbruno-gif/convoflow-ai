@@ -25,9 +25,14 @@ Deno.serve(async (req) => {
     const body = await req.text();
     const data = JSON.parse(body);
 
-    // Extract brand ID from URL
-    const urlParts = new URL(req.url).pathname.split('/');
-    const brandId = urlParts[urlParts.length - 1];
+    // Extract brand ID from query params or URL path
+    const url = new URL(req.url);
+    let brandId = url.searchParams.get('brand_id');
+    
+    if (!brandId) {
+      const urlParts = url.pathname.split('/');
+      brandId = urlParts[urlParts.length - 1];
+    }
 
     // Process Zapier webhook payload
     // Zapier sends event data (conversation created, updated, etc.)

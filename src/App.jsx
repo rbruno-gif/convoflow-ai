@@ -40,6 +40,7 @@ import Settings from '@/pages/Settings';
 import CommitLogs from '@/pages/CommitLogs';
 import KnowledgeScraper from '@/pages/KnowledgeScraper';
 import LiveSupport from '@/pages/LiveSupport';
+import Voice from '@/pages/Voice';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import TermsOfService from '@/pages/TermsOfService';
 import DataDeletion from '@/pages/DataDeletion';
@@ -103,6 +104,7 @@ const AuthenticatedApp = () => {
         <Route path="/brands" element={<Brands />} />
         <Route path="/knowledge-scraper" element={<KnowledgeScraper />} />
         <Route path="/live-support" element={<LiveSupport />} />
+        <Route path="/voice" element={<Voice />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

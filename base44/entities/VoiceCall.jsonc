@@ -1,0 +1,137 @@
+{
+  "name": "VoiceCall",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand scope"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Linked conversation in inbox (if any)"
+    },
+    "ticket_id": {
+      "type": "string",
+      "description": "Linked support ticket (if any)"
+    },
+    "customer_phone": {
+      "type": "string",
+      "description": "Customer phone number"
+    },
+    "customer_name": {
+      "type": "string",
+      "description": "Customer name from Autocalls"
+    },
+    "customer_email": {
+      "type": "string",
+      "description": "Optional customer email"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "inbound",
+        "outbound"
+      ],
+      "description": "Call direction"
+    },
+    "call_type": {
+      "type": "string",
+      "enum": [
+        "inbound_support",
+        "outbound_callback",
+        "outbound_campaign",
+        "outbound_followup"
+      ],
+      "description": "Type of call"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "ringing",
+        "in_progress",
+        "completed",
+        "failed",
+        "voicemail",
+        "declined"
+      ],
+      "default": "pending",
+      "description": "Call status"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "default": 0,
+      "description": "Total call duration"
+    },
+    "transcript": {
+      "type": "string",
+      "description": "Full call transcript"
+    },
+    "recording_url": {
+      "type": "string",
+      "description": "Call recording URL from Autocalls"
+    },
+    "issue_summary": {
+      "type": "string",
+      "description": "AI-summarized reason for call"
+    },
+    "resolved_by_ai": {
+      "type": "boolean",
+      "default": false,
+      "description": "Was issue resolved without human?"
+    },
+    "transferred_to_agent": {
+      "type": "boolean",
+      "default": false,
+      "description": "Was call transferred to live agent?"
+    },
+    "transfer_agent_email": {
+      "type": "string",
+      "description": "Agent email if transferred"
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign ID if part of outbound campaign"
+    },
+    "campaign_outcome": {
+      "type": "string",
+      "enum": [
+        "answered",
+        "not_answered",
+        "voicemail",
+        "booked_appointment",
+        "declined",
+        "callback_scheduled"
+      ],
+      "description": "Outcome for campaign calls"
+    },
+    "followup_response": {
+      "type": "string",
+      "description": "Customer response on follow-up call (satisfied/not_satisfied/no_answer)"
+    },
+    "csat_score": {
+      "type": "number",
+      "min": 1,
+      "max": 5,
+      "description": "CSAT score from call"
+    },
+    "autocalls_id": {
+      "type": "string",
+      "description": "Autocalls call ID for tracking"
+    },
+    "agent_notes": {
+      "type": "string",
+      "description": "Agent notes added after call"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata from Autocalls"
+    }
+  },
+  "required": [
+    "brand_id",
+    "customer_phone",
+    "direction",
+    "call_type"
+  ]
+}

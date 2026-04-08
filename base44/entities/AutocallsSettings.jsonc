@@ -1,0 +1,104 @@
+{
+  "name": "AutocallsSettings",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this voice config belongs to"
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether voice calling is enabled for this brand"
+    },
+    "api_key": {
+      "type": "string",
+      "description": "Autocalls.ai API key (encrypted)"
+    },
+    "phone_numbers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "string"
+          },
+          "department_id": {
+            "type": "string",
+            "description": "Optional: route calls to specific dept"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "description": "Phone numbers managed by Autocalls"
+    },
+    "ai_agent_name": {
+      "type": "string",
+      "description": "Voice agent persona name"
+    },
+    "voice_style": {
+      "type": "string",
+      "enum": [
+        "professional",
+        "friendly",
+        "formal"
+      ],
+      "default": "professional",
+      "description": "Voice tone and style"
+    },
+    "language": {
+      "type": "string",
+      "default": "en-US",
+      "description": "Language for voice AI"
+    },
+    "max_concurrent_calls": {
+      "type": "number",
+      "default": 10,
+      "description": "Maximum parallel inbound calls"
+    },
+    "inbound_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Accept inbound calls"
+    },
+    "outbound_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Make outbound calls"
+    },
+    "callback_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable callback queue overflow action"
+    },
+    "campaign_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable voice channel in campaigns"
+    },
+    "followup_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable post-resolution follow-up calls"
+    },
+    "followup_hours": {
+      "type": "number",
+      "default": 24,
+      "description": "Hours after resolution to trigger follow-up"
+    },
+    "webhook_url": {
+      "type": "string",
+      "description": "Our webhook endpoint URL for Autocalls to send events"
+    },
+    "webhook_secret": {
+      "type": "string",
+      "description": "Secret key to validate incoming webhooks"
+    }
+  },
+  "required": [
+    "brand_id"
+  ]
+}

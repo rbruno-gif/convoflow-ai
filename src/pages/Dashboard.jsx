@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
 import GroupDashboard from '@/pages/GroupDashboard';
-import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight } from 'lucide-react';
+import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow, subDays, format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -29,6 +29,12 @@ export default function Dashboard() {
       ? base44.entities.Lead.filter({ brand_id: activeBrandId }, '-created_date', 50)
       : base44.entities.Lead.list('-created_date', 50),
   });
+  const { data: voiceCalls = [] } = useQuery({
+    queryKey: ['voice-calls', activeBrandId],
+    queryFn: () => activeBrandId
+      ? base44.entities.VoiceCall.filter({ brand_id: activeBrandId }, '-created_date', 20)
+      : base44.entities.VoiceCall.list('-created_date', 20),
+  });
 
   const active = conversations.filter(c => c.status === 'active').length;
   const flagged = conversations.filter(c => c.status === 'flagged' || c.status === 'human_requested').length;
@@ -36,12 +42,14 @@ export default function Dashboard() {
   const aiRate = conversations.length > 0 ? Math.round((aiHandled / conversations.length) * 100) : 0;
   const openTickets = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
   const newLeads = leads.filter(l => l.status === 'new').length;
+  const inboundCalls = voiceCalls.filter(c => c.direction === 'inbound').length;
 
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = subDays(new Date(), 6 - i);
     const dayStr = format(d, 'MMM d');
-    const count = conversations.filter(c => c.created_date && format(new Date(c.created_date), 'MMM d') === dayStr).length;
-    return { day: format(d, 'EEE'), count };
+    const convCount = conversations.filter(c => c.created_date && format(new Date(c.created_date), 'MMM d') === dayStr).length;
+    const callCount = voiceCalls.filter(c => c.created_date && format(new Date(c.created_date), 'MMM d') === dayStr).length;
+    return { day: format(d, 'EEE'), chats: convCount, calls: callCount };
   });
 
   const stats = [
@@ -50,7 +58,7 @@ export default function Dashboard() {
     { icon: AlertTriangle, label: 'Need Attention', value: flagged, sub: 'Flagged + human req.', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
     { icon: Ticket, label: 'Open Tickets', value: openTickets, sub: 'Awaiting resolution', color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
     { icon: Users, label: 'New Leads', value: newLeads, sub: 'Uncontacted', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-    { icon: Zap, label: 'Total Convos', value: conversations.length, sub: 'All time', color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
+    { icon: Phone, label: 'Inbound Calls', value: inboundCalls, sub: 'Voice today', color: '#14b8a6', bg: 'rgba(20,184,184,0.1)' },
   ];
 
   const recent = conversations.slice(0, 5);
@@ -82,14 +90,15 @@ export default function Dashboard() {
 
       <div className="grid lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <h2 className="font-semibold text-sm mb-4">Conversation Volume (Last 7 Days)</h2>
+          <h2 className="font-semibold text-sm mb-4">Chat & Voice Volume (Last 7 Days)</h2>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={last7}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
               <XAxis dataKey="day" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
-              <Bar dataKey="count" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Conversations" />
+              <Bar dataKey="chats" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Chats" />
+              <Bar dataKey="calls" fill="#14b8a6" radius={[4, 4, 0, 0]} name="Calls" />
             </BarChart>
           </ResponsiveContainer>
         </div>

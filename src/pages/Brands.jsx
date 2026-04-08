@@ -38,6 +38,12 @@ export default function Brands() {
     if (selected?.id === brandId) setSelected(null);
   };
 
+  const handleDelete = async (brandId) => {
+    await base44.entities.Brand.delete(brandId);
+    refetch();
+    if (selected?.id === brandId) setSelected(null);
+  };
+
   const selectedBrand = brands.find(b => b.id === selected?.id);
 
   return (
@@ -94,6 +100,7 @@ export default function Brands() {
               setSelected({ ...selectedBrand, ...data });
             }}
             onArchive={() => handleArchive(selectedBrand.id)}
+            onDelete={() => handleDelete(selectedBrand.id)}
           />
         </div>
       )}

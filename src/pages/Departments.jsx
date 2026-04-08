@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import { Building2, Plus, Users, MessageSquare, Edit2, ToggleRight, ToggleLeft, X, Check } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { Building2, Plus, Users, MessageSquare, Edit2, ToggleRight, ToggleLeft, X, Check, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const COLORS = ['#7c3aed', '#0891b2', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'];
@@ -15,26 +16,34 @@ const DEFAULT_DEPTS = [
 ];
 
 export default function Departments() {
-  const { activeBrandId, activeBrand } = useBrand();
+  const { activeBrandId, activeBrand, isInitialized } = useBrand();
   const [form, setForm] = useState(null); // null | dept object
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.Department.filter({ brand_id: activeBrandId }, 'name', 100)
-      : base44.entities.Department.list('name', 100),
+      : [],
+    enabled: !!activeBrandId && isInitialized,
   });
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['convos-dept', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.Conversation.filter({ brand_id: activeBrandId }, '-created_date', 500)
-      : base44.entities.Conversation.list('-created_date', 500),
+      : [],
+    enabled: !!activeBrandId && isInitialized,
   });
 
-  const { data: users = [] } = useQuery({ queryKey: ['users'], queryFn: () => base44.entities.User.list() });
+  const { data: users = [] } = useQuery({ 
+    queryKey: ['users'], 
+    queryFn: () => base44.entities.User.list(),
+    enabled: isInitialized,
+  });
 
   const openConvos = conversations.filter(c => c.status === 'active' || c.status === 'waiting');
 
@@ -42,26 +51,80 @@ export default function Departments() {
 
   const seedDefaults = async () => {
     if (!activeBrandId) return;
-    for (const d of DEFAULT_DEPTS) {
-      await base44.entities.Department.create({ ...d, brand_id: activeBrandId, is_active: true });
+    try {
+      for (const d of DEFAULT_DEPTS) {
+        await base44.entities.Department.create({ ...d, brand_id: activeBrandId, is_active: true });
+      }
+      toast({ title: 'Departments created' });
+      qc.invalidateQueries({ queryKey: ['departments', activeBrandId] });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to seed departments',
+        variant: 'destructive',
+      });
     }
-    qc.invalidateQueries({ queryKey: ['departments', activeBrandId] });
   };
 
   const save = async () => {
+    if (!activeBrandId) {
+      setError('Brand not selected. Please select a brand first.');
+      return;
+    }
+    if (!form.name.trim()) {
+      setError('Department name is required');
+      return;
+    }
+
     setSaving(true);
-    const payload = { ...form, brand_id: activeBrandId };
-    if (form.id) await base44.entities.Department.update(form.id, payload);
-    else await base44.entities.Department.create(payload);
-    qc.invalidateQueries({ queryKey: ['departments', activeBrandId] });
-    setForm(null);
-    setSaving(false);
+    setError('');
+    try {
+      const payload = { ...form, brand_id: activeBrandId };
+      if (form.id) await base44.entities.Department.update(form.id, payload);
+      else await base44.entities.Department.create(payload);
+      toast({
+        title: 'Success',
+        description: form.id ? 'Department updated' : 'Department created',
+      });
+      qc.invalidateQueries({ queryKey: ['departments', activeBrandId] });
+      setForm(null);
+    } catch (err) {
+      setError(err.message || 'Failed to save department');
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggle = async (dept) => {
-    await base44.entities.Department.update(dept.id, { is_active: !dept.is_active });
-    qc.invalidateQueries({ queryKey: ['departments', activeBrandId] });
+    try {
+      await base44.entities.Department.update(dept.id, { is_active: !dept.is_active });
+      qc.invalidateQueries({ queryKey: ['departments', activeBrandId] });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to toggle',
+        variant: 'destructive',
+      });
+    }
   };
+
+  if (!isInitialized || !activeBrandId) {
+    return (
+      <div className="p-6 max-w-5xl">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-5xl">
@@ -162,6 +225,12 @@ export default function Departments() {
               <button onClick={() => setForm(null)}><X className="w-4 h-4 text-gray-400" /></button>
             </div>
             <div className="px-6 py-5 space-y-4">
+              {error && (
+                <div className="flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-medium text-gray-500 mb-1.5 block">Name</label>
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}

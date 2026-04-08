@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
-import { Plus, Edit2, Trash2, Copy } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { Plus, Edit2, Trash2, Copy, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,14 +15,18 @@ export default function CannedResponses() {
   const [editingResponse, setEditingResponse] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ shortcut: '', title: '', content: '', is_shared: false });
-  const { activeBrandId } = useBrand();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const { activeBrandId, isInitialized } = useBrand();
   const qc = useQueryClient();
+  const { toast } = useToast();
 
   const { data: responses = [] } = useQuery({
     queryKey: ['canned-responses', activeBrandId],
     queryFn: () => activeBrandId
       ? base44.entities.CannedResponse.filter({ brand_id: activeBrandId })
       : [],
+    enabled: !!activeBrandId && isInitialized,
   });
 
   const filtered = responses.filter(r =>
@@ -30,22 +35,70 @@ export default function CannedResponses() {
   );
 
   const saveResponse = async () => {
-    const payload = { ...form, brand_id: activeBrandId, is_shared: form.is_shared };
-    if (editingResponse) {
-      await base44.entities.CannedResponse.update(editingResponse.id, payload);
-    } else {
-      await base44.entities.CannedResponse.create(payload);
+    if (!activeBrandId) {
+      setError('Brand not selected. Please select a brand first.');
+      return;
     }
-    qc.invalidateQueries({ queryKey: ['canned-responses', activeBrandId] });
-    setShowForm(false);
-    setEditingResponse(null);
-    setForm({ shortcut: '', title: '', content: '', is_shared: false });
+    if (!form.shortcut.trim() || !form.title.trim() || !form.content.trim()) {
+      setError('All fields are required');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+    try {
+      const payload = { ...form, brand_id: activeBrandId, is_shared: form.is_shared };
+      if (editingResponse) {
+        await base44.entities.CannedResponse.update(editingResponse.id, payload);
+      } else {
+        await base44.entities.CannedResponse.create(payload);
+      }
+      toast({
+        title: 'Success',
+        description: editingResponse ? 'Response updated' : 'Response created',
+      });
+      qc.invalidateQueries({ queryKey: ['canned-responses', activeBrandId] });
+      setShowForm(false);
+      setEditingResponse(null);
+      setForm({ shortcut: '', title: '', content: '', is_shared: false });
+    } catch (err) {
+      setError(err.message || 'Failed to save response');
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to save response',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteResponse = async (id) => {
-    await base44.entities.CannedResponse.delete(id);
-    qc.invalidateQueries({ queryKey: ['canned-responses', activeBrandId] });
+    try {
+      await base44.entities.CannedResponse.delete(id);
+      toast({ title: 'Deleted' });
+      qc.invalidateQueries({ queryKey: ['canned-responses', activeBrandId] });
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to delete',
+        variant: 'destructive',
+      });
+    }
   };
+
+  if (!isInitialized || !activeBrandId) {
+    return (
+      <div className="p-6 max-w-4xl">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-4xl">
@@ -63,6 +116,12 @@ export default function CannedResponses() {
               <DialogTitle>{editingResponse ? 'Edit' : 'New'} Canned Response</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {error && (
+                <div className="flex gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              )}
               <div>
                 <label className="text-sm font-medium mb-1 block">Shortcut</label>
                 <Input
@@ -98,7 +157,9 @@ export default function CannedResponses() {
               </div>
               <div className="flex gap-2 justify-end">
                 <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                <Button onClick={saveResponse}>Save</Button>
+                <Button onClick={saveResponse} disabled={saving}>
+                  {saving ? 'Saving...' : 'Save'}
+                </Button>
               </div>
             </div>
           </DialogContent>

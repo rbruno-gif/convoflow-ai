@@ -18,15 +18,21 @@ Deno.serve(async (req) => {
     // Fetch the page content
     let pageText = '';
     try {
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; U2CBot/1.0)' }
-      });
-      
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      }
-      
-      const html = await res.text();
+     console.log(`[Scraper] Fetching URL: ${url}`);
+
+     const res = await fetch(url, {
+       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; U2CBot/1.0)' },
+       signal: AbortSignal.timeout(15000) // 15s timeout
+     });
+
+     console.log(`[Scraper] HTTP ${res.status} from ${url}`);
+
+     if (!res.ok) {
+       throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+     }
+
+     const html = await res.text();
+     console.log(`[Scraper] Downloaded ${html.length} bytes from ${url}`);
       // Strip HTML tags, scripts, styles
       pageText = html
         .replace(/<script[\s\S]*?<\/script>/gi, '')

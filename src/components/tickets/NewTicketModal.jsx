@@ -7,13 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
-export default function NewTicketModal({ onClose, onCreate }) {
+export default function NewTicketModal({ brandId, onClose, onCreate }) {
   const [form, setForm] = useState({ customer_name: '', customer_email: '', title: '', description: '', priority: 'medium', channel: 'chat', status: 'open' });
 
   const save = async () => {
-    if (!form.customer_name || !form.title) return;
+    if (!form.customer_name || !form.title || !brandId) return;
     const due = new Date(); due.setHours(due.getHours() + (form.priority === 'urgent' ? 4 : form.priority === 'high' ? 8 : 24));
-    await base44.entities.Ticket.create({ ...form, sla_due_at: due.toISOString() });
+    await base44.entities.Ticket.create({ ...form, brand_id: brandId, sla_due_at: due.toISOString() });
     onCreate();
   };
 

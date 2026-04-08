@@ -44,7 +44,9 @@ export default function ConversationList({
     // Unresolved conversations first, by last message time
     if (a.status === 'resolved' && b.status !== 'resolved') return 1;
     if (a.status !== 'resolved' && b.status === 'resolved') return -1;
-    return new Date(b.last_message_at) - new Date(a.last_message_at);
+    const aTime = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+    const bTime = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+    return bTime - aTime;
   });
 
   return (
@@ -163,9 +165,11 @@ export default function ConversationList({
 
                     <div className="flex items-center gap-1 mt-1">
                       <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(conversation.last_message_at), {
-                          addSuffix: true,
-                        })}
+                        {conversation.last_message_at
+                          ? formatDistanceToNow(new Date(conversation.last_message_at), {
+                              addSuffix: true,
+                            })
+                          : 'Just now'}
                       </span>
 
                       {conversation.sla_first_response_breached && (

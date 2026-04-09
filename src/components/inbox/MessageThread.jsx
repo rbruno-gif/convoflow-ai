@@ -86,9 +86,25 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     setSending(true);
     setAction('transfer', 'loading');
     try {
-      // Put conversation in queue — agent must take it
-      await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'waiting', assigned_agent: null });
+      // Ensure leadId is populated before transferring (so agent can send via Umnico)
+      let updatePayload = { mode: 'human', status: 'waiting', assigned_agent: null };
       
+      if (conversation.customer_fb_id && !conversation.umnico_lead_id) {
+        console.log('[Inbox] Looking up leadId before transfer...');
+        try {
+          const result = await base44.functions.invoke('sendUmnicoMessage', {
+            conversationId: conversation.id,
+            text: '[Internal: leadId lookup]'
+          });
+          // Function will have auto-populated leadId on success
+          console.log('[Inbox] LeadId populated for transfer');
+        } catch (e) {
+          // Lookup may fail, but proceed anyway — agent can still message via fallback
+          console.warn('[Inbox] LeadId lookup failed, proceeding with transfer:', e?.message);
+        }
+      }
+      
+      await base44.entities.Conversation.update(conversation.id, updatePayload);
       qc.invalidateQueries({ queryKey: ['conversations'] });
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
       setAction('transfer', 'done');

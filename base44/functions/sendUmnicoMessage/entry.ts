@@ -19,23 +19,50 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing conversationId or text' }), { status: 400 });
     }
 
+    if (!UMNICO_API_KEY) {
+      return new Response(JSON.stringify({ error: 'UMNICO_API_KEY not configured' }), { status: 500 });
+    }
+
     const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId);
     if (!conversation) {
       return new Response(JSON.stringify({ error: 'Conversation not found' }), { status: 404 });
     }
 
-    const leadId = conversation.umnico_lead_id;
+    const contactId = conversation.customer_fb_id;
+    if (!contactId) {
+      return new Response(JSON.stringify({ error: 'No customer_fb_id on conversation' }), { status: 400 });
+    }
+
+    // Step 1: Find Umnico lead ID by searching with the Facebook contact ID
+    console.log(`[sendUmnicoMessage] Looking up lead for contactId: ${contactId}`);
+    const searchRes = await fetch(`https://api.umnico.com/v1.3/leads?search=${encodeURIComponent(contactId)}`, {
+      headers: {
+        'Authorization': `Bearer ${UMNICO_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const searchBody = await searchRes.text();
+    console.log(`[sendUmnicoMessage] Lead search status: ${searchRes.status}, response: ${searchBody}`);
+
+    if (!searchRes.ok) {
+      return new Response(JSON.stringify({ error: `Lead search failed: ${searchRes.status}`, detail: searchBody }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    const searchData = JSON.parse(searchBody);
+    // Extract lead ID — try common response shapes
+    const leads = searchData?.data || searchData?.leads || searchData?.items || searchData;
+    const leadId = Array.isArray(leads) ? leads[0]?.id : searchData?.id;
+
     if (!leadId) {
-      return new Response(JSON.stringify({ error: 'No umnico_lead_id on conversation' }), { status: 400 });
+      console.error(`[sendUmnicoMessage] No lead found for contactId: ${contactId}`, searchBody);
+      return new Response(JSON.stringify({ error: 'No Umnico lead found for this contact', detail: searchBody }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
 
-    if (!UMNICO_API_KEY) {
-      return new Response(JSON.stringify({ error: 'UMNICO_API_KEY not configured' }), { status: 500 });
-    }
+    console.log(`[sendUmnicoMessage] Found leadId: ${leadId}, sending message: ${text}`);
 
-    console.log(`[sendUmnicoMessage] Sending to leadId: ${leadId}, text: ${text}`);
-
-    const res = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
+    // Step 2: Send message via lead ID
+    const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,13 +71,13 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ text }),
     });
 
-    const body = await res.text();
-    if (res.ok) {
-      console.log(`[sendUmnicoMessage] SUCCESS — status: ${res.status}, response: ${body}`);
-      return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    const sendBody = await sendRes.text();
+    if (sendRes.ok) {
+      console.log(`[sendUmnicoMessage] SUCCESS — status: ${sendRes.status}, response: ${sendBody}`);
+      return new Response(JSON.stringify({ success: true, leadId }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } else {
-      console.error(`[sendUmnicoMessage] FAILED — status: ${res.status}, response: ${body}`);
-      return new Response(JSON.stringify({ error: `Umnico API error: ${res.status}`, detail: body }), { status: 502, headers: { 'Content-Type': 'application/json' } });
+      console.error(`[sendUmnicoMessage] FAILED — status: ${sendRes.status}, response: ${sendBody}`);
+      return new Response(JSON.stringify({ error: `Umnico send failed: ${sendRes.status}`, detail: sendBody }), { status: 502, headers: { 'Content-Type': 'application/json' } });
     }
 
   } catch (error) {

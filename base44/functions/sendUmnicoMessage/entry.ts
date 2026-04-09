@@ -24,24 +24,28 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Conversation not found' }), { status: 404 });
     }
 
-    const leadId = conversation.umnico_lead_id;
-    if (!leadId) {
-      return new Response(JSON.stringify({ error: 'No Umnico lead ID on conversation' }), { status: 400 });
+    const contactId = conversation.customer_fb_id;
+    if (!contactId) {
+      return new Response(JSON.stringify({ error: 'No customer contact ID on conversation' }), { status: 400 });
     }
 
     if (!UMNICO_API_KEY) {
       return new Response(JSON.stringify({ error: 'UMNICO_API_KEY not configured' }), { status: 500 });
     }
 
-    console.log(`[sendUmnicoMessage] Sending to leadId: ${leadId}, text: ${text}`);
+    console.log(`[sendUmnicoMessage] Sending to contactId: ${contactId}, text: ${text}`);
 
-    const res = await fetch(`https://api.umnico.com/v1.3/leads/${leadId}/messages`, {
+    const res = await fetch('https://api.umnico.com/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${UMNICO_API_KEY}`,
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({
+        channelType: 'facebook',
+        contactId,
+        text,
+      }),
     });
 
     const body = await res.text();

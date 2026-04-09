@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const UMNICO_API_KEY = Deno.env.get('UMNICO_API_KEY');
+const FB_PAGE_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
 
 // Cache the userId so we don't fetch managers on every call
 let cachedUserId = null;
@@ -11,11 +12,54 @@ async function getUmnicoUserId() {
     headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}` }
   });
   const managers = await res.json();
-  console.log('[sendUmnicoMessage] managers:', JSON.stringify(managers));
-  // Use the owner, or first manager
   const owner = managers.find(m => m.role === 'owner') || managers[0];
   cachedUserId = owner?.id;
   return cachedUserId;
+}
+
+async function sendViaUmnico(leadId, contactId, text) {
+  const userId = await getUmnicoUserId();
+
+  const sourcesRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/sources`, {
+    headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}` }
+  });
+  const sources = await sourcesRes.json();
+  const src = Array.isArray(sources) ? (sources.find(s => s.type === 'message') || sources[0]) : null;
+
+  const sendBody = { message: { text } };
+  if (userId) sendBody.userId = userId;
+  if (src?.realId) sendBody.source = String(src.realId);
+  if (src?.saId) sendBody.saId = Number(src.saId);
+
+  console.log('[sendUmnicoMessage] Sending via Umnico, leadId:', leadId, 'body:', JSON.stringify(sendBody));
+
+  const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(sendBody)
+  });
+
+  const result = await sendRes.text();
+  console.log('[sendUmnicoMessage] Umnico send status:', sendRes.status, 'body:', result);
+  if (!sendRes.ok) throw new Error(`Umnico send failed: ${result}`);
+  return result;
+}
+
+async function sendViaFacebook(recipientId, text) {
+  console.log('[sendUmnicoMessage] Sending via Facebook Graph API, recipientId:', recipientId);
+  const fbRes = await fetch('https://graph.facebook.com/v18.0/me/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      recipient: { id: recipientId },
+      message: { text },
+      access_token: FB_PAGE_TOKEN,
+    }),
+  });
+  const result = await fbRes.text();
+  console.log('[sendUmnicoMessage] Facebook send status:', fbRes.status, 'body:', result);
+  if (!fbRes.ok) throw new Error(`Facebook send failed: ${result}`);
+  return result;
 }
 
 Deno.serve(async (req) => {
@@ -35,43 +79,18 @@ Deno.serve(async (req) => {
     }
 
     const leadId = conversation.umnico_lead_id;
-    if (!leadId) {
-      return Response.json({ error: 'No umnico_lead_id on conversation.' }, { status: 400 });
+    const contactId = conversation.customer_fb_id;
+
+    // Try Umnico first (if we have a leadId), else fall back to Facebook Graph API
+    if (leadId && UMNICO_API_KEY) {
+      const result = await sendViaUmnico(leadId, contactId, text);
+      return Response.json({ success: true, method: 'umnico', response: result });
+    } else if (contactId && FB_PAGE_TOKEN) {
+      const result = await sendViaFacebook(contactId, text);
+      return Response.json({ success: true, method: 'facebook', response: result });
+    } else {
+      return Response.json({ error: 'No delivery method available: missing leadId and Facebook token' }, { status: 400 });
     }
-
-    // Get the real userId for this Umnico account
-    const userId = await getUmnicoUserId();
-    console.log('[sendUmnicoMessage] using userId:', userId, 'leadId:', leadId);
-
-    // Fetch channel sources to get the correct realId
-    const sourcesRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/sources`, {
-      headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}` }
-    });
-    const sources = await sourcesRes.json();
-    console.log('[sendUmnicoMessage] sources:', JSON.stringify(sources));
-
-    const src = Array.isArray(sources)
-      ? (sources.find(s => s.type === 'message') || sources[0])
-      : null;
-
-    const sendBody = { message: { text } };
-    if (userId) sendBody.userId = userId;
-    if (src?.realId) sendBody.source = String(src.realId);
-    if (src?.saId) sendBody.saId = Number(src.saId);
-
-    console.log('[sendUmnicoMessage] sending body:', JSON.stringify(sendBody));
-
-    const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(sendBody)
-    });
-
-    const result = await sendRes.text();
-    console.log('[sendUmnicoMessage] send status:', sendRes.status, 'body:', result);
-
-    if (!sendRes.ok) return Response.json({ error: result }, { status: sendRes.status });
-    return Response.json({ success: true, response: result });
 
   } catch (error) {
     console.error('[sendUmnicoMessage] Error:', error.message);

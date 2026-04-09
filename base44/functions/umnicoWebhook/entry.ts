@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
 
-    console.log('[umnicoWebhook] Received payload:', JSON.stringify(payload));
+    console.log('[umnicoWebhook] Full payload received:', JSON.stringify(payload, null, 2));
 
     // Umnico sends messages in this structure
     const contactId = payload.contactId || payload.contact_id || payload.from;

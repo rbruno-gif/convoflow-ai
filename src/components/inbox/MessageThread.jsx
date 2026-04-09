@@ -59,17 +59,18 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         last_message_time: new Date().toISOString(),
       });
 
-      // Send to customer via Umnico if conversation has a contact ID
-      if (conversation.customer_fb_id) {
-        try {
-          console.log('[Inbox] Calling sendUmnicoMessage — contactId:', conversation.customer_fb_id, 'text:', content);
-          const result = await base44.functions.invoke('sendUmnicoMessage', { conversationId: conversation.id, text: content });
-          console.log('[Inbox] sendUmnicoMessage SUCCESS:', result?.data);
-        } catch (e) {
-          console.error('[Inbox] sendUmnicoMessage FAILED:', e?.response?.data || e?.message || e);
-        }
-      } else {
-        console.warn('[Inbox] No customer_fb_id on conversation — skipping Umnico send');
+      // Send to customer via Zapier webhook
+      try {
+        console.log('[Inbox] Posting to Zapier — to:', conversation.customer_fb_id, 'text:', content);
+        const zapierRes = await fetch('https://hooks.zapier.com/hooks/catch/10829424/u7ru89d/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: conversation.customer_fb_id, message: content })
+        });
+        const zapierData = await zapierRes.text();
+        console.log('[Inbox] Zapier response status:', zapierRes.status, 'body:', zapierData);
+      } catch (e) {
+        console.error('[Inbox] Zapier fetch failed:', e?.message || e);
       }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
@@ -86,25 +87,7 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     setSending(true);
     setAction('transfer', 'loading');
     try {
-      // Ensure leadId is populated before transferring (so agent can send via Umnico)
-      let updatePayload = { mode: 'human', status: 'waiting', assigned_agent: null };
-      
-      if (conversation.customer_fb_id && !conversation.umnico_lead_id) {
-        console.log('[Inbox] Looking up leadId before transfer...');
-        try {
-          const result = await base44.functions.invoke('sendUmnicoMessage', {
-            conversationId: conversation.id,
-            text: '[Internal: leadId lookup]'
-          });
-          // Function will have auto-populated leadId on success
-          console.log('[Inbox] LeadId populated for transfer');
-        } catch (e) {
-          // Lookup may fail, but proceed anyway — agent can still message via fallback
-          console.warn('[Inbox] LeadId lookup failed, proceeding with transfer:', e?.message);
-        }
-      }
-      
-      await base44.entities.Conversation.update(conversation.id, updatePayload);
+      await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'waiting', assigned_agent: null });
       qc.invalidateQueries({ queryKey: ['conversations'] });
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
       setAction('transfer', 'done');

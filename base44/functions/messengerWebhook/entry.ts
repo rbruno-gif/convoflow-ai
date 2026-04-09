@@ -3,6 +3,20 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 Deno.serve(async (req) => {
   try {
     // Step 1: Handle preflight and method check
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      const mode = url.searchParams.get('hub.mode');
+      const token = url.searchParams.get('hub.verify_token');
+      const challenge = url.searchParams.get('hub.challenge');
+      const VERIFY_TOKEN = 's201uog9d8';
+      if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+        console.log('Facebook webhook verified successfully');
+        return new Response(challenge, { status: 200, headers: { 'Content-Type': 'text/plain' } });
+      } else {
+        return new Response('Forbidden', { status: 403 });
+      }
+    }
+
     if (req.method === 'OPTIONS') {
       return new Response(null, {
         status: 200,

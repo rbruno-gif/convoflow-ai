@@ -50,25 +50,33 @@ Deno.serve(async (req) => {
     }
 
     const searchData = JSON.parse(searchBody);
-    // Extract lead ID — try common response shapes
+    // Extract lead — try common response shapes
     const leads = searchData?.data || searchData?.leads || searchData?.items || searchData;
-    const leadId = Array.isArray(leads) ? leads[0]?.id : searchData?.id;
+    const lead = Array.isArray(leads) ? leads[0] : searchData;
+    const leadId = lead?.id;
+    const source = lead?.saId || (lead?.sources && lead.sources[0]) || null;
 
     if (!leadId) {
       console.error(`[sendUmnicoMessage] No lead found for contactId: ${contactId}`, searchBody);
       return new Response(JSON.stringify({ error: 'No Umnico lead found for this contact', detail: searchBody }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
 
-    console.log(`[sendUmnicoMessage] Found leadId: ${leadId}, sending message: ${text}`);
+    console.log(`[sendUmnicoMessage] Found leadId: ${leadId}, source: ${source}, sending message: ${text}`);
 
     // Step 2: Send message via lead ID
+    const sendPayload = {
+      message: { text },
+      userId: 1,
+    };
+    if (source) sendPayload.source = source;
+
     const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${UMNICO_API_KEY}`,
       },
-      body: JSON.stringify({ text }),
+      body: JSON.stringify(sendPayload),
     });
 
     const sendBody = await sendRes.text();

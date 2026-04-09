@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
 import GroupDashboard from '@/pages/GroupDashboard';
-import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight } from 'lucide-react';
+import { MessageSquare, AlertTriangle, Bot, Users, Ticket, Zap, ArrowRight, Webhook } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow, subDays, format } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -54,6 +55,20 @@ export default function Dashboard() {
   ];
 
   const recent = conversations.slice(0, 5);
+  const [webhookResult, setWebhookResult] = useState(null);
+  const [webhookLoading, setWebhookLoading] = useState(false);
+
+  const registerWebhook = async () => {
+    setWebhookLoading(true);
+    setWebhookResult(null);
+    try {
+      const res = await base44.functions.invoke('registerUmnicoWebhook', {});
+      setWebhookResult({ ok: true, data: JSON.stringify(res.data, null, 2) });
+    } catch (e) {
+      setWebhookResult({ ok: false, data: e.message });
+    }
+    setWebhookLoading(false);
+  };
 
   // If the active brand is U2C Group, show the group-level hub
   if (activeBrand?.slug === 'u2c-group') {
@@ -62,9 +77,30 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">{activeBrand?.name || 'ConvoFlow'} · Overview</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground mt-1">{activeBrand?.name || 'ConvoFlow'} · Overview</p>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <button
+            onClick={registerWebhook}
+            disabled={webhookLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+          >
+            <Webhook className="w-4 h-4" />
+            {webhookLoading ? 'Registering…' : 'Register Umnico Webhook'}
+          </button>
+          {webhookResult && (
+            <div className={`text-xs px-3 py-2 rounded-lg max-w-xs break-all ${
+              webhookResult.ok ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+            }`}>
+              <p className="font-semibold mb-1">{webhookResult.ok ? '✓ Registered' : '✗ Error'}</p>
+              <pre className="whitespace-pre-wrap font-mono text-[10px]">{webhookResult.data}</pre>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">

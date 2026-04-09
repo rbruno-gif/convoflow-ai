@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 
 const WEBHOOK_TYPES = [
   { value: 'facebook', label: 'Facebook Messenger', icon: Facebook, desc: 'Sync messages from Facebook pages' },
-  { value: 'zapier', label: 'Zapier', icon: Webhook, desc: 'Connect with Zapier automations' },
 ];
 
 export default function Webhooks() {
@@ -125,11 +124,7 @@ export default function Webhooks() {
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm font-semibold text-blue-900 mb-1">Facebook Messenger</p>
-          <p className="text-xs text-blue-700">Automatically receive messages from your connected Facebook pages. Configure agent reply webhook for live agent handoff.</p>
-        </div>
-        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-          <p className="text-sm font-semibold text-orange-900 mb-1">Zapier Integration</p>
-          <p className="text-xs text-orange-700">Trigger Zapier workflows when conversations are created or updated.</p>
+          <p className="text-xs text-blue-700">Automatically receive messages from your connected Facebook pages.</p>
         </div>
       </div>
 
@@ -276,15 +271,7 @@ export default function Webhooks() {
                 </div>
               )}
 
-              {form.type === 'facebook' && (
-                <div>
-                  <label className="text-xs font-medium text-gray-500 mb-1.5 block">Agent Reply Zapier Webhook URL</label>
-                  <input value={form.agent_reply_zapier_url || ''} onChange={e => setForm(f => ({ ...f, agent_reply_zapier_url: e.target.value }))}
-                    placeholder="https://hooks.zapier.com/hooks/catch/..."
-                    className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400" />
-                  <p className="text-[11px] text-gray-500 mt-1">Zapier webhook URL that sends agent replies back to Facebook Messenger</p>
-                </div>
-              )}
+
             </div>
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={() => setForm(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 font-medium">
@@ -322,13 +309,6 @@ export default function Webhooks() {
                 </code>
               </div>
 
-              <div>
-                <label className="text-xs font-medium text-gray-500 mb-1.5 block">Agent Reply Zapier Webhook URL</label>
-                <input value={form.agent_reply_zapier_url || ''} onChange={e => setForm(f => ({ ...f, agent_reply_zapier_url: e.target.value }))}
-                  placeholder="https://hooks.zapier.com/hooks/catch/..."
-                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-violet-400" />
-                <p className="text-[11px] text-gray-500 mt-1">Zapier webhook URL that sends agent replies back to Facebook Messenger</p>
-              </div>
             </div>
             <div className="flex gap-3 px-6 pb-6">
               <button onClick={() => setForm(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 font-medium">

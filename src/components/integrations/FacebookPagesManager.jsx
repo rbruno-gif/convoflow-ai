@@ -127,11 +127,7 @@ export default function FacebookPagesManager({ brandId }) {
                 <Button variant="outline" size="icon" onClick={() => copyToClipboard(form.verify_token)}><Copy className="w-3.5 h-3.5" /></Button>
               </div>
             </div>
-            <div className="space-y-1">
-              <Label className="text-xs">Agent Reply Zapier Webhook URL</Label>
-              <Input placeholder="https://hooks.zapier.com/hooks/catch/..." value={form.agent_reply_zapier_url} onChange={e => setForm(f => ({ ...f, agent_reply_zapier_url: e.target.value }))} />
-              <p className="text-[11px] text-muted-foreground mt-1">Paste the Zapier webhook URL that forwards agent replies back to Facebook Messenger. Create a Zap with Webhooks by Zapier as trigger and Facebook Messenger Send Message as action.</p>
-            </div>
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-800 space-y-1">
               <p className="font-semibold">Webhook Setup in Meta Developer Console:</p>
               <p>1. Go to your Meta App → Webhooks → Add Subscription</p>

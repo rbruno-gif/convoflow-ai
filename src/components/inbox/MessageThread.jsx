@@ -59,29 +59,7 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         last_message_time: new Date().toISOString(),
       });
 
-      // If Facebook conversation in human mode, send via Zapier
-      if (isFacebookConversation && conversation.mode === 'human') {
-        const webhooks = await base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id });
-        const webhook = webhooks?.find(w => w.facebook_page_id);
-        
-        if (!webhook?.agent_reply_zapier_url) {
-          setReply(content);
-          setSending(false);
-          return;
-        }
 
-        const fbRes = await fetch(webhook.agent_reply_zapier_url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: conversation.customer_fb_id,
-            message: content,
-            conversation_id: conversation.id,
-          }),
-        });
-        
-        if (!fbRes.ok) throw new Error('Facebook send failed');
-      }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
       qc.invalidateQueries({ queryKey: ['conversations'] });
@@ -100,23 +78,6 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
       // Update conversation to human mode
       await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'active' });
       
-      // Look up MessengerWebhook for this brand
-      const webhooks = await base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id });
-      const webhook = webhooks?.find(w => w.facebook_page_id);
-      
-      if (webhook?.agent_reply_zapier_url) {
-        // Send handoff message to customer
-        await fetch(webhook.agent_reply_zapier_url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: conversation.customer_fb_id,
-            message: 'You are now connected with a live agent. How can I help you?',
-            conversation_id: conversation.id,
-          }),
-        });
-      }
-      
       qc.invalidateQueries({ queryKey: ['conversations'] });
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
       setAction('transfer', 'done');
@@ -134,23 +95,6 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     try {
       // Update conversation back to AI mode
       await base44.entities.Conversation.update(conversation.id, { mode: 'ai' });
-      
-      // Look up MessengerWebhook for this brand
-      const webhooks = await base44.entities.MessengerWebhook.filter({ brand_id: conversation.brand_id });
-      const webhook = webhooks?.find(w => w.facebook_page_id);
-      
-      if (webhook?.agent_reply_zapier_url) {
-        // Send reactivation message to customer
-        await fetch(webhook.agent_reply_zapier_url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: conversation.customer_fb_id,
-            message: 'You are now being assisted by our AI assistant. How can I help you?',
-            conversation_id: conversation.id,
-          }),
-        });
-      }
       
       qc.invalidateQueries({ queryKey: ['conversations'] });
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });

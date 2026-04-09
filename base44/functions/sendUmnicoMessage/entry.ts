@@ -28,51 +28,23 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Conversation not found' }), { status: 404 });
     }
 
-    const contactId = conversation.customer_fb_id;
-    if (!contactId) {
-      return new Response(JSON.stringify({ error: 'No customer_fb_id on conversation' }), { status: 400 });
+    const umnicoLeadId = conversation.umnico_lead_id;
+    const source = conversation.umnico_source_id || null;
+
+    if (!umnicoLeadId) {
+      console.error(`[sendUmnicoMessage] No umnico_lead_id on conversation ${conversationId}`);
+      return new Response(JSON.stringify({ error: 'No umnico_lead_id on conversation — webhook must fire first to populate it' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Step 1: Find Umnico lead ID by searching with the Facebook contact ID
-    console.log(`[sendUmnicoMessage] Looking up lead for contactId: ${contactId}`);
-    const searchRes = await fetch(`https://api.umnico.com/v1.3/leads?search=${encodeURIComponent(contactId)}`, {
-      headers: {
-        'Authorization': `Bearer ${UMNICO_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-    });
+    console.log(`[sendUmnicoMessage] Sending to leadId: ${umnicoLeadId}, source: ${source}, text: ${text}`);
 
-    const searchBody = await searchRes.text();
-    console.log(`[sendUmnicoMessage] Lead search — status: ${searchRes.status}`);
-    console.log(`[sendUmnicoMessage] Lead search FULL RESPONSE: ${searchBody}`);
-
-    if (!searchRes.ok) {
-      return new Response(JSON.stringify({ error: `Lead search failed: ${searchRes.status}`, detail: searchBody }), { status: 502, headers: { 'Content-Type': 'application/json' } });
-    }
-
-    const searchData = JSON.parse(searchBody);
-    // Extract lead — try common response shapes
-    const leads = searchData?.data || searchData?.leads || searchData?.items || searchData;
-    const lead = Array.isArray(leads) ? leads[0] : searchData;
-    const leadId = lead?.id;
-    const source = lead?.saId || (lead?.sources && lead.sources[0]) || null;
-
-    if (!leadId) {
-      console.error(`[sendUmnicoMessage] No lead found for contactId: ${contactId}`, searchBody);
-      return new Response(JSON.stringify({ error: 'No Umnico lead found for this contact', detail: searchBody }), { status: 404, headers: { 'Content-Type': 'application/json' } });
-    }
-
-    console.log(`[sendUmnicoMessage] Extracted lead object: ${JSON.stringify(lead)}`);
-    console.log(`[sendUmnicoMessage] Found leadId: ${leadId}, source: ${source}, sending message: ${text}`);
-
-    // Step 2: Send message via lead ID
     const sendPayload = {
       message: { text },
       userId: 1,
     };
     if (source) sendPayload.source = source;
 
-    const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
+    const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${umnicoLeadId}/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

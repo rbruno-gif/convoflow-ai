@@ -36,7 +36,8 @@ Deno.serve(async (req) => {
     const channel = msg?.sa?.type || 'fb_messenger';
     const timestamp = msg?.datetime || new Date().toISOString();
     const brandId = payload.brand_id || null;
-    const leadId = String(payload.leadId);
+    const leadId = String(payload.lead?.id || payload.leadId || '');
+    const sourceId = payload.lead?.saId || null;
 
     if (!contactId || !text) {
       console.error('[umnicoWebhook] Missing contactId or text');
@@ -62,17 +63,20 @@ Deno.serve(async (req) => {
         last_message_time: new Date(timestamp).toISOString(),
         status: 'ai_handling',
         mode: 'ai',
-        umnico_lead_id: leadId,
+        umnico_lead_id: leadId || undefined,
+        umnico_source_id: sourceId || undefined,
       };
       if (brandId) createPayload.brand_id = brandId;
       conversation = await base44.asServiceRole.entities.Conversation.create(createPayload);
       console.log(`[umnicoWebhook] Created conversation: ${conversation.id}`);
     } else {
-      await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+      const updatePayload = {
         last_message: text,
         last_message_time: new Date(timestamp).toISOString(),
-        umnico_lead_id: leadId,
-      });
+      };
+      if (leadId) updatePayload.umnico_lead_id = leadId;
+      if (sourceId) updatePayload.umnico_source_id = sourceId;
+      await base44.asServiceRole.entities.Conversation.update(conversation.id, updatePayload);
       console.log(`[umnicoWebhook] Updated conversation: ${conversation.id}`);
     }
 

@@ -30,6 +30,10 @@
       "type": "string",
       "description": "Umnico leadId for sending messages back via Umnico API"
     },
+    "umnico_source_id": {
+      "type": "string",
+      "description": "Umnico saId (source account ID) for sending messages"
+    },
     "status": {
       "type": "string",
       "enum": [

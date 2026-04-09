@@ -18,56 +18,69 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    console.log('[sendUmnicoMessage] umnico_lead_id:', conversation.umnico_lead_id, 'umnico_source_id:', conversation.umnico_source_id);
-
     const leadId = conversation.umnico_lead_id;
-    if (!leadId) {
-      console.error('[sendUmnicoMessage] No umnico_lead_id on conversation — cannot send.');
-      return Response.json({ error: 'No umnico_lead_id on conversation. An incoming Umnico message must arrive first to populate the lead ID.' }, { status: 400 });
+    const sourceId = conversation.umnico_source_id;
+    const contactId = conversation.customer_fb_id;
+
+    console.log('[sendUmnicoMessage] leadId:', leadId, 'sourceId:', sourceId, 'contactId:', contactId);
+
+    // Path 1: Use v1.3 lead-based send if we have a leadId
+    if (leadId) {
+      // Fetch sources to get the correct realId for the channel
+      const sourcesRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/sources`, {
+        headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}` }
+      });
+      const sourcesRaw = await sourcesRes.text();
+      console.log('[sendUmnicoMessage] Sources status:', sourcesRes.status, 'body:', sourcesRaw);
+
+      let realId = null;
+      let saId = sourceId ? Number(sourceId) : null;
+
+      if (sourcesRes.ok) {
+        const sources = JSON.parse(sourcesRaw);
+        const src = Array.isArray(sources)
+          ? (sources.find(s => s.type === 'message') || sources[0])
+          : null;
+        realId = src?.realId ?? null;
+        saId = src?.saId ?? saId;
+      }
+
+      const sendBody = { message: { text }, userId: 1 };
+      if (realId != null) sendBody.source = String(realId);
+      if (saId != null) sendBody.saId = Number(saId);
+
+      console.log('[sendUmnicoMessage] Sending via v1.3 leadId:', leadId, 'body:', JSON.stringify(sendBody));
+
+      const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(sendBody)
+      });
+      const sendResult = await sendRes.text();
+      console.log('[sendUmnicoMessage] v1.3 send status:', sendRes.status, 'body:', sendResult);
+
+      if (sendRes.ok) {
+        return Response.json({ success: true, method: 'v1.3', response: sendResult });
+      }
+      console.warn('[sendUmnicoMessage] v1.3 send failed, falling back to contactId method...');
     }
 
-    // Fetch all message channels for this lead to get the correct realId
-    const sourcesRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/sources`, {
-      headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}` }
-    });
-    const sourcesRaw = await sourcesRes.text();
-    console.log('[sendUmnicoMessage] Sources response status:', sourcesRes.status, 'body:', sourcesRaw);
-
-    if (!sourcesRes.ok) {
-      return Response.json({ error: `Umnico sources failed: ${sourcesRaw}` }, { status: 502 });
+    // Path 2: Fallback — send via contactId directly (same method aiReply uses, known to work)
+    if (!contactId) {
+      return Response.json({ error: 'No leadId or contactId available to send message.' }, { status: 400 });
     }
 
-    const sources = JSON.parse(sourcesRaw);
-    // Prefer fb_messenger channel of type 'message', fallback to first
-    const fbSource = Array.isArray(sources)
-      ? (sources.find(s => s.type === 'message') || sources[0])
-      : null;
-
-    const realId = fbSource?.realId;
-    const saId = fbSource?.saId ?? (conversation.umnico_source_id ? Number(conversation.umnico_source_id) : undefined);
-
-    console.log('[sendUmnicoMessage] Using realId:', realId, 'saId:', saId);
-
-    const sendBody = { message: { text }, userId: 1 };
-    if (realId != null) sendBody.source = String(realId);
-    if (saId != null) sendBody.saId = Number(saId);
-
-    console.log('[sendUmnicoMessage] Sending to leadId:', leadId, 'body:', JSON.stringify(sendBody));
-
-    const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
+    console.log('[sendUmnicoMessage] Sending via contactId:', contactId);
+    const res = await fetch('https://api.umnico.com/messages', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(sendBody)
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${UMNICO_API_KEY}` },
+      body: JSON.stringify({ channelType: 'facebook', contactId, text })
     });
+    const body = await res.text();
+    console.log('[sendUmnicoMessage] contactId send status:', res.status, 'body:', body);
 
-    const sendResult = await sendRes.text();
-    console.log('[sendUmnicoMessage] Umnico send status:', sendRes.status, 'body:', sendResult);
-
-    if (!sendRes.ok) {
-      return Response.json({ error: sendResult }, { status: sendRes.status });
-    }
-
-    return Response.json({ success: true, response: sendResult });
+    if (!res.ok) return Response.json({ error: body }, { status: res.status });
+    return Response.json({ success: true, method: 'contactId', response: body });
 
   } catch (error) {
     console.error('[sendUmnicoMessage] Error:', error.message);

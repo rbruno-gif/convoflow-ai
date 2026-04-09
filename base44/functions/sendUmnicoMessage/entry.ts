@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
     });
 
     const searchBody = await searchRes.text();
-    console.log(`[sendUmnicoMessage] Lead search status: ${searchRes.status}, response: ${searchBody}`);
+    console.log(`[sendUmnicoMessage] Lead search — status: ${searchRes.status}`);
+    console.log(`[sendUmnicoMessage] Lead search FULL RESPONSE: ${searchBody}`);
 
     if (!searchRes.ok) {
       return new Response(JSON.stringify({ error: `Lead search failed: ${searchRes.status}`, detail: searchBody }), { status: 502, headers: { 'Content-Type': 'application/json' } });
@@ -61,6 +62,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'No Umnico lead found for this contact', detail: searchBody }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
 
+    console.log(`[sendUmnicoMessage] Extracted lead object: ${JSON.stringify(lead)}`);
     console.log(`[sendUmnicoMessage] Found leadId: ${leadId}, source: ${source}, sending message: ${text}`);
 
     // Step 2: Send message via lead ID
@@ -80,11 +82,11 @@ Deno.serve(async (req) => {
     });
 
     const sendBody = await sendRes.text();
+    console.log(`[sendUmnicoMessage] Send — status: ${sendRes.status}`);
+    console.log(`[sendUmnicoMessage] Send FULL RESPONSE: ${sendBody}`);
     if (sendRes.ok) {
-      console.log(`[sendUmnicoMessage] SUCCESS — status: ${sendRes.status}, response: ${sendBody}`);
       return new Response(JSON.stringify({ success: true, leadId }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     } else {
-      console.error(`[sendUmnicoMessage] FAILED — status: ${sendRes.status}, response: ${sendBody}`);
       return new Response(JSON.stringify({ error: `Umnico send failed: ${sendRes.status}`, detail: sendBody }), { status: 502, headers: { 'Content-Type': 'application/json' } });
     }
 

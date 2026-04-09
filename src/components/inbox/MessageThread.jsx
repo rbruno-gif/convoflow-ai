@@ -59,7 +59,14 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         last_message_time: new Date().toISOString(),
       });
 
-
+      // Send to customer via Umnico if conversation has a contact ID
+      if (conversation.customer_fb_id) {
+        try {
+          await base44.functions.invoke('sendUmnicoMessage', { conversationId: conversation.id, text: content });
+        } catch (e) {
+          console.error('Umnico send failed:', e);
+        }
+      }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
       qc.invalidateQueries({ queryKey: ['conversations'] });

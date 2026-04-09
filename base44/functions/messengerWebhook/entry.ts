@@ -142,6 +142,34 @@ Deno.serve(async (req) => {
         status: 'active',
         mode: 'ai',
       });
+      
+      // Auto-populate leadId from Umnico at conversation creation
+      if (from && !conversation.umnico_lead_id) {
+        try {
+          console.log(`[Webhook] Looking up Umnico leadId for contactId: ${from}`);
+          const leadsRes = await fetch('https://api.umnico.com/v1.3/leads?limit=50', {
+            headers: { 'Authorization': `Bearer ${Deno.env.get('UMNICO_API_KEY')}` }
+          });
+          const leadsData = await leadsRes.json();
+          const leads = Array.isArray(leadsData) ? leadsData : (leadsData.leads || leadsData.items || []);
+          
+          for (const lead of leads) {
+            const sources = lead.sources || lead.contacts || [];
+            for (const src of sources) {
+              if (String(src.socialId) === String(from) || String(src.sender) === String(from)) {
+                console.log(`[Webhook] Found leadId: ${lead.id} for contactId: ${from}`);
+                await base44.asServiceRole.entities.Conversation.update(conversation.id, { 
+                  umnico_lead_id: String(lead.id),
+                  umnico_source_id: src.saId || null
+                });
+                break;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`[Webhook] LeadId lookup failed: ${e.message}`);
+        }
+      }
     }
 
     // Step 5: Save incoming message

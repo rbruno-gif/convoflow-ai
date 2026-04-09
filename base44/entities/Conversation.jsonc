@@ -8,11 +8,11 @@
     },
     "customer_name": {
       "type": "string",
-      "description": "Customer's name from Facebook"
+      "description": "Customer's name"
     },
     "customer_fb_id": {
       "type": "string",
-      "description": "Facebook user ID"
+      "description": "External user ID (Facebook, Umnico contact ID, etc.)"
     },
     "customer_avatar": {
       "type": "string",
@@ -22,6 +22,10 @@
       "type": "string",
       "description": "Campaign this conversation belongs to"
     },
+    "channel": {
+      "type": "string",
+      "description": "Channel of the conversation (e.g., umnico, facebook, whatsapp)"
+    },
     "status": {
       "type": "string",
       "enum": [
@@ -29,7 +33,9 @@
         "waiting",
         "flagged",
         "resolved",
-        "human_requested"
+        "human_requested",
+        "ai_handling",
+        "human_handling"
       ],
       "default": "active"
     },
@@ -78,18 +84,15 @@
         "neutral",
         "negative"
       ],
-      "default": "neutral",
-      "description": "Detected sentiment from latest messages"
+      "default": "neutral"
     },
     "is_urgent": {
       "type": "boolean",
-      "default": false,
-      "description": "Auto-flagged as urgent (negative sentiment + keywords)"
+      "default": false
     },
     "sentiment_updated_at": {
       "type": "string",
-      "format": "date-time",
-      "description": "When sentiment was last analyzed"
+      "format": "date-time"
     },
     "intent": {
       "type": "string",
@@ -105,19 +108,16 @@
         "technical_support",
         "other"
       ],
-      "default": "general_question",
-      "description": "Detected conversation intent"
+      "default": "general_question"
     },
     "conversation_summary": {
-      "type": "string",
-      "description": "AI-generated summary of conversation"
+      "type": "string"
     },
     "key_topics": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Key topics/keywords extracted from conversation"
+      }
     },
     "resolution_status": {
       "type": "string",
@@ -130,8 +130,7 @@
     },
     "ai_resolution_attempted": {
       "type": "boolean",
-      "default": false,
-      "description": "AI attempted to resolve before handoff"
+      "default": false
     }
   },
   "required": [

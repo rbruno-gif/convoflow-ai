@@ -62,10 +62,14 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
       // Send to customer via Umnico if conversation has a contact ID
       if (conversation.customer_fb_id) {
         try {
-          await base44.functions.invoke('sendUmnicoMessage', { conversationId: conversation.id, text: content });
+          console.log('[Inbox] Calling sendUmnicoMessage — contactId:', conversation.customer_fb_id, 'text:', content);
+          const result = await base44.functions.invoke('sendUmnicoMessage', { conversationId: conversation.id, text: content });
+          console.log('[Inbox] sendUmnicoMessage SUCCESS:', result?.data);
         } catch (e) {
-          console.error('Umnico send failed:', e);
+          console.error('[Inbox] sendUmnicoMessage FAILED:', e?.response?.data || e?.message || e);
         }
+      } else {
+        console.warn('[Inbox] No customer_fb_id on conversation — skipping Umnico send');
       }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });

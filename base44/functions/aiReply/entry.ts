@@ -100,20 +100,17 @@ Deno.serve(async (req) => {
     });
 
     // Send reply back via Umnico API
-    if (UMNICO_API_KEY && conversation.customer_fb_id) {
+    if (UMNICO_API_KEY && conversation.umnico_lead_id) {
       try {
-        console.log(`[aiReply] Sending reply to Umnico — contactId: ${conversation.customer_fb_id}, text: ${aiText}`);
-        const umnicoRes = await fetch('https://api.umnico.com/messages', {
+        const leadId = conversation.umnico_lead_id;
+        console.log(`[aiReply] Sending reply to Umnico — leadId: ${leadId}, text: ${aiText}`);
+        const umnicoRes = await fetch(`https://api.umnico.com/v1.3/leads/${leadId}/messages`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${UMNICO_API_KEY}`,
           },
-          body: JSON.stringify({
-            channelType: 'facebook',
-            contactId: conversation.customer_fb_id,
-            text: aiText,
-          }),
+          body: JSON.stringify({ text: aiText }),
         });
         const umnicoBody = await umnicoRes.text();
         if (umnicoRes.ok) {
@@ -125,7 +122,7 @@ Deno.serve(async (req) => {
         console.error('[aiReply] Umnico API ERROR (network/exception):', e.message);
       }
     } else {
-      console.warn(`[aiReply] Skipping Umnico send — UMNICO_API_KEY set: ${!!UMNICO_API_KEY}, customer_fb_id: ${conversation.customer_fb_id}`);
+      console.warn(`[aiReply] Skipping Umnico send — UMNICO_API_KEY set: ${!!UMNICO_API_KEY}, umnico_lead_id: ${conversation.umnico_lead_id}`);
     }
 
     return new Response(JSON.stringify({ success: true, reply: aiText }), {

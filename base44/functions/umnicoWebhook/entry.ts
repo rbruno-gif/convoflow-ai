@@ -22,13 +22,21 @@ Deno.serve(async (req) => {
 
     console.log('[umnicoWebhook] Full payload received:', JSON.stringify(payload, null, 2));
 
-    // Umnico sends messages in this structure
-    const contactId = payload.contactId || payload.contact_id || payload.from;
-    const contactName = payload.contactName || payload.contact_name || payload.name || `User ${contactId}`;
-    const text = payload.text || payload.body || payload.message;
-    const channel = payload.channel || payload.source || 'umnico';
-    const timestamp = payload.timestamp || payload.created_at || new Date().toISOString();
+    // Only process incoming messages
+    if (payload.type !== 'message.incoming') {
+      console.log(`[umnicoWebhook] Skipping event type: ${payload.type}`);
+      return new Response(JSON.stringify({ skipped: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // Parse Umnico's actual payload structure
+    const msg = payload.message;
+    const contactId = msg?.sender?.socialId || msg?.source?.sender;
+    const contactName = msg?.sender?.login || `User ${contactId}`;
+    const text = msg?.message?.text;
+    const channel = msg?.sa?.type || 'fb_messenger';
+    const timestamp = msg?.datetime || new Date().toISOString();
     const brandId = payload.brand_id || null;
+    const leadId = String(payload.leadId);
 
     if (!contactId || !text) {
       console.error('[umnicoWebhook] Missing contactId or text');
@@ -54,6 +62,7 @@ Deno.serve(async (req) => {
         last_message_time: new Date(timestamp).toISOString(),
         status: 'ai_handling',
         mode: 'ai',
+        umnico_lead_id: leadId,
       };
       if (brandId) createPayload.brand_id = brandId;
       conversation = await base44.asServiceRole.entities.Conversation.create(createPayload);
@@ -62,6 +71,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.Conversation.update(conversation.id, {
         last_message: text,
         last_message_time: new Date(timestamp).toISOString(),
+        umnico_lead_id: leadId,
       });
       console.log(`[umnicoWebhook] Updated conversation: ${conversation.id}`);
     }

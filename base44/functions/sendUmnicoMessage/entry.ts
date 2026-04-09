@@ -1,83 +1,52 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
-const UMNICO_API_KEY = Deno.env.get('UMNICO_API_KEY');
-
 Deno.serve(async (req) => {
-  if (req.method !== 'POST') {
-    return new Response('Method Not Allowed', { status: 405 });
-  }
-
   try {
     const base44 = createClientFromRequest(req);
-    
     const { conversationId, text } = await req.json();
-    if (!conversationId || !text) {
-      return new Response(JSON.stringify({ error: 'Missing conversationId or text' }), { status: 400 });
-    }
-
-    if (!UMNICO_API_KEY) {
-      return new Response(JSON.stringify({ error: 'UMNICO_API_KEY not configured' }), { status: 500 });
-    }
 
     const conversation = await base44.asServiceRole.entities.Conversation.get(conversationId);
-    if (!conversation) {
-      return new Response(JSON.stringify({ error: 'Conversation not found' }), { status: 404 });
-    }
+    console.log(`[sendUmnicoMessage] umnico_lead_id: ${conversation.umnico_lead_id}, customer_fb_id: ${conversation.customer_fb_id}`);
 
-    const umnicoLeadId = conversation.umnico_lead_id;
-    const source = conversation.umnico_source_id || null;
+    const UMNICO_API_KEY = Deno.env.get('UMNICO_API_KEY');
 
-    let resolvedLeadId = umnicoLeadId;
-    let resolvedSource = source;
+    let leadId = conversation.umnico_lead_id;
+    let source = conversation.umnico_source_id || null;
 
-    if (!resolvedLeadId) {
-      console.log(`[sendUmnicoMessage] No umnico_lead_id on conversation — falling back to lead search for contactId: ${conversation.customer_fb_id}`);
+    if (!leadId) {
+      console.log(`[sendUmnicoMessage] No umnico_lead_id — searching by customer_fb_id: ${conversation.customer_fb_id}`);
       const searchRes = await fetch(`https://api.umnico.com/v1.3/leads?search=${encodeURIComponent(conversation.customer_fb_id)}`, {
-        headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}` },
       });
-      const searchBody = await searchRes.text();
-      console.log(`[sendUmnicoMessage] Lead search fallback — status: ${searchRes.status}`);
-      console.log(`[sendUmnicoMessage] Lead search fallback FULL RESPONSE: ${searchBody}`);
-      const searchData = JSON.parse(searchBody);
-      const leads = searchData?.data || searchData?.leads || searchData?.items || (Array.isArray(searchData) ? searchData : null);
+      const searchRaw = await searchRes.text();
+      console.log(`[sendUmnicoMessage] Lead search FULL RESPONSE: ${searchRaw}`);
+      const searchData = JSON.parse(searchRaw);
+      const leads = searchData?.data || searchData?.leads || searchData?.items || (Array.isArray(searchData) ? searchData : []);
       const lead = Array.isArray(leads) ? leads[0] : null;
-      resolvedLeadId = lead?.id;
-      resolvedSource = lead?.saId || null;
-      if (!resolvedLeadId) {
-        console.error(`[sendUmnicoMessage] No lead found in fallback search`);
-        return new Response(JSON.stringify({ error: 'No umnico_lead_id on conversation and lead search returned no results' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-      }
-      console.log(`[sendUmnicoMessage] Fallback found leadId: ${resolvedLeadId}, source: ${resolvedSource}`);
+      leadId = lead?.id;
+      source = lead?.saId || null;
     }
 
-    console.log(`[sendUmnicoMessage] Sending to leadId: ${resolvedLeadId}, source: ${resolvedSource}, text: ${text}`);
+    const sendBody = { message: { text }, userId: 1 };
+    if (source) sendBody.source = source;
 
-    const sendPayload = {
-      message: { text },
-      userId: 1,
-    };
-    if (resolvedSource) sendPayload.source = resolvedSource;
+    console.log(`[sendUmnicoMessage] Sending to leadId: ${leadId}, payload: ${JSON.stringify(sendBody)}`);
 
-    const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${resolvedLeadId}/send`, {
+    const sendRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${UMNICO_API_KEY}`,
       },
-      body: JSON.stringify(sendPayload),
+      body: JSON.stringify(sendBody),
     });
 
-    const sendBody = await sendRes.text();
-    console.log(`[sendUmnicoMessage] Send — status: ${sendRes.status}`);
-    console.log(`[sendUmnicoMessage] Send FULL RESPONSE: ${sendBody}`);
-    if (sendRes.ok) {
-      return new Response(JSON.stringify({ success: true, leadId: resolvedLeadId }), { status: 200, headers: { 'Content-Type': 'application/json' } });
-    } else {
-      return new Response(JSON.stringify({ error: `Umnico send failed: ${sendRes.status}`, detail: sendBody }), { status: 502, headers: { 'Content-Type': 'application/json' } });
-    }
+    const sendRaw = await sendRes.text();
+    console.log(`[sendUmnicoMessage] Send response status: ${sendRes.status}, FULL RESPONSE: ${sendRaw}`);
 
+    return Response.json({ success: sendRes.ok, status: sendRes.status, response: sendRaw });
   } catch (error) {
     console.error('[sendUmnicoMessage] Error:', error.message);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

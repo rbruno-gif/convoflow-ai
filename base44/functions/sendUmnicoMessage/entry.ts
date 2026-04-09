@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
 
     console.log(`[sendUmnicoMessage] Sending to contactId: ${contactId}, text: ${text}`);
 
-    const res = await fetch('https://api.umnico.com/messages', {
+    const res = await fetch('https://api.umnico.com/v1.3/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

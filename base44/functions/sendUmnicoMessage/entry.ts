@@ -1,7 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 
 const UMNICO_API_KEY = Deno.env.get('UMNICO_API_KEY');
-const FB_PAGE_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
 
 // Cache the userId so we don't fetch managers on every call
 let cachedUserId = null;
@@ -17,7 +16,30 @@ async function getUmnicoUserId() {
   return cachedUserId;
 }
 
-async function sendViaUmnico(leadId, contactId, text) {
+// Look up Umnico leadId by contactId (socialId)
+async function findLeadIdByContactId(contactId) {
+  console.log('[sendUmnicoMessage] Looking up leadId for contactId:', contactId);
+  const res = await fetch(`https://api.umnico.com/v1.3/leads?limit=50`, {
+    headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}` }
+  });
+  const data = await res.json();
+  const leads = Array.isArray(data) ? data : (data.leads || data.items || []);
+  
+  for (const lead of leads) {
+    // Check if any source matches our contactId
+    const sources = lead.sources || lead.contacts || [];
+    for (const src of sources) {
+      if (String(src.socialId) === String(contactId) || String(src.sender) === String(contactId) || String(src.id) === String(contactId)) {
+        console.log('[sendUmnicoMessage] Found leadId:', lead.id, 'for contactId:', contactId);
+        return String(lead.id);
+      }
+    }
+  }
+  console.log('[sendUmnicoMessage] Could not find leadId for contactId:', contactId);
+  return null;
+}
+
+async function sendViaUmnico(leadId, text) {
   const userId = await getUmnicoUserId();
 
   const sourcesRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/sources`, {
@@ -41,24 +63,7 @@ async function sendViaUmnico(leadId, contactId, text) {
 
   const result = await sendRes.text();
   console.log('[sendUmnicoMessage] Umnico send status:', sendRes.status, 'body:', result);
-  if (!sendRes.ok) throw new Error(`Umnico send failed: ${result}`);
-  return result;
-}
-
-async function sendViaFacebook(recipientId, text) {
-  console.log('[sendUmnicoMessage] Sending via Facebook Graph API, recipientId:', recipientId);
-  const fbRes = await fetch('https://graph.facebook.com/v18.0/me/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      recipient: { id: recipientId },
-      message: { text },
-      access_token: FB_PAGE_TOKEN,
-    }),
-  });
-  const result = await fbRes.text();
-  console.log('[sendUmnicoMessage] Facebook send status:', fbRes.status, 'body:', result);
-  if (!fbRes.ok) throw new Error(`Facebook send failed: ${result}`);
+  if (!sendRes.ok) throw new Error(`Umnico send failed (${sendRes.status}): ${result}`);
   return result;
 }
 
@@ -78,19 +83,25 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    const leadId = conversation.umnico_lead_id;
+    let leadId = conversation.umnico_lead_id;
     const contactId = conversation.customer_fb_id;
 
-    // Try Umnico first (if we have a leadId), else fall back to Facebook Graph API
-    if (leadId && UMNICO_API_KEY) {
-      const result = await sendViaUmnico(leadId, contactId, text);
-      return Response.json({ success: true, method: 'umnico', response: result });
-    } else if (contactId && FB_PAGE_TOKEN) {
-      const result = await sendViaFacebook(contactId, text);
-      return Response.json({ success: true, method: 'facebook', response: result });
-    } else {
-      return Response.json({ error: 'No delivery method available: missing leadId and Facebook token' }, { status: 400 });
+    // If no leadId stored, try to look it up from Umnico by contactId
+    if (!leadId && contactId && UMNICO_API_KEY) {
+      leadId = await findLeadIdByContactId(contactId);
+      // Save it back so we don't have to look it up every time
+      if (leadId) {
+        await base44.asServiceRole.entities.Conversation.update(conversationId, { umnico_lead_id: leadId });
+        console.log('[sendUmnicoMessage] Saved leadId', leadId, 'to conversation', conversationId);
+      }
     }
+
+    if (!leadId) {
+      return Response.json({ error: 'Could not find Umnico lead for this conversation' }, { status: 400 });
+    }
+
+    const result = await sendViaUmnico(leadId, text);
+    return Response.json({ success: true, response: result });
 
   } catch (error) {
     console.error('[sendUmnicoMessage] Error:', error.message);

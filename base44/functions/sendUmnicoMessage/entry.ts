@@ -9,11 +9,7 @@ Deno.serve(async (req) => {
 
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
-    if (!user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-    }
-
+    
     const { conversationId, text } = await req.json();
     if (!conversationId || !text) {
       return new Response(JSON.stringify({ error: 'Missing conversationId or text' }), { status: 400 });

@@ -12,6 +12,7 @@ import CustomerSidebar from '@/components/inbox/CustomerSidebar';
 const STATUS_FILTERS = [
   { key: 'all', label: 'All' },
   { key: 'active', label: 'Active' },
+  { key: 'waiting', label: 'Queue' },
   { key: 'human_requested', label: 'Handoff' },
   { key: 'flagged', label: 'Flagged' },
   { key: 'resolved', label: 'Resolved' },
@@ -138,7 +139,8 @@ function ConvoRow({ convo, selected, onSelect, brands, showBrand }) {
           )}
           {convo.customer_fb_id && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 flex items-center gap-0.5"><Facebook className="w-2.5 h-2.5" /> Facebook</span>}
           {(convo.mode === 'ai' || !convo.mode) && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-700 flex items-center gap-0.5"><Bot className="w-2.5 h-2.5" /> AI</span>}
-          {convo.mode === 'human' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center gap-0.5"><User className="w-2.5 h-2.5" /> Agent</span>}
+          {convo.mode === 'human' && convo.status !== 'waiting' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center gap-0.5"><User className="w-2.5 h-2.5" /> Agent</span>}
+          {convo.status === 'waiting' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 flex items-center gap-0.5">⏳ Queue</span>}
           {isUrgent && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 flex items-center gap-0.5"><AlertTriangle className="w-2.5 h-2.5" /> Urgent</span>}
           {convo.status === 'resolved' && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" /> Done</span>}
           {convo.unread_count > 0 && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500 text-white font-bold">{convo.unread_count}</span>}

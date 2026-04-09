@@ -82,8 +82,8 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     setSending(true);
     setAction('transfer', 'loading');
     try {
-      // Update conversation to human mode
-      await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'active' });
+      // Put conversation in queue — agent must take it
+      await base44.entities.Conversation.update(conversation.id, { mode: 'human', status: 'waiting', assigned_agent: null });
       
       qc.invalidateQueries({ queryKey: ['conversations'] });
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
@@ -91,6 +91,22 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
       onUpdate?.();
     } catch (error) {
       console.error('Transfer error:', error);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const takeConversation = async () => {
+    setSending(true);
+    setAction('take', 'loading');
+    try {
+      await base44.entities.Conversation.update(conversation.id, { status: 'active', assigned_agent: user?.email });
+      qc.invalidateQueries({ queryKey: ['conversations'] });
+      qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
+      setAction('take', 'done');
+      onUpdate?.();
+    } catch (error) {
+      console.error('Take error:', error);
     } finally {
       setSending(false);
     }
@@ -231,7 +247,11 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
             <ActionBtn id="transfer" icon={UserCheck} label="Transfer" onClick={transferToAgent}
               color="text-blue-500 hover:text-blue-700 hover:bg-blue-50" />
           )}
-          {isFacebookConversation && conversation.mode === 'human' && (
+          {conversation.mode === 'human' && conversation.status === 'waiting' && (
+            <ActionBtn id="take" icon={UserCheck} label="Take" onClick={takeConversation}
+              color="text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50" />
+          )}
+          {conversation.mode === 'human' && conversation.status !== 'waiting' && (
             <ActionBtn id="return" icon={Bot} label="Return to AI" onClick={returnToAI}
               color="text-violet-500 hover:text-violet-700 hover:bg-violet-50" />
           )}
@@ -267,34 +287,42 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
       </div>
 
       {/* Input */}
-      <div className="px-4 pb-4 bg-white flex gap-2 items-end">
-        <textarea
-          placeholder="Type a reply..."
-          value={reply}
-          onChange={e => setReply(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-          rows={2}
-          className="flex-1 resize-none text-sm rounded-xl border border-gray-200 p-3 focus:outline-none focus:ring-2 focus:ring-violet-400"
-        />
-        <div className="flex flex-col gap-1.5">
-          <button
-            onClick={handleAIReply}
-            disabled={sending}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-violet-600 border border-violet-200 hover:bg-violet-50 transition-colors disabled:opacity-50"
-          >
-            <Zap className="w-3.5 h-3.5" /> AI
-          </button>
-          <button
-            onClick={sendMessage}
-            disabled={sending || !reply.trim()}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white transition-colors disabled:opacity-50"
-            style={isFacebookConversation ? { background: '#1877F2' } : { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
-          >
-            {isFacebookConversation ? <Facebook className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
-            Send
-          </button>
+      {conversation.status === 'waiting' ? (
+        <div className="px-4 pb-4 pt-2 bg-white">
+          <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-700 text-sm font-medium">
+            ⏳ In queue — click "Take" to claim this conversation
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="px-4 pb-4 bg-white flex gap-2 items-end">
+          <textarea
+            placeholder="Type a reply..."
+            value={reply}
+            onChange={e => setReply(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            rows={2}
+            className="flex-1 resize-none text-sm rounded-xl border border-gray-200 p-3 focus:outline-none focus:ring-2 focus:ring-violet-400"
+          />
+          <div className="flex flex-col gap-1.5">
+            <button
+              onClick={handleAIReply}
+              disabled={sending}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-violet-600 border border-violet-200 hover:bg-violet-50 transition-colors disabled:opacity-50"
+            >
+              <Zap className="w-3.5 h-3.5" /> AI
+            </button>
+            <button
+              onClick={sendMessage}
+              disabled={sending || !reply.trim()}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white transition-colors disabled:opacity-50"
+              style={isFacebookConversation ? { background: '#1877F2' } : { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+            >
+              {isFacebookConversation ? <Facebook className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+              Send
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

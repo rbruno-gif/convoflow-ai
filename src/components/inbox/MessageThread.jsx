@@ -59,18 +59,13 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         last_message_time: new Date().toISOString(),
       });
 
-      // Send to customer via Zapier webhook
+      // Send to customer via Facebook Messenger
       try {
-        console.log('[Inbox] Posting to Zapier — to:', conversation.customer_fb_id, 'text:', content);
-        const zapierRes = await fetch('https://hooks.zapier.com/hooks/catch/10829424/u7ru89d/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ to: conversation.customer_fb_id, message: content })
-        });
-        const zapierData = await zapierRes.text();
-        console.log('[Inbox] Zapier response status:', zapierRes.status, 'body:', zapierData);
+        console.log('[Inbox] Sending Facebook message to:', conversation.customer_fb_id);
+        await base44.functions.invoke('sendFacebookMessage', { to: conversation.customer_fb_id, message: content });
+        console.log('[Inbox] Facebook message sent successfully');
       } catch (e) {
-        console.error('[Inbox] Zapier fetch failed:', e?.message || e);
+        console.error('[Inbox] Facebook send failed:', e?.message || e);
       }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });

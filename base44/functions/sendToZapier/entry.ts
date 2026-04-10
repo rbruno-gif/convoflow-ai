@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
   const res = await fetch('https://hooks.zapier.com/hooks/catch/10829424/u7ru89d/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ to, message })
+    body: JSON.stringify({ recipient_id: to, text: message })
   });
   const result = await res.text();
   return new Response(JSON.stringify({ ok: res.ok, result }), { status: 200 });

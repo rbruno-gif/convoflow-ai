@@ -59,13 +59,11 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         last_message_time: new Date().toISOString(),
       });
 
-      // Send to customer via Facebook Messenger
+      // Send to customer via Zapier
       try {
-        console.log('[Inbox] Sending Facebook message to:', conversation.customer_fb_id);
-        await base44.functions.invoke('sendFacebookMessage', { to: conversation.customer_fb_id, message: content });
-        console.log('[Inbox] Facebook message sent successfully');
+        await base44.functions.invoke('sendToZapier', { to: conversation.customer_fb_id, message: content });
       } catch (e) {
-        console.error('[Inbox] Facebook send failed:', e?.message || e);
+        console.error('[Inbox] Zapier send failed:', e?.message || e);
       }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });

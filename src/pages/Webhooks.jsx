@@ -70,7 +70,6 @@ export default function Webhooks() {
       webhook_url: url,
       webhook_token: token,
       facebook_page_id: form.facebook_page_id || null,
-      agent_reply_zapier_url: form.agent_reply_zapier_url || '',
       is_active: true,
     };
     

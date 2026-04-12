@@ -35,7 +35,7 @@ export default function FacebookPagesManager({ brandId }) {
     setLoadingFbPages(false);
   };
 
-  useEffect(() => { fetchFbPages(); }, []);
+
 
   const { data: pages = [] } = useQuery({
     queryKey: ['facebook-pages', brandId],
@@ -45,6 +45,7 @@ export default function FacebookPagesManager({ brandId }) {
   });
 
   const openNew = () => {
+    fetchFbPages();
     const verify = Math.random().toString(36).substring(2, 12);
     setEditing(null);
     setForm({ ...emptyForm, verify_token: verify });

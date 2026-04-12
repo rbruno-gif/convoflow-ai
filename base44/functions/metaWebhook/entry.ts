@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
 
         // Send reply via Facebook Messenger API
         if (pageAccessToken) {
-          const fbRes = await fetch('https://graph.facebook.com/v18.0/me/messages', {
+          const fbRes = await fetch(`https://graph.facebook.com/v18.0/${pageId}/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

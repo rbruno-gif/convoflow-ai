@@ -1,110 +1,166 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
-// Handles Facebook Messenger & Instagram DM webhooks (multi-page support)
 Deno.serve(async (req) => {
-  // GET request = webhook verification from Meta
+  // GET = webhook verification from Meta
   if (req.method === 'GET') {
     const url = new URL(req.url);
     const mode = url.searchParams.get('hub.mode');
     const token = url.searchParams.get('hub.verify_token');
     const challenge = url.searchParams.get('hub.challenge');
-
-    if (mode === 'subscribe') {
-      // Try to verify against stored page verify tokens
-      try {
-        const base44 = createClientFromRequest(req);
-        const pages = await base44.asServiceRole.entities.FacebookPage.list();
-        const matched = pages.find(p => p.verify_token === token);
-        if (matched || token) {
-          return new Response(challenge, { status: 200 });
-        }
-      } catch (_) {
-        // fallback: accept any token during setup
-        return new Response(challenge, { status: 200 });
-      }
-      return new Response(challenge, { status: 200 });
+    const VERIFY_TOKEN = Deno.env.get('FACEBOOK_VERIFY_TOKEN') || 's201uog9d8';
+    if (mode === 'subscribe' && (token === VERIFY_TOKEN || token)) {
+      console.log('Facebook webhook verified');
+      return new Response(challenge, { status: 200, headers: { 'Content-Type': 'text/plain' } });
     }
     return new Response('Forbidden', { status: 403 });
   }
 
-  try {
-    const body = await req.json();
-    const base44 = createClientFromRequest(req);
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  }
 
-    // Load all active Facebook pages for lookup
+  try {
+    const base44 = createClientFromRequest(req);
+    const payload = await req.json();
+
     const fbPages = await base44.asServiceRole.entities.FacebookPage.filter({ is_active: true });
     const pageMap = {};
     fbPages.forEach(p => { pageMap[p.page_id] = p; });
 
-    const entries = body.entry || [];
+    const entries = payload.entry || [];
 
     for (const entry of entries) {
-      const messaging = entry.messaging || entry.changes || [];
       const pageId = String(entry.id);
-
-      // Look up which registered page this belongs to
       const registeredPage = pageMap[pageId];
-      const pageLabel = registeredPage ? registeredPage.page_name : null;
-      const company = registeredPage ? registeredPage.company : null;
+      const brandId = registeredPage?.brand_id || '69d5d0811141577dd21cc040';
+      const pageAccessToken = registeredPage?.page_access_token || Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
 
+      const messaging = entry.messaging || [];
       for (const event of messaging) {
-        const msg = event.message || event.value?.messages?.[0];
-        const sender = event.sender || { id: event.value?.contacts?.[0]?.wa_id };
+        const msg = event.message;
+        const senderId = event.sender?.id;
 
-        if (!msg || !sender?.id) continue;
+        if (!msg || !senderId || msg.is_echo) continue;
 
-        const senderId = String(sender.id);
-        const text = msg.text || msg.text?.body || '[media message]';
+        const text = msg.text;
+        if (!text) continue;
 
-        // Determine platform
-        const platform = body.object === 'instagram' ? 'instagram' : 'facebook';
-        // Include page ID in composite so same user on different pages = different convos
-        const compositeId = `${platform}:${pageId}:${senderId}`;
+        console.log(`[metaWebhook] Page: ${pageId}, From: ${senderId}, Msg: ${text}`);
 
         // Find or create conversation
         const existing = await base44.asServiceRole.entities.Conversation.filter({
-          customer_fb_id: compositeId,
+          customer_fb_id: senderId,
+          brand_id: brandId,
+          status: 'active',
         });
 
-        let convId;
-        if (existing.length > 0) {
-          convId = existing[0].id;
-          await base44.asServiceRole.entities.Conversation.update(convId, {
-            last_message: text.slice(0, 200),
-            last_message_time: new Date().toISOString(),
-            unread_count: (existing[0].unread_count || 0) + 1,
-            status: 'active',
-          });
-        } else {
-          const namePrefix = platform === 'instagram' ? 'Instagram' : 'Facebook';
-          const pageSuffix = pageLabel ? ` (${pageLabel})` : '';
-          const conv = await base44.asServiceRole.entities.Conversation.create({
-            customer_name: `${namePrefix} User${pageSuffix} ${senderId.slice(-4)}`,
-            customer_fb_id: compositeId,
+        let conversation = existing[0];
+        if (!conversation) {
+          conversation = await base44.asServiceRole.entities.Conversation.create({
+            brand_id: brandId,
+            customer_fb_id: senderId,
+            customer_name: 'Facebook User',
             status: 'active',
             mode: 'ai',
-            last_message: text.slice(0, 200),
-            last_message_time: new Date().toISOString(),
-            unread_count: 1,
-            tags: [platform, ...(pageLabel ? [pageLabel] : []), ...(company ? [company] : [])],
+            channel: 'facebook',
           });
-          convId = conv.id;
         }
 
+        // Save customer message
         await base44.asServiceRole.entities.Message.create({
-          conversation_id: convId,
+          conversation_id: conversation.id,
+          brand_id: brandId,
           sender_type: 'customer',
-          sender_name: `${platform === 'instagram' ? '📸' : '📘'} ${senderId.slice(-6)}`,
+          sender_name: 'Facebook User',
           content: text,
           timestamp: new Date().toISOString(),
-          is_read: false,
           message_type: 'text',
         });
+
+        await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+          last_message: text,
+          last_message_time: new Date().toISOString(),
+          unread_count: (conversation.unread_count || 0) + 1,
+        });
+
+        // Skip AI reply if in human mode
+        if (conversation.mode === 'human') {
+          console.log(`[metaWebhook] Human mode — skipping AI reply`);
+          continue;
+        }
+
+        // Build AI reply
+        let replyText = null;
+        try {
+          const [kbEntries, faqEntries, brandSettings] = await Promise.all([
+            base44.asServiceRole.entities.KnowledgeDoc.filter({ brand_id: brandId, is_active: true }),
+            base44.asServiceRole.entities.FAQ.filter({ brand_id: brandId, is_active: true }),
+            base44.asServiceRole.entities.AgentSettings.filter({ brand_id: brandId }),
+          ]);
+
+          const brand = await base44.asServiceRole.entities.Brand.filter({ id: brandId }).then(r => r[0]).catch(() => null);
+          const persona = brand?.ai_persona_name || 'Victor';
+          const instructions = brand?.ai_instructions || brandSettings[0]?.ai_instructions || 'You are a helpful customer support assistant.';
+
+          const kbContext = (kbEntries || []).map(e => `# ${e.title}\n${e.content}`).join('\n\n');
+          const faqContext = (faqEntries || []).map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+
+          const result = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: `${instructions}\n\nKNOWLEDGE BASE:\n${kbContext}\n\nFAQs:\n${faqContext}\n\nCUSTOMER MESSAGE: ${text}\n\nRespond as ${persona}. Be concise, warm, and helpful.`,
+          });
+          replyText = typeof result === 'string' ? result : result?.data || result?.text || null;
+        } catch (e) {
+          console.error('[metaWebhook] LLM failed:', e.message);
+          replyText = 'Thanks for reaching out! An agent will be with you shortly.';
+        }
+
+        if (!replyText) replyText = 'Thanks for reaching out! An agent will be with you shortly.';
+
+        // Save AI reply to inbox
+        await base44.asServiceRole.entities.Message.create({
+          conversation_id: conversation.id,
+          brand_id: brandId,
+          sender_type: 'ai',
+          sender_name: 'AI Assistant',
+          content: replyText,
+          timestamp: new Date().toISOString(),
+          message_type: 'text',
+        });
+
+        await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+          last_message: replyText,
+          last_message_time: new Date().toISOString(),
+        });
+
+        // Send reply via Facebook Messenger API
+        if (pageAccessToken) {
+          const fbRes = await fetch('https://graph.facebook.com/v18.0/me/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              recipient: { id: senderId },
+              message: { text: replyText },
+              access_token: pageAccessToken,
+            }),
+          });
+          const fbBody = await fbRes.json();
+          console.log(`[metaWebhook] Sent reply to ${senderId}, status: ${fbRes.status}`, JSON.stringify(fbBody));
+        } else {
+          console.warn('[metaWebhook] No page access token — reply not sent');
+        }
       }
     }
 
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('[metaWebhook] Error:', error.message);
+    return Response.json({ error: error.message }, { status: 200 });
   }
 });

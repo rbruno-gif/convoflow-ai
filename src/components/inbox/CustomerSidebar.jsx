@@ -1,13 +1,13 @@
-import { User, Phone, Mail, MapPin, Tag, Clock, MessageSquare } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Tag, Clock, MessageSquare, Facebook } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export default function CustomerSidebar({ conversation }) {
   if (!conversation) return null;
 
   const info = [
-    { icon: Phone, label: 'Phone', value: conversation.customer_fb_id || '—' },
-    { icon: Mail, label: 'Channel', value: conversation.tags?.join(', ') || 'Website Chat' },
-    { icon: MapPin, label: 'Location', value: '—' },
+    { icon: Phone, label: 'PSID', value: conversation.customer_fb_id || '—' },
+    { icon: Facebook, label: 'FB Page ID', value: conversation.fb_page_id || '—' },
+    { icon: Mail, label: 'Channel', value: conversation.channel || 'Website Chat' },
     { icon: Clock, label: 'Last seen', value: conversation.last_message_time ? formatDistanceToNow(new Date(conversation.last_message_time), { addSuffix: true }) : '—' },
   ];
 

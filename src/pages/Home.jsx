@@ -12,7 +12,7 @@ export default function Home() {
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="text-2xl font-bold text-primary">ChatPulse</div>
+          <div className="text-2xl font-bold text-primary">U2C Mobile LifeLine</div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden"
@@ -40,10 +40,10 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
         <div className="text-center space-y-8">
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
-            AI-Powered Customer Support
+            U2C Mobile LifeLine Support
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            Deliver exceptional customer experiences with intelligent AI agents and seamless agent handoffs
+            AI-powered customer support platform for U2C Mobile, ACP Connect Wireless, and all partner brands
           </p>
           <div className="flex justify-center gap-4 flex-wrap pt-4">
             <Link to="/dashboard">
@@ -89,7 +89,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-center text-muted-foreground space-y-3">
-          <p>&copy; 2026 ChatPulse. All rights reserved.</p>
+          <p>&copy; 2026 U2C Mobile LifeLine. All rights reserved.</p>
           <div className="flex flex-wrap justify-center gap-4 text-sm">
             <button onClick={() => navigate('/privacy')} className="text-primary hover:underline">
               Privacy Policy

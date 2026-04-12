@@ -22,8 +22,17 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
   const { data: allMessages = [] } = useQuery({
     queryKey: ['messages', conversation.id],
     queryFn: () => base44.entities.Message.filter({ conversation_id: conversation.id }, 'timestamp', 200),
-    refetchInterval: 3000,
+    refetchInterval: 5000,
   });
+
+  useEffect(() => {
+    const unsub = base44.entities.Message.subscribe((event) => {
+      if (event.data?.conversation_id === conversation.id) {
+        qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
+      }
+    });
+    return unsub;
+  }, [conversation.id]);
 
   const messages = allMessages.filter(msg => {
     if (msg.is_whisper) return user?.role === 'supervisor' || user?.email === msg.whisper_to_agent_email;

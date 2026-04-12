@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { useBrand } from '@/context/BrandContext';
 import { MessageSquare, Filter, Search, Bot, User, AlertTriangle, CheckCircle, Facebook } from 'lucide-react';
@@ -24,6 +24,14 @@ export default function BrandInbox() {
   const [brandFilter, setBrandFilter] = useState('all');
   const [search, setSearch] = useState('');
   const { activeBrandId, activeBrand, brands } = useBrand();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const unsub = base44.entities.Conversation.subscribe(() => {
+      qc.invalidateQueries({ queryKey: ['inbox-conversations', activeBrandId] });
+    });
+    return unsub;
+  }, [activeBrandId]);
 
   const { data: conversations = [] } = useQuery({
     queryKey: ['inbox-conversations', activeBrandId],

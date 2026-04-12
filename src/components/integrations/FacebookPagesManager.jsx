@@ -27,8 +27,10 @@ export default function FacebookPagesManager({ brandId }) {
   const fetchFbPages = async () => {
     setLoadingFbPages(true);
     try {
-      const res = await base44.functions.invoke('getFacebookPages', {});
-      setFbPages(res.data?.pages || []);
+      const origin = window.location.origin;
+      const res = await fetch(`${origin}/api/functions/getFacebookPages`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const data = await res.json();
+      setFbPages(data?.pages || []);
     } catch (e) {
       console.error('Could not fetch FB pages:', e.message);
     }

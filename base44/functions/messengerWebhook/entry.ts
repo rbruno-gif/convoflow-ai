@@ -170,19 +170,32 @@ Deno.serve(async (req) => {
       last_message_time: new Date().toISOString(),
     });
 
-    // Send reply via Meta API
-    const pageAccessToken = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
-    if (pageAccessToken && from) {
-      const fbRes = await fetch('https://graph.facebook.com/v18.0/me/messages', {
+    // Send reply via Meta API using page-specific token
+    const USER_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+    let pageToken = USER_TOKEN;
+    if (facebookPageId && USER_TOKEN) {
+      const accountsRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${USER_TOKEN}&fields=id,access_token&limit=100`);
+      const accountsData = await accountsRes.json();
+      if (accountsData.data) {
+        const match = accountsData.data.find(p => p.id === facebookPageId);
+        if (match) pageToken = match.access_token;
+      }
+    }
+    if (pageToken && from) {
+      const endpoint = facebookPageId
+        ? `https://graph.facebook.com/v18.0/${facebookPageId}/messages`
+        : 'https://graph.facebook.com/v18.0/me/messages';
+      const fbRes = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           recipient: { id: from },
           message: { text: replyText },
-          access_token: pageAccessToken,
+          access_token: pageToken,
         }),
       });
-      console.log(`[Messenger] Meta API responded: ${fbRes.status}`);
+      const fbBody = await fbRes.json();
+      console.log(`[Messenger] Meta API responded: ${fbRes.status}`, JSON.stringify(fbBody));
     }
 
     return new Response(JSON.stringify({ success: true, response: replyText, conversation_id: conversation.id }), {

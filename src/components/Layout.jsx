@@ -109,7 +109,7 @@ export default function Layout() {
             {!collapsed && <span>Commit Logs</span>}
           </Link>
           <button
-            onClick={() => base44.auth.logout()}
+            onClick={() => base44.auth.logout('/')}
             className={cn('w-full flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium transition-all', collapsed && 'justify-center px-0')}
             style={{ color: 'rgba(255,255,255,0.4)' }}
             onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}

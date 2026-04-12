@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Facebook, Plus, Trash2, Edit2, Check, X, Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Facebook, Plus, Trash2, Edit2, Copy, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +12,30 @@ import { useToast } from '@/components/ui/use-toast';
 
 const WEBHOOK_BASE = `${window.location.origin.includes('localhost') ? 'https://your-app.base44.app' : window.location.origin}/api/functions/metaWebhook`;
 
-const emptyForm = { page_name: '', page_id: '', page_access_token: '', company: '', verify_token: '', agent_reply_zapier_url: '', is_active: true };
+const emptyForm = { page_name: '', page_id: '', page_access_token: '', company: '', verify_token: '', is_active: true };
 
 export default function FacebookPagesManager({ brandId }) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [expanded, setExpanded] = useState(null);
+  const [fbPages, setFbPages] = useState([]);
+  const [loadingFbPages, setLoadingFbPages] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
+
+  const fetchFbPages = async () => {
+    setLoadingFbPages(true);
+    try {
+      const res = await base44.functions.invoke('getFacebookPages', {});
+      setFbPages(res.data?.pages || []);
+    } catch (e) {
+      console.error('Could not fetch FB pages:', e.message);
+    }
+    setLoadingFbPages(false);
+  };
+
+  useEffect(() => { fetchFbPages(); }, []);
 
   const { data: pages = [] } = useQuery({
     queryKey: ['facebook-pages', brandId],
@@ -102,6 +117,30 @@ export default function FacebookPagesManager({ brandId }) {
         {showForm && (
           <div className="border rounded-xl p-4 bg-muted/30 space-y-3">
             <h4 className="text-sm font-semibold">{editing ? 'Edit Page' : 'Connect New Facebook Page'}</h4>
+
+            {/* Facebook Page Dropdown */}
+            <div className="space-y-1">
+              <Label className="text-xs">Select from your Facebook Pages</Label>
+              <div className="flex gap-2">
+                <select
+                  className="flex-1 text-sm border border-input rounded-md px-3 py-2 bg-background"
+                  disabled={loadingFbPages}
+                  onChange={e => {
+                    const selected = fbPages.find(p => p.id === e.target.value);
+                    if (selected) setForm(f => ({ ...f, page_id: selected.id, page_name: f.page_name || selected.name, page_access_token: selected.access_token || f.page_access_token }));
+                  }}
+                  defaultValue=""
+                >
+                  <option value="">{loadingFbPages ? 'Loading pages…' : fbPages.length ? 'Choose a page…' : 'No pages found — fill manually below'}</option>
+                  {fbPages.map(p => <option key={p.id} value={p.id}>{p.name} ({p.id})</option>)}
+                </select>
+                <Button variant="outline" size="icon" onClick={fetchFbPages} disabled={loadingFbPages}>
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingFbPages ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Or fill in manually below</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Page Name *</Label>

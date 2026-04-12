@@ -27,12 +27,27 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('[metaWebhook] Method:', req.method);
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
+    console.log('[metaWebhook] Payload received, entry count:', (payload.entry || []).length);
 
+    console.log('[metaWebhook] Received payload:', JSON.stringify(payload).substring(0, 500));
+
+    // Load all registered Facebook pages (entity tokens)
     const fbPages = await base44.asServiceRole.entities.FacebookPage.filter({ is_active: true });
     const pageMap = {};
     fbPages.forEach(p => { pageMap[p.page_id] = p; });
+
+    // Dynamically fetch all page tokens (user token → page tokens)
+    const USER_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+    const dynamicTokens = {};
+    const accountsRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${USER_TOKEN}&fields=id,access_token&limit=100`);
+    const accountsData = await accountsRes.json();
+    if (accountsData.data) {
+      accountsData.data.forEach(p => { dynamicTokens[p.id] = p.access_token; });
+      console.log(`[metaWebhook] Loaded ${accountsData.data.length} page tokens dynamically`);
+    }
 
     const entries = payload.entry || [];
 
@@ -40,7 +55,10 @@ Deno.serve(async (req) => {
       const pageId = String(entry.id);
       const registeredPage = pageMap[pageId];
       const brandId = registeredPage?.brand_id || '69d5d0811141577dd21cc040';
-      const pageAccessToken = registeredPage?.page_access_token || Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+
+      // Use entity token → dynamic per-page token → env fallback
+      const pageAccessToken = registeredPage?.page_access_token || dynamicTokens[pageId] || USER_TOKEN;
+      console.log(`[metaWebhook] Page: ${pageId}, token source: ${registeredPage?.page_access_token ? 'entity' : dynamicTokens[pageId] ? 'dynamic' : 'env fallback'}`);
 
       const messaging = entry.messaging || [];
       for (const event of messaging) {

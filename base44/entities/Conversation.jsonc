@@ -38,6 +38,10 @@
       "type": "string",
       "description": "Umnico saId (source account ID) for sending messages"
     },
+    "umnico_contact_id": {
+      "type": "string",
+      "description": "Umnico sender/contact userId for sending messages"
+    },
     "status": {
       "type": "string",
       "enum": [

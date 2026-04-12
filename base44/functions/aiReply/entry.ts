@@ -107,7 +107,11 @@ Deno.serve(async (req) => {
         const umnicoRes = await fetch(`https://api.umnico.com/v1.3/messaging/${leadId}/send`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${UMNICO_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: { text: aiText } })
+          body: JSON.stringify({
+            message: { text: aiText },
+            source: conversation.umnico_source_id ? Number(conversation.umnico_source_id) : undefined,
+            userId: conversation.umnico_contact_id ? Number(conversation.umnico_contact_id) : undefined,
+          })
         });
         const umnicoBody = await umnicoRes.text();
         if (umnicoRes.ok) {

@@ -36,9 +36,15 @@ Deno.serve(async (req) => {
           }
         }
       }
-    } else {
-      // No page_id — try to infer from /me/accounts (use first page)
-      console.warn('[sendFacebookMessage] No page_id provided — this may send from wrong page');
+    } else if (USER_TOKEN) {
+      // No page_id — auto-detect from /me/accounts (use first page)
+      const accountsRes = await fetch(`https://graph.facebook.com/v18.0/me/accounts?access_token=${USER_TOKEN}&fields=id,access_token&limit=1`);
+      const accountsData = await accountsRes.json();
+      if (accountsData.data && accountsData.data[0]) {
+        pageToken = accountsData.data[0].access_token;
+        targetPageId = accountsData.data[0].id;
+        console.log(`[sendFacebookMessage] Auto-detected page: ${targetPageId}`);
+      }
     }
 
     console.log(`[sendFacebookMessage] Sending to PSID: ${to} via page: ${targetPageId || 'me'}`);

@@ -97,9 +97,14 @@ Deno.serve(async (req) => {
         brand_id: brandId,
         customer_fb_id: from,
         customer_name: profileName || 'Facebook User',
+        fb_page_id: facebookPageId,
+        channel: 'facebook',
         status: 'active',
         mode: 'ai',
       });
+    } else if (!conversation.fb_page_id && facebookPageId) {
+      await base44.asServiceRole.entities.Conversation.update(conversation.id, { fb_page_id: facebookPageId, channel: 'facebook' });
+      conversation.fb_page_id = facebookPageId;
     }
 
     // Save incoming message

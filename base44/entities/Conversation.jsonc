@@ -26,6 +26,10 @@
       "type": "string",
       "description": "Channel of the conversation (e.g., umnico, facebook, whatsapp)"
     },
+    "fb_page_id": {
+      "type": "string",
+      "description": "Facebook Page ID this conversation is on"
+    },
     "umnico_lead_id": {
       "type": "string",
       "description": "Umnico leadId for sending messages back via Umnico API"

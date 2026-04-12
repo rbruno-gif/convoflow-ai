@@ -85,6 +85,7 @@ Deno.serve(async (req) => {
             brand_id: brandId,
             customer_fb_id: senderId,
             customer_name: 'Facebook User',
+            fb_page_id: pageId,
             status: 'active',
             mode: 'ai',
             channel: 'facebook',

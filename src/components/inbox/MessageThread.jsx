@@ -61,7 +61,7 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
 
       // Send to customer via Facebook Messenger API
       try {
-        await base44.functions.invoke('sendFacebookMessage', { to: conversation.customer_fb_id, message: content });
+        await base44.functions.invoke('sendFacebookMessage', { to: conversation.customer_fb_id, message: content, page_id: conversation.fb_page_id });
       } catch (e) {
         console.error('[Inbox] Facebook send failed:', e?.message || e);
       }

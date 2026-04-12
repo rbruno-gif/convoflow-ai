@@ -46,6 +46,7 @@ import TermsOfService from '@/pages/TermsOfService';
 import DataDeletion from '@/pages/DataDeletion';
 import DemoWalkthrough from '@/pages/DemoWalkthrough';
 import FacebookSetup from '@/pages/FacebookSetup';
+import FacebookTest from '@/pages/FacebookTest';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -112,6 +113,7 @@ const AuthenticatedApp = () => {
         <Route path="/webhooks" element={<Webhooks />} />
         <Route path="/live-support" element={<LiveSupport />} />
         <Route path="/facebook-setup" element={<FacebookSetup />} />
+        <Route path="/facebook-test" element={<FacebookTest />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

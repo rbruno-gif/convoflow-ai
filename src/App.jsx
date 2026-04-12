@@ -47,7 +47,7 @@ import DataDeletion from '@/pages/DataDeletion';
 import DemoWalkthrough from '@/pages/DemoWalkthrough';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
@@ -64,6 +64,11 @@ const AuthenticatedApp = () => {
 
   if (authError?.type === 'user_not_registered') {
     return <UserNotRegisteredError />;
+  }
+
+  if (authError?.type === 'auth_required') {
+    navigateToLogin();
+    return null;
   }
 
   return (

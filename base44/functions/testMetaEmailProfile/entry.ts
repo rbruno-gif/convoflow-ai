@@ -9,8 +9,10 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const USER_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
-    if (!USER_TOKEN) return Response.json({ error: 'FACEBOOK_PAGE_ACCESS_TOKEN not set' }, { status: 500 });
+    const body = await req.json().catch(() => ({}));
+    // Accept a user access token from the request body, or fall back to env
+    const USER_TOKEN = body.user_access_token || Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+    if (!USER_TOKEN) return Response.json({ error: 'No access token provided' }, { status: 500 });
 
     const results = {};
 

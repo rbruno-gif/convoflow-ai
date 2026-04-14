@@ -1,0 +1,44 @@
+{
+  "name": "InstagramAccount",
+  "type": "object",
+  "properties": {
+    "brand_id": {
+      "type": "string",
+      "description": "Brand this Instagram account belongs to"
+    },
+    "account_name": {
+      "type": "string",
+      "description": "Instagram business account username"
+    },
+    "ig_account_id": {
+      "type": "string",
+      "description": "Instagram Business Account ID"
+    },
+    "fb_page_id": {
+      "type": "string",
+      "description": "Connected Facebook Page ID"
+    },
+    "fb_page_name": {
+      "type": "string",
+      "description": "Connected Facebook Page name"
+    },
+    "page_access_token": {
+      "type": "string",
+      "description": "Facebook Page Access Token used for Instagram API"
+    },
+    "verify_token": {
+      "type": "string",
+      "description": "Webhook verify token"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "account_name",
+    "ig_account_id",
+    "fb_page_id",
+    "page_access_token"
+  ]
+}

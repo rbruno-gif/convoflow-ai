@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileText, Facebook, AlertCircle } from 'lucide-react';
+import { Bot, User, UserCircle, Send, Flag, UserCheck, CheckCircle, Zap, FileText, Facebook, Instagram, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -68,11 +68,15 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
         last_message_time: new Date().toISOString(),
       });
 
-      // Send to customer via Facebook Messenger API
+      // Send to customer via Facebook/Instagram API
       try {
-        await base44.functions.invoke('sendFacebookMessage', { to: conversation.customer_fb_id, message: content, page_id: conversation.fb_page_id });
+        if (isInstagramConversation) {
+          await base44.functions.invoke('sendInstagramMessage', { to: conversation.customer_fb_id, message: content, fb_page_id: conversation.fb_page_id });
+        } else {
+          await base44.functions.invoke('sendFacebookMessage', { to: conversation.customer_fb_id, message: content, page_id: conversation.fb_page_id });
+        }
       } catch (e) {
-        console.error('[Inbox] Facebook send failed:', e?.message || e);
+        console.error('[Inbox] Send failed:', e?.message || e);
       }
 
       qc.invalidateQueries({ queryKey: ['messages', conversation.id] });
@@ -212,7 +216,8 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
     onUpdate?.();
   };
 
-  const isFacebookConversation = !!conversation.customer_fb_id;
+  const isFacebookConversation = !!conversation.customer_fb_id && conversation.channel !== 'instagram';
+  const isInstagramConversation = conversation.channel === 'instagram';
 
   const ActionBtn = ({ id, icon: Icon, label, onClick, color = 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' }) => {
     const state = actionState[id];
@@ -275,7 +280,18 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
 
       {/* Channel indicator or quick reply hint */}
       <div className="px-4 pt-2 bg-white border-t border-gray-100">
-        {isFacebookConversation ? (
+        {isInstagramConversation ? (
+          <div className="flex items-center gap-2 mb-1">
+            <p className="text-[10px] text-pink-600 font-medium flex items-center gap-1.5">
+              <Instagram className="w-3.5 h-3.5" /> Replying via Instagram DM
+            </p>
+            {conversation.mode === 'ai' || !conversation.mode ? (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 font-medium">AI Active</span>
+            ) : (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Live Agent</span>
+            )}
+          </div>
+        ) : isFacebookConversation ? (
           <div className="flex items-center gap-2 mb-1">
             <p className="text-[10px] text-blue-600 font-medium flex items-center gap-1.5">
               <Facebook className="w-3.5 h-3.5" /> Replying via Facebook Messenger
@@ -320,9 +336,9 @@ export default function MessageThread({ conversation, onUpdate, onInsertReply, e
               onClick={sendMessage}
               disabled={sending || !reply.trim()}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-white transition-colors disabled:opacity-50"
-              style={isFacebookConversation ? { background: '#1877F2' } : { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+              style={isInstagramConversation ? { background: 'linear-gradient(135deg, #e1306c, #c13584)' } : isFacebookConversation ? { background: '#1877F2' } : { background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
             >
-              {isFacebookConversation ? <Facebook className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
+              {isInstagramConversation ? <Instagram className="w-3.5 h-3.5" /> : isFacebookConversation ? <Facebook className="w-3.5 h-3.5" /> : <Send className="w-3.5 h-3.5" />}
               Send
             </button>
           </div>

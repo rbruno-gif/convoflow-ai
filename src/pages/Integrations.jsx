@@ -11,6 +11,7 @@ import GmailIntegration from '@/components/integrations/GmailIntegration';
 import MetaIntegration from '@/components/integrations/MetaIntegration';
 import FacebookPagesManager from '@/components/integrations/FacebookPagesManager';
 import WhatsAppIntegration from '@/components/integrations/WhatsAppIntegration';
+import InstagramManager from '@/components/integrations/InstagramManager';
 
 export default function Integrations() {
   const { activeBrand } = useBrand();
@@ -27,7 +28,7 @@ export default function Integrations() {
       <div className="space-y-5">
         <GmailIntegration brandId={activeBrand?.id} />
         <FacebookPagesManager brandId={activeBrand?.id} />
-        <MetaIntegration platform="instagram" brandId={activeBrand?.id} />
+        <InstagramManager brandId={activeBrand?.id} />
         <WhatsAppIntegration brandId={activeBrand?.id} />
       </div>
     </div>

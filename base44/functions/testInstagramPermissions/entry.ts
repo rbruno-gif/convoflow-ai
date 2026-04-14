@@ -6,101 +6,122 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const USER_TOKEN = Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
-    if (!USER_TOKEN) return Response.json({ error: 'Token not set' }, { status: 500 });
+    const body = await req.json().catch(() => ({}));
+    const TOKEN = body.user_access_token || Deno.env.get('FACEBOOK_PAGE_ACCESS_TOKEN');
+    if (!TOKEN) return Response.json({ error: 'No token provided' }, { status: 500 });
 
     const results = {};
 
-    // Test email & public_profile (GET /me)
-    try {
-      const meRes = await fetch(`https://graph.instagram.com/v18.0/me?fields=id,username,name,email&access_token=${USER_TOKEN}`);
-      const meData = await meRes.json();
-      results.user_info = meData.error ? { error: meData.error.message } : {
-        success: true,
-        id: meData.id,
-        username: meData.username,
-        name: meData.name,
-        email: meData.email
-      };
-    } catch (e) {
-      results.user_info = { error: e.message };
-    }
+    // 1. instagram_basic — get linked IG accounts via FB pages
+    let igAccountId = null;
+    let pageAccessToken = TOKEN;
+    let fbPageId = null;
 
-    // Get business accounts (pages_show_list & instagram_business_basic)
     try {
-      const accountsRes = await fetch(`https://graph.instagram.com/v18.0/me/accounts?fields=id,name,instagram_business_account&access_token=${USER_TOKEN}`);
+      const accountsRes = await fetch(
+        `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name,profile_picture_url}&limit=100&access_token=${TOKEN}`
+      );
       const accountsData = await accountsRes.json();
-      const instagramAccounts = (accountsData.data || [])
-        .filter(a => a.instagram_business_account)
-        .map(a => ({
-          page_id: a.id,
-          page_name: a.name,
-          ig_account_id: a.instagram_business_account.id
-        }));
+      const pages = (accountsData.data || []).filter(p => p.instagram_business_account);
 
-      results.pages_show_list = {
-        success: !!accountsData.data,
-        accounts_found: instagramAccounts.length,
-        accounts: instagramAccounts
+      results.instagram_basic = {
+        success: pages.length > 0,
+        ig_accounts_found: pages.length,
+        accounts: pages.map(p => ({
+          fb_page_id: p.id,
+          fb_page_name: p.name,
+          ig_id: p.instagram_business_account.id,
+          ig_username: p.instagram_business_account.username,
+        })),
+        error: pages.length === 0 ? (accountsData.error?.message || 'No IG accounts linked to your pages') : null,
       };
 
-      // If we have Instagram accounts, test messaging and comments
-      if (instagramAccounts.length > 0) {
-        const igAccountId = instagramAccounts[0].ig_account_id;
-
-        // Test instagram_business_manage_messages
-        try {
-          const msgRes = await fetch(`https://graph.instagram.com/v18.0/${igAccountId}/conversations?fields=id,senders&access_token=${USER_TOKEN}`);
-          const msgData = await msgRes.json();
-          results.instagram_business_manage_messages = {
-            success: !msgData.error,
-            message: msgData.error?.message || 'Permission available'
-          };
-        } catch (e) {
-          results.instagram_business_manage_messages = { error: e.message };
-        }
-
-        // Test instagram_manage_comments
-        try {
-          const commentsRes = await fetch(`https://graph.instagram.com/v18.0/${igAccountId}/ig_hashtag_search?user_id=${igAccountId}&hashtag=test&access_token=${USER_TOKEN}`);
-          const commentsData = await commentsRes.json();
-          results.instagram_manage_comments = {
-            success: !commentsData.error,
-            message: commentsData.error?.message || 'Permission available'
-          };
-        } catch (e) {
-          results.instagram_manage_comments = { error: e.message };
-        }
+      if (pages.length > 0) {
+        igAccountId = pages[0].instagram_business_account.id;
+        pageAccessToken = pages[0].access_token || TOKEN;
+        fbPageId = pages[0].id;
       }
     } catch (e) {
-      results.pages_show_list = { error: e.message };
+      results.instagram_basic = { success: false, error: e.message };
     }
 
-    // Test business_management
+    // 2. instagram_manage_messages — fetch conversations
     try {
-      const bizRes = await fetch(`https://graph.instagram.com/v18.0/me/businesses?access_token=${USER_TOKEN}`);
-      const bizData = await bizRes.json();
-      results.business_management = {
-        success: !!bizData.data,
-        businesses_count: bizData.data?.length || 0
+      const convRes = await fetch(
+        `https://graph.facebook.com/v18.0/${igAccountId || 'me'}/conversations?platform=instagram&fields=id,participants&access_token=${pageAccessToken}`
+      );
+      const convData = await convRes.json();
+      results.instagram_manage_messages = {
+        success: !convData.error,
+        conversations_found: convData.data?.length || 0,
+        error: convData.error?.message || null,
       };
     } catch (e) {
-      results.business_management = { error: e.message };
+      results.instagram_manage_messages = { success: false, error: e.message };
     }
 
-    // Test pages_read_engagement
+    // 3. instagram_manage_comments — fetch recent media comments
     try {
-      const engRes = await fetch(`https://graph.instagram.com/v18.0/me?fields=id&access_token=${USER_TOKEN}`);
+      const mediaRes = await fetch(
+        `https://graph.facebook.com/v18.0/${igAccountId || 'me'}/media?fields=id,timestamp,comments_count&limit=5&access_token=${pageAccessToken}`
+      );
+      const mediaData = await mediaRes.json();
+      results.instagram_manage_comments = {
+        success: !mediaData.error,
+        media_found: mediaData.data?.length || 0,
+        error: mediaData.error?.message || null,
+      };
+    } catch (e) {
+      results.instagram_manage_comments = { success: false, error: e.message };
+    }
+
+    // 4. pages_show_list — list pages
+    try {
+      const pagesRes = await fetch(
+        `https://graph.facebook.com/v18.0/me/accounts?fields=id,name,category&access_token=${TOKEN}`
+      );
+      const pagesData = await pagesRes.json();
+      results.pages_show_list = {
+        success: !!pagesData.data,
+        pages_count: pagesData.data?.length || 0,
+        pages: (pagesData.data || []).slice(0, 5).map(p => ({ id: p.id, name: p.name, category: p.category })),
+        error: pagesData.error?.message || null,
+      };
+    } catch (e) {
+      results.pages_show_list = { success: false, error: e.message };
+    }
+
+    // 5. business_management — fetch businesses
+    try {
+      const bizRes = await fetch(
+        `https://graph.facebook.com/v18.0/me/businesses?access_token=${TOKEN}`
+      );
+      const bizData = await bizRes.json();
+      results.business_management = {
+        success: !bizData.error,
+        businesses_count: bizData.data?.length || 0,
+        businesses: (bizData.data || []).map(b => ({ id: b.id, name: b.name })),
+        error: bizData.error?.message || null,
+      };
+    } catch (e) {
+      results.business_management = { success: false, error: e.message };
+    }
+
+    // 6. pages_read_engagement — fetch page engagement insights
+    try {
+      const engRes = await fetch(
+        `https://graph.facebook.com/v18.0/${fbPageId || 'me'}/insights?metric=page_impressions&period=day&access_token=${pageAccessToken}`
+      );
       const engData = await engRes.json();
       results.pages_read_engagement = {
         success: !engData.error,
-        message: 'Permission available'
+        error: engData.error?.message || null,
       };
     } catch (e) {
-      results.pages_read_engagement = { error: e.message };
+      results.pages_read_engagement = { success: false, error: e.message };
     }
 
-    return Response.json(results);
+    return Response.json({ ok: true, ig_account_id: igAccountId, fb_page_id: fbPageId, results });
   } catch (error) {
     console.error('[testInstagramPermissions] Error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });

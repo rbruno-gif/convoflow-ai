@@ -80,7 +80,7 @@ export default function AuditLogPage() {
         <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
           className="text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-400">
           <option value="">All Actions</option>
-          {uniqueActions.map(a => <option key={a} value={a}>{a.replace(/_/g, ' ')}</option>)}
+          {uniqueActions.filter(Boolean).map(a => <option key={a} value={a}>{a.replace(/_/g, ' ')}</option>)}
         </select>
       </div>
 
